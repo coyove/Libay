@@ -1,0 +1,159 @@
+<title>{{.Table}}</title>
+<p id="breadcrumbs">数据库: {{.Table}}</p>
+
+<script type="text/javascript">
+	function tryDelete() {
+		var ck = (getChecked());
+		if (confirm("是否删除: " + ck)) {
+			etc.util.ajax.post("/database/{{.Table}}/delete", {
+				"ids": ck,
+				"csrf": etc.util.CSRF()
+			}).then( function(e, d, x) {
+				if (d == "ok") {
+					window.location.reload();
+				} else {
+					alert("发生错误");
+				}
+			});
+		}
+	}
+
+	function tryUpdateTags() {
+		etc.util.ajax.post("/tags/update", {
+			"csrf": etc.util.CSRF()
+		}).then( function(e, d, x) {
+			alert("更新标签");	
+		});
+	}
+
+	function tryExec() {
+		var stat = etc.id("sql-statement").value;
+		if (stat.indexOf("where") < 0) {
+			if (confirm("未发现where判断, 是否继续执行")) {
+
+			} else {
+				return;
+			}
+		}
+
+		etc.util.ajax.post("/database/{{.Table}}/exec", {
+			"statement": stat,
+			"csrf": etc.util.CSRF()
+		}).then( function(e, d, x) {
+			if (d == "ok") {
+				alert("成功执行");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + d);
+			}
+		});
+	}
+
+	function getChecked() {
+		var ret = [];
+		var elems = document.querySelectorAll(".database input[type=checkbox]");
+		for (var i in elems) {
+			var e = elems[i];
+			if (e.parentNode) {
+				var n = e.parentNode.nextSibling.nextSibling
+				var id = parseInt(n ? n.innerHTML : 0);
+				if (e.checked) ret.push(id);
+			}
+		}
+
+		return ret.join(',');
+	}
+
+	function checkAll() {
+		var elems = document.querySelectorAll(".database input[type=checkbox]");
+		for (var i in elems)
+			elems[i].checked = true;
+	}
+
+	function uncheckAll() {
+		var elems = document.querySelectorAll(".database input[type=checkbox]");
+		for (var i in elems)
+			elems[i].checked = false;
+	}
+
+	function reverseCheck() {
+		var elems = document.querySelectorAll(".database input[type=checkbox]");
+		for (var i in elems)
+			elems[i].checked = !elems[i].checked;
+	}
+
+	function _update(str) {
+		switch (str) {
+			case "lock":
+			etc.id("sql-statement").value = "update user_info set \"status\"='locked' where id="; 
+			break;
+			case "unlock":
+			etc.id("sql-statement").value = "update user_info set \"status\"='ok' where id="; 
+			break;
+		}
+	}
+</script>
+
+<a href="/database/articles/page/1">articles表</a>,
+<a href="/database/history/page/1">history表</a>,
+<a href="/database/users/page/1">users表</a>,
+<a href="/database/user_info/page/1">user_info表</a>,
+<a href="/database/images/page/1">images表</a>,
+<a href="/database/tags/page/1">tags表</a>
+
+<div>
+	<button onclick="tryDelete()">删除选定</button>
+	<button onclick="checkAll()">全选</button>
+	<button onclick="uncheckAll()">全不选</button>
+	<button onclick="reverseCheck()">反选</button>
+	<div style="margin-top: 1em">
+	<textarea id="sql-statement" rows="2" cols="60">update {{.Table}} set ?1=?2 where id=?3</textarea><br>
+	<button onclick="tryExec()">执行SQL</button>
+	<button onclick="_update('lock')">封锁用户</button>
+	<button onclick="_update('unlock')">解锁用户</button>
+	<button onclick="tryUpdateTags()">更新标签</button>
+	</div>
+</div>
+
+<table class="database">
+	<tr style="background: #ccc">
+		<th></th>
+		{{range .TableColumns}}
+		<th onclick="etc.id('sql-statement').value=etc.id('sql-statement').value.replace('?1','{{.}}')">
+		{{.}}
+		</th>
+		{{end}}
+	</tr>
+	{{range .TableRows}}
+	<tr>
+	<td><input type="checkbox"></td>
+		{{range .Columns}}
+		<td>
+			{{.}}
+		</td>
+		{{end}}
+	</tr>
+	{{end}}
+
+	<script type="text/javascript">
+		var elems = document.querySelectorAll(".database td");
+		for (var i in elems){
+			var e = elems[i];
+			if (e.innerHTML && /ts:\d+?/.test(e.innerHTML)) {
+				e.innerHTML = etc.date.format(parseInt(e.innerHTML.replace("ts:", "")) * 1000);
+			}
+		}
+	</script>
+</table>
+
+<div class="pager">
+{{range .PagerLinks}}
+<script type="text/javascript">
+	if ({{.Page}} == 0) {
+		document.write('<strong>[ {{$.CurPage}} ]</strong>');
+	} else {
+		document.write('[<a href="{{.Link}}"> {{.Page}} </a>]');
+	}
+</script>
+{{end}}
+</div>

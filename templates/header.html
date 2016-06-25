@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<script type="text/javascript" src="{{.CDN}}/assets/main.min.js"></script>
+<link rel="stylesheet" type="text/css" href="{{.CDN}}/assets/main.css">
+<link rel='icon' type='image/png' href='{{.CDN}}/assets/favicon.png'>
+
+<body>
+<div id="header">
+    <ul id="navibar">
+        <li id="nv-index" class="link"><a href="/">首页</a></li>
+        <li id="nv-article" class="link hide"><a>文章</a></li>
+        <li id="nv-articles" class="link"><a href="/page/1">全部文章</a></li>
+        <li id="nv-tags" class="link"><a href="/tags">标签组</a></li>
+        <li id="nv-user-articles" class="link hide"><a>用户文章</a></li>
+        <li id="nv-tag-articles" class="link hide"><a>标签文章</a></li>
+        <li id="nv-replies" class="link hide"><a>文章回复</a></li>
+        <li id="nv-owa" class="link hide"><a>文章管理</a></li>
+        <li id="nv-messages" class="link hide"><a>私信</a></li>
+        <li id="nv-new-article" class="link"><a href="/new/article/0" id="nv-new-a">发布</a></li>
+        <li id="nv-console" class="link"><a href="/account" id="nv-console-a">管理面板</a></li>
+        <li id="nv-register" class="link hide"><a>注册</a></li>
+        <li id="nv-database" class="link hide"><a>数据库</a></li>
+        <li id="nv-config" class="link hide"><a>配置</a></li>
+        <li id="nv-bootstrap" class="link hide"><a>模板</a></li>
+        <li id="nv-playground" class="link hide"><a>Playground</a></li>
+        <li id="nv-about" class="link hide"><a href="/about">关于 {{.Title}}</a></li>
+    </ul>
+    <div id="pageline"><hr style="display:none;"></div>
+
+    <script type="text/javascript">
+        window.__dateTransform = ["今天","昨天","天前","上周"];
+        window.__title = "{{.Title}}";
+        window.__cdn = "{{.CDN}}";
+        window.__loadingImg = "{{.CDN}}/assets/images/loading.gif";
+        window.__tickImg = "{{.CDN}}/assets/images/tick.png";
+        window.__crossImg = "{{.CDN}}/assets/images/cross.png";
+        window.__logoImg = "{{.CDN}}/assets/images/inazuma.svg";
+
+        etc.id("{{.CurrentNav}}").className = "current"
+        etc.id("nv-console-a").href += "?" + window.location.href;
+        etc.id("nv-new-a").href += "?" + window.location.href;
+
+        function searchSite(){
+            if (etc.id('search-word').value == "") {
+                alert("请输入关键词");
+                return;
+            }
+
+            window.open("https://www.google.com/search?q=site%3A{{.URL}}+" + etc.id('search-word').value);
+        }
+    </script>
+</div>
+
+<div id="container">

@@ -1,0 +1,77 @@
+{{if .List}}
+<title>Bootstrap</title>
+<p id="breadcrumbs">bootstrap</p>
+<ul>
+	{{range .Templates}}
+	<li>
+		<a href="/bootstrap/{{.}}">{{.}}</a>
+	</li>
+	{{end}}
+</ul>
+{{else}}
+
+<script src="/assets/codemirror/lib/codemirror.js"></script>
+<link rel="stylesheet" href="/assets/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="/assets/codemirror/addon/hint/show-hint.css">
+<script src="/assets/codemirror/addon/hint/show-hint.js"></script>
+<script src="/assets/codemirror/addon/hint/xml-hint.js"></script>
+<script src="/assets/codemirror/addon/hint/html-hint.js"></script>
+<script src="/assets/codemirror/mode/xml/xml.js"></script>
+<script src="/assets/codemirror/mode/javascript/javascript.js"></script>
+<script src="/assets/codemirror/mode/css/css.js"></script>
+<script src="/assets/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+
+<title>Bootstrap: {{.File}}</title>
+<p id="breadcrumbs">bootstrap / {{.File}}</p>
+<a href="/bootstrap">返回</a>
+
+<div id="code-main" style="width: 100%">
+</div>
+
+<div id="code" style="display: none">{{.Content}}</div>
+<button onclick="tryUpdate()">保存</button><span id="success"></span>
+
+<script type="text/javascript">
+	editor = CodeMirror(etc.id("code-main"), {
+          mode: "text/html",
+          extraKeys: {"Ctrl-Space": "autocomplete"},
+          value: etc.string.unescape(etc.id("code").innerHTML),
+          viewportMargin: Infinity
+        });
+
+	editor.setSize("100%", "90%");
+	editor.on('mousedown', function(instance, event){
+		var doc = editor.getDoc();
+		var cursor = doc.getCursor(); // gets the line number in the cursor position
+		var line = doc.getLine(cursor.line);
+		if (/<img.+?src="\S+?".+?>/.test(line) && event.ctrlKey) {
+			var m = (line).match(/src="(\S+?)"/);
+			var url = (m[1]);
+			event.preventDefault();
+			
+			// var img = document.createElement("img");
+			// img.src = url;
+			// img.style.position = "absolute";
+			// img.style.maxWidth = "100%";
+			// img.style.maxHeight = "100%";
+			// img.style.top = 0;
+			// img.style.left = 0;
+			// document.body.appendChild(img);
+		}
+	});
+
+	function tryUpdate() {
+		etc.util.ajax.post("/bootstrap/{{.File}}", {
+			"content": editor.getValue(),
+			"csrf": etc.util.CSRF()
+		}).then(function(e, d, x){
+			if (d == "ok"){
+				// {window.location.reload();}
+                etc.id("success").innerHTML = "保存: " + new Date().getTime();
+			}
+			else 
+				alert("发生错误: " + d);
+		})
+	}
+</script>
+{{end}}

@@ -1,0 +1,47 @@
+<title>所有标签</title>
+<p id="breadcrumbs">所有标签 | 
+<a href="javascript:toggleDesc()">显示隐藏描述</a> |
+最近更新
+	{{range .HotTags}}
+		| <a href="/tag/{{.}}/page/1">{{.}}</a>
+	{{end}}
+</p>
+
+<script type="text/javascript">
+	function toggleDesc() {
+		var ds = etc.get(".tag-description");
+		for (var i = 0; i < ds.length; i++) {
+			if (ds[i].style.display == "none")
+				ds[i].style.display = "block";
+			else
+				ds[i].style.display = "none";
+		}
+	}
+</script>
+
+<ul id="tags">
+	<li>
+		<a href="/playground" class="title"><b>play</b>: Playground</a><br>
+	</li>
+	{{range .Tags}}
+		{{if .Visible}}
+			<li><b>{{.Short}}</b>:
+				<a href="/tag/{{.Name}}/page/1" class="title">{{.Name}}</a><br>
+			<div class="tag-description">
+				{{.Description}}
+			</div>
+			</li>
+		{{else}}
+			{{if $.IsLoggedIn}}
+			<li type="circle"><b>{{.Short}}</b>:
+				<a href="/tag/{{.Name}}/page/1" class="title"><em>{{.Name}}</em></a><br>
+				{{if .Restricted}}<div>限制为{{range .PermittedTo}} :{{.}}{{end}}</div>{{end}}
+				<div class="tag-description">
+					{{.Description}}
+				</div>
+			</li>
+			{{end}}
+		{{end}}
+	{{end}}
+</ul>
+<br style="clear: both">

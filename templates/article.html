@@ -1,0 +1,190 @@
+<title>[{{.Article.Tag}}] {{.Article.Title}}</title>
+<p id="breadcrumbs">
+	文章 |
+
+	{{if .Article.Revision}}
+		<a href="javascript:getHistory()">rev.{{.Article.Revision}}</a> |
+	{{else}}
+		无修订 |
+	{{end}}
+
+	作者: <a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> |
+
+	标签: <a href="/tag/{{.Article.Tag}}/page/1">{{.Article.Tag}}</a> |
+
+	<script type="text/javascript">
+		document.write(etc.date.format({{.Article.ModTimestamp}} * 1000, true));
+	</script> |
+
+	{{.Article.Hits}}次查看
+</p>
+<div id="article-history" style="display:none; margin-left: 3em"></div>
+
+<script type="text/javascript">
+function goEdit() {
+	window.location.href="/edit/article/{{.Article.ID}}?" + window.location.href;
+}
+
+function goChange() {
+	etc.let.hide("make-top");
+
+	etc.util.ajax.post("/top/article/{{.Article.ID}}", {"csrf": etc.util.CSRF()}).then(function(e, d, x){
+		if (d == "ok") {
+			alert("操作成功");
+			window.location.reload();
+		}
+		else {
+			alert("发生错误: " + d);
+			etc.let.show("make-top");
+		}
+	});
+}
+
+function goLock() {
+	etc.let.hide("make-locked");
+
+	etc.util.ajax.post("/lock/article/{{.Article.ID}}", {"csrf":etc.util.CSRF()}).then(function(e, d, x){
+		if (d == "ok") {
+			alert("操作成功");
+			window.location.reload();
+		}
+		else {
+			alert("发生错误: " + d);
+			etc.let.show("make-locked");
+		}
+	});
+}
+
+function getHistory() {
+	var ah = etc.id("article-history");
+	if (ah.style.display == "block") {
+		ah.style.display = "none";
+		return
+	}
+	
+	etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
+		if (e && x.status == 503) {
+			setTimeout(getHistory, 1000);
+			return
+		}
+
+		var j = JSON.parse(d);
+		var has = false;
+		var _html = ["</ul>"];
+		for(var k in j) {
+			has = true;
+			_html.push("<li onclick='getHistory()'>" + j[k].User + " - " + etc.date.format(j[k].Date, true) + "</li>");
+		}
+		if (!has) _html.push("<li>无历史版本</li>");
+		_html.push("<ul style='cursor: default'>")
+
+		etc.let.show("article-history").$.html(_html.reverse().join(''));
+	});
+}
+
+function tryDeleteRestore(del){
+	etc.let.hide("delete-restore-article");
+	etc.util.ajax.post("/delete/article/{{.Article.ID}}/" + del, {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+		if (text == "ok") {
+			alert("已经" + (del ? "删除" : "恢复") + "该文章");
+			window.location.reload();
+		} else {
+			alert("发生错误: " + text);
+			etc.let.show("delete-restore-article");
+		}
+	});
+}
+
+function switchView() {
+	var el = etc.id("switch-mode");
+
+	if (el.attr("mode") == "gallery") {
+		el.attr("mode", "normal");
+		el.innerHTML = "文章模式";
+		Gallery._Gallery();
+	} else {
+		el.attr("mode", "gallery");
+		el.innerHTML = "相册模式";
+		Gallery._Normal();
+	}
+}
+</script>
+
+<div>
+	<h1>
+	{{.Article.Title}}
+	</h1>
+
+	<table class="toa"><tr>
+		{{if .Article.ParentID}}
+		{{else}}
+			{{if .Article.IsMessage}}{{else}}
+				<script type="text/javascript">
+				if (etc.util.isNumber("{{.Article.Tag}}"))
+					document.write('<td><a href="/new/message/{{.Article.AuthorID}}"><b>回复私信</b></a></td>');
+				else {
+					if ({{.Article.Children}} > 0)
+						document.write('<td><a href="/reply/{{.Article.ID}}/page/1"><b>{{.Article.Children}}篇回复</b></a></td>');
+
+					document.write('<td><a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1"><b>回复文章</b></a></td>');
+				}
+				</script>
+			{{end}}
+		{{end}}
+		{{if .IsLoggedIn}}
+			{{if .AuthorSelf}}
+				<td><a href='javascript:goEdit()'>编辑</a></td>
+				{{if .Article.Deleted}}
+					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(false)">恢复</a></td>
+				{{else}}
+					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(true)">删除</a></td>
+				{{end}}
+			{{end}}
+
+			{{if .CanMakeTop}}
+				{{if .Article.StayTop}}
+					<td><a id="make-top" href='javascript:goChange()'>取消置顶</a></td>
+				{{else}}
+					<td><a id="make-top" href='javascript:goChange()'>置顶</a></td>
+				{{end}}
+			{{end}}	
+
+			{{if .CanMakeLocked}}
+				{{if .Article.Locked}}
+					<td><a id="make-locked" href='javascript:goLock()'>解锁</a></td>
+				{{else}}
+					<td><a id="make-locked" href='javascript:goLock()'>锁</a></td>
+				{{end}}
+			{{end}}	
+		{{end}}
+		<td><a href="javascript:switchView()" id="switch-mode" mode="gallery">相册模式</a></td>
+	</tr></table>
+
+	<ul>
+		{{if .Article.ParentID}}
+		<li>父文章: <a href="/article/{{.Article.ParentID}}">{{.Article.ParentTitle}}</a></li>
+		{{end}}
+
+		{{if .Article.Deleted}}
+		<li><em>该文章已删除</em></li>
+		{{end}}
+
+		{{if .Article.Locked}}
+		<li><em>文章已被管理员锁定</em></li>
+		{{end}}
+
+		{{if .Article.IsRestricted}}
+		<li><em>您没有查看权限</em></li>
+		{{end}}
+
+		{{if .Article.IsMessage}}
+		<li><em>这是他人私信文章</em></li>
+		{{end}}
+	</ul>
+</div>
+
+<hr>
+
+<div id="article-content">
+{{.Article.Content}}
+</div>

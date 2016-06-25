@@ -1,0 +1,439 @@
+/*
+    This css file inherits from the Debian and the Moinmoin's offical websites
+*/
+
+body {
+    margin: 0;
+    font: normal 100% sans-serif;
+    line-height: 1.5;
+    color: #222;
+    background-color: white;
+}
+#container {
+    margin: 0 10px 0 10px;
+}
+input, select, textarea {
+    -ms-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box; 
+    box-sizing:border-box; 
+}
+
+div.article:hover {
+    background-color: #f0f0f4;
+}
+
+#articles {
+    width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
+    border-top: dotted 1px grey; 
+    border-bottom: dotted 1px grey;
+}
+
+td.fit, th.fit{
+    width:1%;
+    white-space:nowrap;
+}
+
+#articles td.title, #articles th.title {
+    display: block;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+#articles td.fit i { color: #666; }
+#articles th {
+    font-weight: bold; 
+    text-align: center;
+}
+#articles td, th { 
+    padding: 0.33em; 
+    padding-top: 0.5em;
+    padding-bottom: 0.5em; 
+    line-height: 1.2em;
+}
+
+#articles td.pr0 { padding-right: 0; }
+#articles td.pl0 { padding-left: 0; }
+#articles td.center { text-align: center; }
+#articles td span.time { 
+	color: #888; 
+	font-size: 80%;
+	display: none;
+}
+
+#articles .darken {
+    background-color: #f5f6f7; 
+}
+
+.preview-content {
+    color: #888;
+    font-size: 80%;
+}
+
+#article-history {
+    display: none;
+    position: absolute;
+    background: white;
+    border: solid 1px #aaa;
+    padding: 0;
+    margin-top: -10px;
+}
+
+#article-history ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#article-history li {
+    padding: 1px 5px;
+}
+
+#article-history li:nth-child(odd) {
+    background-color: #efefef;
+}
+
+a {
+    text-decoration: none;
+    color:#0035c7; /*#1580aA;*/
+}
+a:visited { color: #54638c; }
+a:hover { color: #00207a; text-decoration: underline; }
+a:active { color: #c2c3c7; }
+a.title { text-decoration: none; }
+a.title:hover { text-decoration: underline; }
+a.block, span.block {
+	text-decoration: none;
+	background-color: #f8f8f8;
+    border: dotted 1px;
+    border-bottom: solid 1px;
+    padding: 2px 5px;
+    border-right: solid 1px;
+}
+
+table.account-info { 
+    width: 100%; 
+    max-width: 800px;
+}
+table.account-info td { 
+    vertical-align: top; 
+    padding-bottom: 2em;
+    display: table-cell;
+}
+.article-image {
+    max-width: 250px;
+    max-height: 250px;
+}
+.small-preview {
+	max-width:100px;
+	max-height:100px;
+}
+#about {
+    text-align: left; margin: auto; max-width:500px; width: 100%
+}
+#about p {
+    text-indent: 2em;
+    text-align: justify;
+}
+
+#breadcrumbs {
+    margin: 0;
+    margin-bottom: 5px;
+    padding: 3px 10px;
+    font-size: 90%;
+    text-transform: lowercase;
+    line-height: 2;
+    background-color: transparent;
+    background-color: #f5f6f7;
+    border-bottom: 1px solid #d2d3d7 ;
+}
+
+badge {
+    background-color: cadetblue;
+    color: white;
+    padding: 0 2px;
+    text-decoration: none;
+    border: solid 1px #568e8f;
+    border-bottom: solid 2px #4b8686;
+    font-weight: bold;
+}
+
+#header {
+    margin: 10px 10px 0 10px;
+}
+
+#navibar {
+    clear: both;  /* problem: clear: right; aligns nicely right of logo,
+                    but lets it float high in the header, disconnected from ground */
+    display: block;
+    margin: 0;
+    padding: 0 10px;
+    font-size: 0.82em;
+    zoom: 1; /* for avoiding a gap between navibar and pageline on IE */
+}
+
+#navibar li {
+    float: left;
+    display: inline;
+    margin: 0 2px;
+    padding: 2px 5px;
+    border: 1px solid #acd;
+    border-bottom: none;
+    white-space: nowrap;
+}
+
+#navibar li.link {
+    background: white; /*url(../img/tab-wiki.png) repeat-x;*/
+}
+
+#navibar a, #navibar a:visited {
+    display: block;
+    color: black;
+    text-decoration: none;    
+}
+
+#navibar li.current a {
+    font-weight: bold;
+}
+
+#navibar li.hide {
+    display: none;
+}
+
+#navibar li:hover {
+    background: #bddfe8;
+    border-color: #94afb6;  
+}
+
+#navibar li.current, #navibar li.current:hover {
+    background: #f5f6f7; /* url(../img/tab-selected.png) repeat-x; */
+    border: 1px solid #aaa;
+    border-bottom: 1px solid #f5f6f7;
+    margin-bottom: -1px;
+}
+
+#navibar a, #navibar a:hover {
+    text-decoration: none;
+}
+
+#pageline {
+    clear: both;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    /* sync these values, line-height is needed for IE */
+    /*height: 4px;*/
+    /*line-height: 4px;*/
+    /*border-bottom: 1px solid #aaa;*/
+    border-top: 1px solid #aaa;
+    background: #f5f6f7;
+}
+
+hr {
+    border:none;
+    border-top: solid 1px #ccc;
+}
+
+.toa {
+    margin: 0.5em 0;
+    border: solid 1px #a9abb3;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.toa td {
+    font-size: 90%;
+    border-top: dotted 1px #a9abb3;
+    padding: 0.25em 0.5em;
+}
+.toa td a {
+    text-decoration: none;
+    display: block;
+}
+.toa td:not([class=no-hover]):hover {
+    background-color: #f0f0f4;
+}
+.toa td.head {
+    background: #a9abb3;
+    color: white;
+    border-right: dotted 1px;
+    
+}
+.pager {margin-top: 5px; }
+
+table._table { 
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin: 1.5em 0;
+}
+
+table._table td { padding: 0.33em; }
+table._table td:first-child {padding-left: 0;}
+table._table td:last-child {padding-right: 0;}
+table._table tr:first-child td {padding-top: 0;}
+table._table tr:last-child td {padding-bottom: 0;}
+table._table td ._f { width: 100%; }
+
+table.database { 
+    width: 100%; 
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 80%;
+}
+table.database td {
+    border: solid 1px #ccc;
+}
+
+.account-id {
+    background: cadetblue;
+    color: white;
+    padding: 0.33em;
+    border-radius: 3px;
+}
+
+.monospace-code {
+    color: #800080;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 90%;
+}
+
+.monospace-code-lucida {
+    font-family: "Lucida Console", Monaco, monospace
+}
+
+div#editor {
+    /*max-width:500px;*/
+    width: 100%;
+}
+
+div#editor table {
+    width: 100%;
+}
+
+div#editor textarea {
+    width: 100%;
+}
+
+#thread-tag {
+    font-family: Consolas;
+}
+
+.view-reply {
+    padding: 0.5em;
+    border: dotted 1px #666;
+}
+
+#footer {
+    font-size: 0.75em;
+    border: 1px solid #dfdfe0;
+    padding:1em;
+    background-color: #f5f6f7;
+    margin: 10px 10px 0 10px;
+    line-height: 1.5em;
+    border-left: 0;
+    border-right: 0;
+    clear: both;
+}
+#tags {padding: 0;}
+#tags li { 
+    float: left; 
+    margin: 0 1em;
+    border-bottom: dotted 1px #888;
+}
+#tags div { font-size: 0.75em; margin-bottom: 5px; }
+
+@media only screen and (max-width: 38em) {
+
+    div#header {
+        margin: 10px 2px 0 2px;
+        padding: 0;
+    }
+    div#logo {
+        position: relative;
+        top: 0;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        min-height: 0;
+    }
+    div#logo a {
+        height: auto;
+        height: 61px;
+    }
+    div#logo a img {
+        margin: 0;
+        padding: 0;
+        display: block;
+    }
+    
+    #container {
+        margin: 0 2px;
+    }
+    #articles td span.time {
+    	display: block;
+    }
+    #articles td.last, #articles th.last {
+    	display: none;
+    }
+    table.account-info td { 
+        display: block;
+    }
+    #footer {
+        margin-left: 2px;
+        margin-right: 2px;
+    }
+}
+@media only screen and (max-width: 30em) {
+    #navibar {
+        padding: 0;
+    }
+    #navibar ul {
+        padding: 0;
+    }
+    #navibar li {
+        float: inherit;
+        display: list-item;
+        list-style-type: none;
+        margin: 0;
+        padding: 2px 5px;
+        border-left: none;
+        border-right: none;
+        white-space: nowrap;
+    }
+    #navibar li.current, #navibar li.current:hover {
+    	background: #f5f6f7;
+    	border: solid 1px #aaa;
+    	margin-bottom: 0;
+    }
+}
+
+span.right-block {
+    display: block; 
+    float:right; 
+    margin-right: 8px
+}
+
+.editor-panel span {
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}
+
+.editor-panel a {
+    text-decoration: none;
+    text-shadow: 0 1px 0 white;
+    color: #ccc;
+    margin: 0 0.2em;
+}
+
+.editor-panel a:hover {
+    color:#0F6080;
+    text-shadow: 0 0 0;
+}
+
+.CodeMirror {
+    height: auto;
+}

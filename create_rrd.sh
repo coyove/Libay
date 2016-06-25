@@ -1,0 +1,1 @@
+rrdtool create ./assets/eth0.rrd -s 120 DS:RX:COUNTER:240:U:U DS:TX:COUNTER:240:U:U RRA:AVERAGE:0.5:30:48 RRA:AVERAGE:0.5:2:720

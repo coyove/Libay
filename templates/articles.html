@@ -1,0 +1,285 @@
+<script type="text/javascript">
+	{{if .IsSearch}}
+		var _end = {{.ArticlesPerPage}} * ({{.CurPage}});
+		var _start = {{.ArticlesPerPage}} * ({{.CurPage}} - 1) + 1;
+
+		document.write("<p id='breadcrumbs'>搜索 / 显示第" + _start + "~" + _end + "条结果</p>");
+		document.title = "{{.CurTag}}的搜索结果 第{{.CurPage}}页";
+	{{else}}
+		document.write('<p id="breadcrumbs">');
+		// document.title = window.__title;
+		if ("{{.CurType}}" == "") {
+			document.title = "全部文章 第{{.CurPage}}页";
+			document.write('全部文章 | 共{{.TotalArticles}}篇');
+		} else if ("{{.CurType}}" == "reply") {
+			document.title = "文章回复 第{{.CurPage}}页";
+			document.write('文章回复 <badge>{{.CurTag}}</badge> | 共{{.TotalArticles}}篇');
+		} else if ("{{.CurType}}" == "ua") {
+			document.title = "用户 第{{.CurPage}}页";
+			document.write('用户 <badge>{{.CurTag}}</badge> | 共{{.TotalArticles}}篇');
+		} else if ("{{.CurType}}" == "message") {
+			document.title = "私信 第{{.CurPage}}页";
+			document.write('共{{.TotalArticles}}条');
+		} else if ("{{.CurType}}" == "owa") {
+			document.title = "用户文章管理 第{{.CurPage}}页";
+			document.write('共{{.TotalArticles}}篇');
+		} else {
+			document.title = "{{.CurTag}} 第{{.CurPage}}页";
+			document.write('{{.CurTag}} | 共{{.TotalArticles}}篇');
+		}
+		document.write(' | 第{{.CurPage}}页</p>');
+	{{end}}
+</script>
+
+{{if .IsOWA}}
+	{{range $key, $value := .Tags}}
+	   <input class="select-tag" type="checkbox" id="check-{{$key}}" name="check-{{$key}}" onclick="updateTag({{$key}})" checked/><label for="check-{{$key}}">{{$value}}</label>
+	{{end}}
+	<script type="text/javascript">
+		var omit = "{{.CurTag}}".split(":");
+		omit.shift();
+		for (var i in omit) {
+			etc.id("check-" + omit[i]).checked = false;
+		}
+
+		function updateTag(tagID) {
+			var r = new RegExp("\\:" + tagID + "(\\:?)");
+			var owa = "{{.CurTag}}"
+			var has = r.test("{{.CurTag}}");
+			var cto = etc.id("check-" + tagID).checked;
+
+			if (!cto && !has) {
+				owa += ":" + tagID;
+			} else if (cto && has) {
+				owa = owa.replace(r, "$1");
+			}
+
+			window.location.href = "/owa/" + owa + "/page/1";
+		}
+
+		function reverseTag() {
+			var omit = "{{.CurTag}}".split(":");
+			var _new = [omit[0]];
+
+			var chks = document.querySelectorAll("input.select-tag");
+			for (var i in chks) {
+				if (chks[i].checked) _new.push(chks[i].id.replace("check-", ""));
+			}
+
+			window.location.href = "/owa/" + _new.join(':') + "/page/1";
+		}
+
+		function checkAllArticles() {
+			var elems = document.querySelectorAll("#articles input[type=checkbox]");
+			for (var i in elems)
+				elems[i].checked = true;
+		}
+
+		function uncheckAllArticles() {
+			var elems = document.querySelectorAll("#articles input[type=checkbox]");
+			for (var i in elems)
+				elems[i].checked = false;
+		}
+
+		function reverseCheckArticles() {
+			var elems = document.querySelectorAll("#articles input[type=checkbox]");
+			for (var i in elems)
+				elems[i].checked = !elems[i].checked;
+		}
+
+		function getChecked() {
+			var ret = [];
+			var elems = document.querySelectorAll("#articles input[type=checkbox]");
+			for (var i in elems) {
+				if (elems[i].getAttribute)
+				ret.push(elems[i].getAttribute("aid"));
+			}
+
+			return ret.join(',');
+		}
+	</script>
+	<button onclick="reverseTag()">反选</button>
+{{end}}
+
+<div class="pager">
+	{{range .PagerLinks}}
+		{{if .Page}}
+			[<a href="{{.Link}}"> {{.Page}} </a>]
+		{{else}}
+			<strong>[ {{$.CurPage}} ]</strong>
+		{{end}}
+	{{end}} 
+</div>
+
+{{if .IsReply}}
+	<table class="toa"><tr>
+			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/{{.CurPage}}">回复该文章</a></td>
+			<td><a href="/article/{{.CurTag}}">返回文章#{{.CurTag}}</a></td>
+	</tr></table>
+
+	<table id="articles">
+	<tr>
+	<th class="fit">回复者</th><th></th><th style="text-align: left">回复标题</th>
+	<th class="fit last">回复日期</th>
+	</tr>
+	{{range .Articles}}
+	<tr class="darken">
+		<td class="fit"><a class="block" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
+		<td class="fit">:</td>
+		<td class="title">
+			<a class="title" href="/article/{{.ID}}">
+				{{.Title}}
+				{{if .Content}}•{{end}}
+			</a><br>
+			<span class="time">
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>
+			</span>
+		</td>
+		<td class="fit last">
+		[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>]
+		</td>
+	</tr>
+	<tr><td colspan="4"><span class="preview-content">{{.Content}}</span></td>
+	</tr>
+	{{end}}
+	</table>
+	<table class="toa"><tr>
+			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/{{.CurPage}}">回复该文章</a></td>
+			<td><a href="/article/{{.CurTag}}">返回文章#{{.CurTag}}</a></td>
+	</tr></table>
+{{else}}
+{{if .IsMessage}}
+	<script type="text/javascript">
+	function tryDelete(id) {
+		etc.let.hide("delete-message");
+		etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			if (text == "ok") {
+				alert("已经删除该消息");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + text);
+				etc.let.show("delete-message");
+			}
+		});
+	}
+	</script>
+	<table id="articles">
+	<tr>
+	<th class="fit">方向</th><th></th><th style="text-align: left">标题</th><th colspan="2">操作</th>
+	<th class="fit last">回复日期</th>
+	</tr>
+	{{range .Messages}}
+	<tr class="darken">
+		<td class="fit">
+		{{if .Sentout}}
+			<em>{{.SenderName}}</em>
+		{{else}}
+			<b><a class="block" href="/user/{{.SenderID}}">{{.SenderName}}</a></b>
+		{{end}}
+		→
+		{{if .Sentout}}
+			<b><a class="block" href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a></b>
+		{{else}}
+			<em>{{.ReceiverName}}</em>
+		{{end}}
+		</td>
+		<td class="fit">:</td>
+		<td class="title">
+		<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+		<span class="time">
+		<script type="text/javascript">document.write(etc.date.format({{.Timestamp}} * 1000, true));</script>
+		</span>
+		</td>
+		<td class="fit">
+		{{if .Sentout}}
+			<a href="/message/{{.ReceiverID}}/page/1">对话</a>
+		{{else}}
+			<a href="/new/message/{{.SenderID}}">回复</a>
+		{{end}}
+		</td>
+		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message">删除</a></td>
+		<td class="fit last">
+			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}} * 1000, true));</script>]
+		</td>
+	</tr>
+	<tr>
+	<td colspan="6"><span class="preview-content">{{.Preview}}</span></td>
+	</tr>
+	{{end}}
+	</table>
+{{else}}
+<table id="articles">
+<tr>
+	<!-- <th class="fit pr0"></th> -->
+	<th class="fit center"></th><!-- <th class="fit pl0"></th>  -->
+	<th style="text-align: left">文章标题</th>
+	<th class="fit">作者</th>
+	<th class="fit">回复</th>
+	<th class="fit">查看</th>
+	<th class="fit last">最后修改</th>
+</tr>
+	{{range .Articles}}
+	<tr class="darken">
+		<!-- <td class="fit pr0">[</td> -->
+		<td class="fit center">
+			{{if .StayTop}}
+			{{if $.ShowAlwaysTop}}
+				<span class="block"><b>置顶</b></span>
+			{{else}}
+				<a class="block" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
+			{{end}}
+			{{else}}
+			<a class="block" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
+			{{end}}
+		</td>
+		<!-- <td class="fit pl0">]</td> -->
+		<td class="title">
+			<a href="/article/{{.ID}}" class="title">
+			{{if .Deleted}}
+				<del>{{.Title}}</del>
+			{{else}}
+				{{.Title}}
+			{{end}}
+			</a><br>
+			<span class="time">
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>
+			</span>
+		</td>
+		<td class="fit center"><a href="/user/{{.AuthorID}}">{{.Author}}</a></td>
+		<td class="fit center"><a href="/reply/{{.ID}}/page/1"><em>{{.Children}}</em></a></td>
+		<td class="fit center"><em>{{.Hits}}</em></td>
+		<td class="fit last">
+			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>]
+		</td>
+	</tr>
+	<tr>
+	<td colspan="8"><span class="preview-content">{{.Content}}</span></td>
+	</tr>
+	{{end}}
+</table>
+{{end}}
+{{end}}
+
+<div class="pager">
+	{{range .PagerLinks}}
+		{{if .Page}}
+		[<a href="{{.Link}}"> {{.Page}} </a>]
+		{{else}}
+		<strong>[ {{$.CurPage}} ]</strong>
+		{{end}}
+	{{end}} 
+	<div style="float:right">
+	前往: <input id="goto-page" type="textbox" style="width:30px; text-align:center"/> (共{{.TotalPages}}页)
+	</div><br style="clear:both">
+</div>
+
+<script type="text/javascript">
+	etc.id("goto-page").onkeyup = function(ev) {
+		if (ev.keyCode == 13) {
+			if ("{{.CurType}}" == "")
+				window.location.href = "/page/" + etc.id("goto-page").value;
+			else
+				window.location.href = "/{{.CurType}}/{{.CurTag}}/page/" + etc.id("goto-page").value;
+		}
+	}
+</script>

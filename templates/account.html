@@ -1,0 +1,405 @@
+{{if .IsLoggedIn}}
+<title>管理面板</title>
+<p id="breadcrumbs">
+    管理面板 | <a href="javascript:tryLogout()" id="logout-button">登出</a> |
+    <a href="/ua/{{.ID}}/page/1">冰山(可见文章)</a> |
+    <a href="/owa/{{.ID}}/page/1">全部文章</a> |
+    <a href="/message/{{.ID}}/page/1">站内信箱</a>
+</p>
+
+{{else}}
+<title>用户登入</title>
+<p id="breadcrumbs">
+    用户登入 | 
+    <a href="javascript:switchLoginPanel()" login="z" id="login-method">使用密码登入</a>
+</p>
+{{end}}
+
+<script type="text/javascript">
+    var returnURL = "/";
+    var privateKeyContent = "";
+    var encryptedContent = "";
+    var waitingPhase2 = false;
+
+    var decryptMessage = function (privkey, passphrase, encoded_message, callback) {
+        var openpgp = window.openpgp;
+        var privKeys = openpgp.key.readArmored(privkey);
+        var privKey = privKeys.keys[0];
+        
+        if (privkey) {
+            var success = privKey.decrypt(passphrase);
+        } else {
+            callback("error");
+            return;
+        }
+
+        function _base64ToArrayBuffer(str) {
+            var binary_string = etc.string.base64Decode(str);
+            var len = binary_string.length;
+            var bytes = new Uint8Array( len );
+            for (var i = 0; i < len; i++)        {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        if (openpgp) {
+            
+            var decrypted = openpgp.decrypt({
+                message: openpgp.message.read(_base64ToArrayBuffer(encoded_message)),
+                // publicKeys: publicKeys.keys,     // for verification (optional)
+                privateKey: privKey,
+                format: 'binary'
+            });
+
+            decrypted.then(function(d) {
+                callback(String.fromCharCode.apply(null, d.data));
+            })
+        } else {
+            callback("error");
+        }
+    }
+
+    var tryLoginPhase1 = function(){
+        etc.let.hide("login-result");
+        if (waitingPhase2) {
+            etc.let.show("login-result").$.html("正在获取交换密钥");
+            return;
+        }
+        waitingPhase2 = true;
+
+        var u = etc.id("uname").value;
+        etc.id("waiting-phase1-response").html("<img src='" + window.__loadingImg + "' width='16'/>");
+
+        etc.util.ajax.post("/login/phase1", {"username" : u, "csrf": etc.util.CSRF()}).then(function (e, data, x) {
+            waitingPhase2 = false;
+
+            if (data.indexOf("Err:") < 0) {
+                var j = JSON.parse(data);
+                etc.let.hide("login-result");
+
+                encryptedContent = j.Key2;
+                // etc.id("encrypted").innerHTML = "..." + j.Key2.substring(20, 36) + "...";
+                etc.id("waiting-phase1-response").html("<img src='" + window.__tickImg + "'/>");
+                etc.let.enable('login-phase2');
+            } else {
+                encryptedContent = "";
+                // etc.id("encrypted").innerHTML = "(请重试)";
+                etc.id("waiting-phase1-response").innerHTML = "<img src='" + window.__crossImg + "'/>";
+                etc.let.disable('login-phase2');
+                etc.let.show("login-result").$.html("交换密钥错误: " + data);
+            }
+        });
+    }
+
+    var tryLoginPhase2 = function(){
+        etc.let.disable('login-phase2');
+        setTimeout(function() {
+            etc.let.enable('login-phase2');
+        }, 5000);
+
+        privateKeyContent = etc.id("private-key-content").value;
+
+        decryptMessage(privateKeyContent, etc.id("pp").value, encryptedContent, function(p) {
+            var u = etc.id("uname").value;
+            var e = etc.id("expire").value;
+
+            if (p == "" || p == "error") {
+                etc.id("login-result").innerHTML = "私钥错误";
+                etc.let.enable('login-phase2');
+                return;
+            }
+
+            etc.util.write("private_key", etc.id("allow-local-storage").checked ? privateKeyContent : "");
+
+            etc.util.ajax.post("/login/phase2", {
+                "username" : u, 
+                "password" : p, 
+                "expire" : e,
+                "csrf": etc.util.CSRF()
+            }).then(function (e, data, x) {
+                if (data.indexOf("ok") == 0) {
+                    window.location.href = returnURL;
+                } else {
+                    etc.let.show("login-result").$.innerHTML = "登入失败: " + data;
+                    etc.let.enable('login-phase2');
+                }
+            });
+        });
+    }
+
+    var tryLogin = function(){
+        etc.let.hide("login-result").disable('simple-login');
+
+        var u = etc.id("simple-username").value;
+        var e = etc.id("simple-expire").value;
+        var p = etc.id("simple-password").value;
+
+        etc.util.ajax.post("/login/phase2", {
+            "username" : u, 
+            "password" : p, 
+            "expire" : e,
+            "csrf": etc.util.CSRF()
+        }).then(function (e, data, x) {
+            if (data.indexOf("ok") == 0) {
+                window.location.href = returnURL;
+            } else {
+                etc.let.show("login-result").$.html("登入失败: " + data);
+                etc.let.enable('simple-login');
+            }
+        });
+    }
+
+    var switchLoginPanel = function() {
+        var t = etc.id("login-method");
+        if (t.getAttribute("login") == "z") {
+            etc.let.hide("login-panel").show("simple-login-panel");
+            t.setAttribute("login", "simple");
+            t.innerHTML = "使用公钥登入";
+        } else {
+            etc.let.hide("simple-login-panel").show("login-panel");
+            t.setAttribute("login", "z");
+            t.innerHTML = "使用密码登入";
+        }
+    }
+
+    {{if .IsLoggedIn}}
+    var tryLogout = function(){
+        etc.let.disable("logout-button");
+        etc.util.ajax.post("/logout").then(function (e, data, x) {
+            window.location.reload();
+        });
+    }
+
+    var tryUpdateComment = function(){
+        etc.let.disable("update-comment");
+
+        etc.util.ajax.post("/user/update/comment", {
+            "comment": etc.id("user-comment").value,
+            "csrf": etc.util.CSRF()
+        }).then(function(e, d, x){
+            if (d == "ok") {
+                alert("更新备注成功");
+                window.location.reload();
+            } else {
+                alert("更新失败: " + d);
+                etc.let.enable("update-comment");
+            }
+        });
+    }
+
+    var tryUpdateAvatar = function(){
+        etc.let.disable("update-avatar");
+
+        etc.util.ajax.$post("/upload", {
+            "image": etc.file("user-avatar"),
+            "avatar": "true",
+            "csrf": etc.util.CSRF()
+        }).then(function(e, d, x){
+            etc.let.enable("update-avatar");
+
+            var j = JSON.parse(d);
+
+            if (j.Avatar == "ok"){
+                alert("上传成功");
+                etc.id("avatar-image").attr("src", j.Thumbnail).parentNode.href = j.Link;
+            } else {
+                alert("发生错误");
+            }
+        });
+    }
+    {{else}}
+    window.onload = function() {
+        etc.util.lazyLoad(["/assets/openpgp.min.js"]);
+
+        var q = (window.location.href).split("?");
+        if (q.length > 1) returnURL = q[1];
+
+        etc.id("uname").on("blur", tryLoginPhase1);
+        etc.id("pp").on("focus", function(ev) { if (ev && encryptedContent == "") tryLoginPhase1(); })
+        .on("keydown", function(ev) { if (ev.keyCode == 13) tryLoginPhase2(); });
+        etc.id("simple-password").on("keydown", function(ev) { if (ev.keyCode == 13) tryLogin(); });
+
+        etc.id('private-key').on('change', function (evt) {
+            var f = evt.target.files[0]; 
+
+            if (f) {
+                var r = new FileReader();
+                r.onload = function(e) { 
+                    privateKeyContent = e.target.result;
+                    etc.id("private-key-content").value = privateKeyContent;
+                }
+                r.readAsText(f);
+            } else { 
+                alert("无法打开文件");
+            }
+        }, false);
+
+        etc.id("encrypted").on("click", tryLoginPhase1);
+        etc.id("private-key-content").on("click", function(ev) { etc.id("private-key").click(); });
+
+        privateKeyContent = etc.util.read("private_key");
+        if (privateKeyContent != null) {
+            etc.id("private-key-content").value = privateKeyContent;
+            etc.id("allow-local-storage").checked = true;
+        }
+
+        etc.let.disable('login-phase2');
+    }
+    {{end}}
+</script>
+
+{{if .IsLoggedIn}}
+<table class="toa" style="display: none" id="admin-nav">
+<tr>
+    <td><a href="/owa/0/page/1">站内所有文章</a></td>
+    <td><a href="/config/sheet">配置文件</a></td>
+    <td><a href="/database/articles/page/1">浏览数据库</a></td>
+    <td><a href="/bootstrap">配置模板</a></td>
+    <td><a href="/status" target="_blank">系统负载</a></td>
+    <td><a href="/cache" target="_blank">缓存状态</a></td>
+</tr>
+</table>
+
+<table class="account-info">
+<tr>
+<td>
+    <h2>用户信息</h2>
+    <p>
+        ID: <b>{{.ID}}</b>, 昵称: <b>{{.NickName}}</b>, 用户名: <b>{{.Name}}</b> <br>
+        用户组: <b>{{.Group}}</b>, 状态: <b><script type="text/javascript">
+            var s = "";
+            switch("{{.Status}}") {
+                case "ok": s = "正常"; break;
+                case "locked": s = "禁用"; break;
+            }
+            document.write(s);
+            if ("{{.Group}}" == "admin") etc.let.show("admin-nav");
+        </script></b><br>权限: <br>{{range .UserPrivilege}}
+        {{if .Value}}[{{.Name}}]{{else}}[<del>{{.Name}}</del>]{{end}}<br>
+        {{end}}
+    </p>
+</td>
+    <td>
+    <h2>登入信息</h2>
+        <p>
+            上次登入时间: 
+            <script type="text/javascript">
+                document.write(etc.date.format({{.LastLoginDate}} * 1000, true))
+            </script><br>
+            上次登入IP: <a href="http://ipinfo.io/{{.LastLoginIP}}" target="_blank">{{.LastLoginIP}}</a><br>
+            注册时间: <script type="text/javascript">
+                        document.write(etc.date.format({{.SignUpDate}} * 1000, true))
+                    </script>
+        </p>
+    </td>
+</tr>
+<tr>
+    <td rowspan="2">
+        <h2>用户图片</h2>
+        <p>
+            <a href="/images/{{.Avatar}}" style="margin-bottom: 1em; display: block;">
+            <img id="avatar-image" style="max-width: 150px; max-height: 150px" src="/thumbs/{{.Avatar}}">
+            </a>
+            <input type="file" id="user-avatar"/>
+            <button onclick="tryUpdateAvatar()" id="update-avatar">上传图像</button>
+        </p>
+    </td>
+    <td>
+        <h2>用户备注</h2>
+        <p>
+            当前: {{.Comment}}<br>
+            修改: <input type="textbox" id="user-comment" style="width: 100%; max-width: 200px" value="{{.Comment}}"/>
+            <button onclick="tryUpdateComment()" id="update-comment">更新备注</button>
+        </p>
+    </td>
+</tr>
+<tr>
+    <td>
+        <h2>其它</h2>
+        <p>
+            上传图片: <script type="text/javascript">
+            document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} 字节)");
+            </script>
+        </p>
+    </td>
+</tr>
+</table>
+{{else}}
+
+<table class="_table" id="login-panel">
+    <tr>
+        <td>用户名:</td>
+        <td><input type="textbox" id="uname" class="_f" /></td>
+        <td><div id="waiting-phase1-response" style="display: block; width:16px"></div></td>
+    </tr>
+    <tr>
+        <td>密码:</td><td >
+        <input type="password" id="pp" class="_f" placeholder="私钥密码" />
+        <input type="textbox" id="password" style="display: none" />
+        </td><td></td>
+    </tr>
+    <tr>
+        <td>私钥:<input type="file" id="private-key" style="display:none" /></td><td>
+           <textarea id="private-key-content" class="_f" cols="37" rows="2" style="cursor: pointer;"></textarea>
+        </td>
+        <td>
+            <span id="encrypted" style="display: none"><a href="javascript:tryLoginPhase1()">刷新</a></span>
+        </td>
+    </tr>
+    <!-- <tr>
+        <td>交换密钥: </td>
+        <td></td>
+    </tr> -->
+    <tr><td></td>
+        <td>
+<input type="checkbox" id="allow-local-storage"/><label for="allow-local-storage">记住私钥内容: localStorage</label>
+        </td>
+    </tr>
+    <tr>
+        <td>Cookie:</td>
+        <td>
+            <select id="expire" class="_f">
+                <option value="1">1 天</option>
+                <option value="7">1 周</option>
+                <option value="30">30 天</option>
+                <option value="0">1 年</option>
+            </select>
+        </td><td></td>
+    </tr>
+    <tr><td></td><td>
+        <button onclick="tryLoginPhase2()" class="wp-btn" id="login-phase2">登入</button>
+    </td></tr>
+</table>
+
+<table class="_table" id="simple-login-panel" style="display:none">
+    <tr>
+        <td>用户名:</td>
+        <td><input type="textbox" id="simple-username" class="_f" /></td>
+    </tr>
+    <tr>
+        <td>密码:</td><td>
+        <input type="password" id="simple-password" class="_f"/>
+    </tr>
+    <tr>
+        <td>Cookie:</td>
+        <td>
+            <select id="simple-expire" class="_f">
+                <option value="1">1 天</option>
+                <option value="7">1 周</option>
+                <option value="30">30 天</option>
+                <option value="0">1 年</option>
+            </select>
+        </td>
+    </tr>
+    <tr><td></td><td>
+        <button onclick="tryLogin()" id="simple-login">登入</button>
+    </td></tr>
+</table>
+
+<div id="login-result"></div>
+
+<p>
+    如果您没有帐号, 可以<a href="/account/register">创建一个</a>。
+</p>
+{{end}}

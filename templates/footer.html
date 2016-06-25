@@ -1,0 +1,21 @@
+</div>
+<script type="text/javascript">
+	function emailTo() {
+		var e = document.querySelector("a.email").innerText.match(/(\w+)/g);
+		window.open("mailto:" + e[0] + "@" + e[1] + "." + e[2]);
+	}
+</script>
+<div id="footer">
+	<div>服务器: {{.ConfigChecksum}}, {{.Checksum}}, 负载: {{.Load}} {{.AvgLoad}}/{{.RunTime}}, 平均: {{.AvgRenderTime}}ms
+
+		<span style="display:none" id="csrf">{{.CSRF}}</span>
+	</div>
+	<hr>
+	<div>
+		权利声明请发送至 <a href="javascript:emailTo()" class="email">abuse&#65312;libay&#46;nl</a>。<br>
+		To report a copyright abuse, please contact at <a href="javascript:emailTo()" class="email">abuse&#65312;libay&#46;nl</a>.<br><br>
+
+		最近修订日期: {{.CurTime}}
+	</div>
+</div>
+</body>

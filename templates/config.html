@@ -1,0 +1,31 @@
+<title>修改设置</title>
+<p id="breadcrumbs">修改设置</p>
+
+<script type="text/javascript">
+	function tryUpdate(){
+		etc.let.disable("update");
+		etc.util.ajax.post("/config/update", {
+			"config": etc.id("config-editor").value,
+			"csrf": etc.util.CSRF()
+		}).then(function(error, text, xhr) {
+			if (text == "ok") {
+				alert("成功更新设置");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + text);
+				etc.let.enable("update");
+			}
+		});
+	}
+</script>
+
+<div id="editor">
+	<textarea id="config-editor" rows="40" style="width:100%;">
+		{{.JSON}}
+	</textarea>
+	<script type="text/javascript">
+	var json = JSON.parse(etc.id("config-editor").value);
+	etc.id("config-editor").value = JSON.stringify(json, null, 4);
+	</script>
+</div>
+<button onclick="tryUpdate();" id="update">更新</button>

@@ -1,0 +1,389 @@
+{{if .Update}}
+<title>编辑文章</title>
+{{else}}
+<title>发布文章</title>
+{{end}}
+
+<p id="breadcrumbs">
+	{{if .Message}}
+		发送私信至用户 <badge>{{.ReplyTo}}</badge> | <a href='/user/{{.ReplyTo}}'>查看用户</a>
+	{{else}}
+		{{if .Update}}
+			修改文章 <badge>{{.ReplyTo}}</badge> | <a href='/article/{{.ReplyTo}}'>查看文章</a>
+		{{else}}
+			{{if .ReplyTo}}
+				回复文章 <badge>{{.ReplyTo}}</badge> | <a href='/article/{{.ReplyTo}}'>查看文章</a>
+			{{else}}
+				发布新文章
+			{{end}}
+		{{end}}
+	{{end}}|
+	身份:
+	{{if .IsLoggedIn}}
+		{{.Username}}
+	{{else}}
+		匿名
+		{{if .Message}}
+		| 匿名用户不能发送私信
+		{{end}}
+	{{end}}
+</p>
+
+{{if .Update}}
+<span id="article-raw-content" style="display: none">
+	{{.Article.Content}}
+</span>
+{{end}}
+
+<script type="text/javascript">
+	window.onload = (function() {
+		etc.util.lazyLoad(["/assets/font.css"]);
+		etc.editor.wrap("thread-content");
+	    etc.id("thread-content").onpaste = function(event){
+			var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+
+			for (index in items) {
+			  	var item = items[index];
+			  	if (item.kind === 'file') {
+			    	var blob = item.getAsFile();
+		    		Animation.start("uploading-sign");
+					etc.editor.uploadImage('file-uploader', blob, null, true); 
+			  	}
+			}
+		}
+
+		{{if .Message}}
+			var sel = etc.get('#thread-tag option');
+			for(var i in sel) {
+				if (sel[i].innerHTML && sel[i].innerHTML[0] == "m") {
+					sel[i].selected = true;
+					etc.let.disable("thread-tag");
+					break;
+				}
+			}
+		{{else}}
+			{{if .ReplyTo}}{{if .Update}}{{else}}
+				var sel = etc.get('#thread-tag option');
+				for(var i in sel) {
+					if (sel[i].innerHTML && sel[i].innerHTML[0] == "r") {
+						sel[i].selected = true;
+						etc.let.disable("thread-tag");
+						break;
+					}
+				}
+			{{end}}{{end}}
+		{{end}}
+
+        {{if .Update}}
+			etc.id("thread-title").value = "{{.Article.Title}}";
+			etc.id("thread-content").innerHTML = (etc.string.unescape(etc.id("article-raw-content").innerHTML));
+			var e = etc.id("thread-tag");
+			for (var i = 0; i < e.options.length; i++) {
+				if(e.options[i].value === "{{.Article.Tag}}") {
+					e.selectedIndex = i;
+					break;
+				}
+			}
+
+			etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
+				var j = JSON.parse(d);
+				var _html = ["历史版本:&nbsp;<select onchange='getHistory(this.value)'>"];
+				for(var k in j) {
+					_html.push("<option value='"+k+"'>历史版本: " + 
+						etc.date.format(j[k].Date, true) + "(" + j[k].User +
+						")</option>");
+				}
+				_html.push("<option value='-1' selected>当前版本: " +
+					etc.date.format({{.Article.ModTimestamp}} * 1000, true) + 
+					"({{.Article.Author}})</option></select>");
+
+				etc.id("article-history-list").innerHTML = _html.join('');
+				etc.let.show("article-history-list");
+				setupScroll();
+			});
+		{{else}}
+			setInterval(saveDraft, 20000);
+			var d = etc.util.read({{if .Message}}"draft-message-{{.ReplyTo}}"{{else}}"draft-{{.ReplyTo}}"{{end}});		
+			if (d && d.length > 1) 
+				etc.id("thread-content").html(d);
+
+			setupScroll();
+		{{end}}
+
+		var te = etc.id("thread-title");
+		te.onchange = te.onkeyup = te.onkeydown = te.onpaste = function() {
+			etc.id("title-length").innerHTML = "(" + etc.string.utf8Len(te.value) + "/512)";
+		}
+  	});
+
+	function setupScroll() {
+		// window.scrollTo(0, 0);
+		var elem = etc.id("editor-container");
+		var t = elem.getBoundingClientRect().top;
+		var dt = document.body.getBoundingClientRect().top;
+		t = t - dt;
+// console.log(t, dt, document.body.scrollTop)
+		window.onscroll = function(e) {
+		    	// console.log(t, document.body.scrollTop)
+		    if (document.body.scrollTop > t) {
+		        elem.setAttribute("style", "position:fixed;left:0;top:0");
+		    } else {
+		        elem.setAttribute("style", "");
+		    }
+		}
+	}
+
+	function tryPost(){
+		etc.let.disable("post-article");
+		var title = etc.id("thread-title").value;
+
+		etc.util.ajax.post("/post/{{.ReplyTo}}", {
+			"tag": etc.id("thread-tag").value,
+			"title": title == "" ? "---" : title,
+			"content": etc.id("thread-content").innerHTML,
+			"update": "{{.Update}}",
+			"csrf": etc.util.CSRF()
+		}).then(function(error, text, xhr) {
+			if (text == "ok") {
+				alert("发布成功");
+				clearDraft(true);
+				goBack();
+			} else {
+				alert("发生错误: " + text);
+				etc.let.enable("post-article");
+			}
+		});
+	}
+
+	function tryPreview(){
+		// etc.let.disable("preview-article");
+
+		// etc.util.ajax.post("/preview", {
+		// 	"content": etc.id("thread-content").innerHTML
+		// }).then(function(error, text, xhr) {
+		// 	etc.let.enable("preview-article");
+		// 	if (text.indexOf("Err::") == 0) {
+		// 		alert("发生错误: " + text);
+		// 	} else {
+		// 		var win = window.open("", "预览 -- " + etc.id("thread-title").value);
+		// 		win.document.body.innerHTML = '<link rel="stylesheet" type="text/css" href="' +
+ 	// 			window.__cdn + '/assets/main.css">' +
+		// 		text;
+		// 	}
+		// });
+		var f = document.createElement("form");
+		f.setAttribute("method", "post");
+		f.setAttribute("action", "/preview");
+		f.setAttribute("target", "_blank");
+
+		var input = document.createElement("input");
+		input.setAttribute("name", "content");
+		input.setAttribute("value", etc.id("thread-content").innerHTML);
+
+		f.appendChild(input);
+		f.submit();
+	}
+
+	function goBack() {
+		var url = window.location.href.split("?");
+		if (url.length < 2) 
+			window.location.href = '/';
+		else
+			window.location.href = (url[1]);
+	}
+
+	function getHistory(id) {
+		if (id == -1)
+			window.location.reload();
+		else
+			etc.util.ajax.get("/article/{{.Article.ID}}/history/" + id).then(function(e,d,x){
+				var j = JSON.parse(d);
+				etc.id("thread-title").value = (etc.string.unescape(j.Title));
+				etc.id("thread-content").innerHTML = (etc.string.unescape(j.Content));
+			});
+	}
+
+	function editHTML() {
+		if (etc.id("html-edit").attr("mode") == "wysiwyg") {
+			etc.let.hide("tr-edit").disable("post-article").show("tr-edit-html");
+			etc.id("html-edit").attr("mode", "html").innerHTML = "返回編輯";
+			etc.id("thread-content-html").value = etc.id("thread-content").innerHTML;
+		} else {
+			etc.let.hide("tr-edit-html").show("tr-edit").enable("post-article");
+			etc.id("html-edit").attr("mode", "wysiwyg").innerHTML = "HTML編輯";
+			etc.id("thread-content").innerHTML = (etc.id("thread-content-html").value);
+		}
+	}
+
+	function saveDraft() {
+
+		{{if .Message}}
+			var d = "draft-message-{{.ReplyTo}}";
+		{{else}}
+			var d = "draft-{{.ReplyTo}}";
+		{{end}}
+		etc.util.write(d, etc.id("thread-content").innerHTML);
+		etc.id("save-draft").innerHTML = "草稿保存于 " + etc.date.now() + " " + d;
+	}
+
+	function clearDraft(p) {
+		
+		{{if .Message}}
+			var d = "draft-message-{{.ReplyTo}}";
+		{{else}}
+			var d = "draft-{{.ReplyTo}}";
+		{{end}}
+		etc.util.storage.delete(d);
+
+		if (p) return;
+
+		alert("已清空: " + d);
+		window.location.reload();
+	}
+
+	function formatHTML(){
+		etc.util.lazyLoad([
+			"/assets/html_beautify/beautify.js",
+			"/assets/html_beautify/beautify-css.js",
+			"/assets/html_beautify/beautify-html.js"
+			], function() {
+				var source = etc.id("thread-content-html").value;
+                opts = {};
+
+	            opts.indent_size = 4;
+	            opts.indent_char = ' ';
+	            opts.max_preserve_newlines = 5;
+
+                etc.id("thread-content-html").value = html_beautify(source, opts);
+			});
+	}
+</script>
+
+<div id="editor">
+<div>
+	标题:&nbsp;<span id="title-length"></span><br>
+	<textarea id="thread-title" rows="2"></textarea>
+</div>
+<div id="article-history-list" style="display: none"></div>
+	<div id="tr-edit">
+      内容:
+		<div id="editor-container" unselectable="on" style="width: 100%;">
+		<div class="nicEdit-panelContain" unselectable="on" style="overflow: hidden; width: 100%; border: 1px solid rgb(204, 204, 204); background-color: rgb(239, 239, 239);">
+		<div class="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em">
+		<style type="text/css">
+			.editor-panel a { font-family: FontAwesome; }
+		</style>
+			<span><span id="uploading-sign"></span>
+			<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xf093;</a>
+			<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xf03e;</a>
+			<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xf0c1;</a>
+			<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xf0cb;</a>
+			<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xf0ca;</a>
+			<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xf0ce;</a>
+			<a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
+			<a href="javascript:etc.editor.insertNode('Bold')" title="粗体">&#xf032;</a>
+			<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
+			<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
+			<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a>
+			
+			<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" 
+			onchange="tryUploadImageImgur()" >
+			<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" 
+			onchange="tryUploadImage()" >
+
+			<script type="text/javascript">
+				function tryUploadImage() {
+					Animation.start("uploading-sign");
+					etc.editor.uploadImage('file-uploader');
+				}
+				function tryUploadImageImgur() {
+					Animation.start("uploading-sign");
+					etc.editor.uploadImage('file-uploader-imgur', null, null, true);
+				}
+			    window.ondragover = function(e) {e.preventDefault();}
+			    window.ondrop = function(e) {
+			    	e.preventDefault(); 
+			    	Animation.start("uploading-sign");
+			    	etc.editor.uploadImage('file-uploader', e.dataTransfer.files[0]); 
+			    }
+			</script>
+			</span>
+		</div></div></div>
+		<div style="width: 100%;border: 1px solid #ccc;border-top: 0;overflow-y: auto;overflow-x: hidden;box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);background-color: white;text-align: left">
+        <div contenteditable="true" id="thread-content" style="width: 100%; min-height: 100px; padding: 4px; box-sizing: border-box"></div>
+        </div>
+		<!-- <textarea rows="10" id="thread-content"></textarea> -->
+	</div>
+
+	<div id="tr-edit-html" style="display:none" colspan="2">
+		HTML: <br>
+		<textarea rows="20" id="thread-content-html"></textarea>
+		<button onclick="formatHTML()">HTML排版 (jsbeautifier)</button>
+		<p style="font-size: 80%">
+		允许HTML标签:
+		{{range $key, $value := .HTMLTags}}
+		&lt;{{$key}}&gt;
+		{{end}}<br>
+		允许标签属性:
+		{{range $key, $value := .HTMLAttrs}}
+		&lt;{{$key}}&gt;
+		{{end}}
+		</p>
+	</div>
+
+	<div>
+		<p>
+			<select id="thread-tag">
+				<option value="">--请选择标签--</option>
+				<optgroup label="通用标签">
+				{{range .Tags}}
+					{{if .Visible}}
+					<option value="{{.Name}}">{{.Short}}: {{.Name}}</option>
+					{{end}}
+				{{end}}
+				</optgroup>
+				{{if .IsLoggedIn}}
+					<optgroup label="隐藏标签">
+					{{range .Tags}}
+						{{if .Visible}}{{else}}{{if .Restricted}}{{else}}
+						<option value="{{.Name}}">{{.Short}}: {{.Name}}</option>
+						{{end}}{{end}}
+					{{end}}
+					</optgroup>
+					<optgroup label="限制标签">
+					{{range .Tags}}
+						{{if .Restricted}}
+						<option value="{{.Name}}">
+							{{.Short}}: {{.Name}} {{range .PermittedTo}}:{{.}} {{end}}
+						</option>
+						{{end}}
+					{{end}}
+					</optgroup>
+				{{end}}
+			</select>
+		</p>
+		<button onclick="tryPost()" id="post-article" {{if .IsLoggedIn}}{{else}}{{if .Message}}disabled{{end}}{{end}}>
+			{{if .Update}}修改{{else}}发布{{end}}
+		</button>
+		<button onclick="tryPreview()" id="preview-article">预览</button>
+		<button onclick="editHTML()" id="html-edit" mode="wysiwyg">HTML編輯</button>
+		<button onclick="clearDraft()">清空草稿</button>
+		<span id="save-draft"></span>
+		
+		{{if .Update}}
+			
+		{{end}}
+	</div>
+	<div>
+		<ul>
+			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
+			<!-- <li>按下Ctrl+V可以直接粘贴图片(上传至imgur)</li> -->
+			<li>回复一篇文章时内容不是必须的，可以把回复写在标题里。一般请选择[r: 回复区]标签</li>
+			<li>
+			使用Gist请编辑HTML并粘贴:<br> 
+			&lt;script src="https://gist.github.com/xxx/1234567890abcdef1234567890abcdef.js"&gt;&lt;/script&gt;
+			</li>
+		</ul>
+	</div>
+
+</div>

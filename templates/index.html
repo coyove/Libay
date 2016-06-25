@@ -1,0 +1,25 @@
+<script type="text/javascript">
+	document.title = window.__title + "首页";
+</script>
+<p id="breadcrumbs"></p>
+	<img id="index-image" src="/assets/images/inazuma.svg" style="width: 100%; max-width: 512px; display: block;"><br>
+
+	<a href="/page/1" class="block">浏览全部文章</a>
+	<a href="/new/article/0" class="block">发布文章</a>
+	<a href="/account" class="block">登入/管理</a>
+	<a href="/about" class="block">关于本站</a>
+	<hr style="border: dashed 1px #ccc">
+	订阅:
+	<a href="/feed/atom" class="block">Atom feed</a>
+	<a href="/feed/rss" class="block">RSS feed</a>
+	<hr style="border: dashed 1px #ccc">
+	<input id="search-word" value="" size="27">
+	<button id="search-button" onclick="searchSite()">搜索</button>
+
+<script type="text/javascript">
+	etc.id('search-word').onkeydown = function(e) {
+        if (e.keyCode == 13) searchSite();
+    };
+
+    etc.id('index-image').src = window.__logoImg;
+</script>

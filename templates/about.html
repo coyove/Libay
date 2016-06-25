@@ -1,0 +1,35 @@
+<p id="breadcrumbs">
+	关于 | 目前注册用户: {{.TotalUsers}} | 总文章数: {{.TotalArticles}}
+</p>
+<title>关于</title>
+
+<div style="text-align: center">
+	<img src="/assets/images/logo.gif" style="margin: auto" width="100">
+	<div id="about">
+		<p>
+			Libay是一个使用OpenPGP验证登入的交流平台，这里的文章发布非常自由，原则上<b>除了</b>以下内容都是允许存在的：
+			<ul>
+				<li>暴力与犯罪</li>
+				<li>儿童色情</li>
+				<li>以盈利为目的的非法版权</li>
+			</ul>
+		</p>
+
+		<p>
+			如果您认为站内文章违反了这些规则，可以发送邮件反映(abuse&#65312;libay&#46;nl)或匿名留言。
+		</p>
+
+		<p>
+			对于访客本站不会储存任何Cookie，但是对于注册用户Cookie则是必须的。如果对安全有所顾虑，请使用浏览器提供的隐身（隐私）浏览模式。
+		</p>
+
+		<p>
+			若要使用公私钥登入，注册时请生成一对新的密钥而不要使用任何已有的密钥。用户注册时上传公钥，登入时输入私钥，所有操作均在本地完成(<a href="https://openpgpjs.org/">openpgp.js</a>)，并不会上传私钥。 <br><br>
+
+			导出公钥时请使用.gpg格式：<br>
+			<b class="monospace-code">gpg --export ABCDFE01 > alice.gpg</b><br>
+			导出私钥时请使用ASCII Armored格式：<br>
+			<b class="monospace-code">gpg --armor --export-secret-key ABCDFE01 > alice.asc</b><br>
+		</p>
+	</div>
+</div>

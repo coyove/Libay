@@ -1,0 +1,112 @@
+<title>Playground</title>
+<p id="breadcrumbs">Playground</p>
+
+<script type="text/javascript" src="/assets/editor.js"></script>
+
+<script type="text/javascript">
+
+</script>
+
+<div id="editor">
+    <table class="account-table">
+        <tr>
+            <td style="font-size: 90%">
+            {{if .AllowAnonymousUpload}}
+                这里可以自由上传图片，大小{{.MaxSize}}MiB以下。上传完成后点击可浏览原尺寸图片。
+            {{else}}
+                已关闭
+            {{end}}
+            </td>
+        </tr>
+        <tr >
+            <td id="tr-edit">
+                图片:<br>
+                <input id="file-uploader" type="file" onchange="upload()" >
+                <span class="right-block">
+                <button onclick="etc.let.show('file-uploader2').hide(this)">File Uploader (Admin)</button>
+                <input id="file-uploader2" type="file" onchange="uploadFile()" style="display:none">
+                </span>
+
+                <script type="text/javascript">
+                function uploadCallback(n, t) {
+                    // console.log(window.location)
+                    var _full = window.location.protocol + "//" + window.location.host + n;
+                    var _html = "<a href='" + n + "' target='_blank'><img src='" + t + "' class='small-preview'></a><br>";
+                    var e = etc.id("uploaded-images");
+                    var r = e.insertRow(1);
+                    r.insertCell(0).innerHTML = _html;
+                    r.insertCell(1).innerHTML = _full;
+                }
+
+                function upload() {
+                    Animation.start("uploading-sign");
+                    etc.editor.uploadImage('file-uploader', null, uploadCallback);
+                }
+
+                function uploadFile() {
+                    var onError = function(A) {
+                        alert("Err::Upload::" + A);
+                        etc.id('file-uploader2').value = "";
+                        Animation.stop();
+                    };
+
+                    Animation.start("uploading-sign");
+                    etc.util.ajax.$post("/upload/file", {
+                        "file": etc.file("file-uploader2")
+                    }).then(function (e, d, x){
+                        try {
+                            var D = JSON.parse(d);
+                        } catch (E) {
+                            return onError("JSON")
+                        }
+                        if (D.Error) return onError("Server_Failure")
+                        var _link = D.Link;
+                        var _full = window.location.protocol + "//" + window.location.host + _link;
+                        var _html = "<a href='" + _full + "' target='_blank'>link</a><br>";
+
+                        var e = etc.id("uploaded-images");
+                        var r = e.insertRow(1);
+                        r.insertCell(0).innerHTML = _html;
+                        r.insertCell(1).innerHTML = _full;
+                        
+                        etc.id('file-uploader2').value = "";
+                        Animation.stop();
+                    });
+                }
+
+                window.ondragover = function(e) {e.preventDefault();}
+                window.ondrop = function(e) {
+                    e.preventDefault(); 
+                    Animation.start("uploading-sign");
+                    etc.editor.uploadImage('file-uploader', e.dataTransfer.files[0], uploadCallback); 
+                }
+                </script>
+            </td>
+        </tr>
+        <tr>
+            <td><span id="uploading-sign"></span></td>
+        </tr>
+        <tr>
+            <td>
+            <table id="uploaded-images">
+            <tr>
+                <th>图片</th>
+                <th>URL</th>
+                <th>日期</th>
+            </tr>
+                {{range .HistoryImages}}
+                <tr>
+                    <td><a href="/images/{{.Name}}"><img src="/thumbs/{{.Name}}" class='small-preview'></a></td>
+                    <td><a href="/images/{{.Name}}">{{.Name}}</a></td>
+                    <td class="fit">
+                    <script type="text/javascript">
+                        document.write(etc.date.format({{.Date}} * 1000, true));
+                    </script>
+                    </td>
+                </tr>
+                {{end}}
+            </table>
+            </td>
+        </tr>
+    </table>
+</div>
