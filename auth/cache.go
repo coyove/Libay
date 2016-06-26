@@ -2,7 +2,7 @@ package auth
 
 import (
 	"container/list"
-	"github.com/golang/glog"
+	// "github.com/golang/glog"
 	"sync"
 	"time"
 )
@@ -78,7 +78,7 @@ func (c *Cache) Start() {
 				// c.removeElement(ele)
 			}
 			c.Unlock()
-			glog.Infoln(count, "items expired then purged")
+			// glog.Infoln(count, "items expired then purged")
 			time.Sleep(time.Duration(c.PurgeInterval) * time.Second)
 		}
 	}()

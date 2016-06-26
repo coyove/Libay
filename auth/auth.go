@@ -200,10 +200,7 @@ func LogIPnv(r *http.Request) bool {
 	}
 }
 
-type LoginPhase1Handler struct {
-}
-
-func (lh *LoginPhase1Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func ServeLoginPhase1(w http.ResponseWriter, r *http.Request) {
 	if !LogIP(r) {
 		w.Write([]byte("Err::Router::Frequent_Access"))
 		return
@@ -268,10 +265,7 @@ Version: GnuPG v2` + "\n" + _password + "\n" + `-----END PGP MESSAGE-----`
 
 }
 
-type LoginPhase2Handler struct {
-}
-
-func (lh *LoginPhase2Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) {
 	if !LogIP(r) {
 		w.Write([]byte("Err::Router::Frequent_Access"))
 		return
@@ -373,25 +367,7 @@ func (lh *LoginPhase2Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 }
 
-// func SetUserToken(w http.ResponseWriter, username string, session_id string, passkey string, expire time.Time) {
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:    "username",
-// 		Value:   username,
-// 		Expires: expire, HttpOnly: true, Path: "/"})
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:    "session",
-// 		Value:   session_id,
-// 		Expires: expire, HttpOnly: true, Path: "/"})
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:    "passkey",
-// 		Value:   passkey,
-// 		Expires: expire, HttpOnly: true, Path: "/"})
-// }
-
-type RegisterHandler struct {
-}
-
-func (rh *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func ServeRegister(w http.ResponseWriter, r *http.Request) {
 	if !LogIP(r) {
 		w.Write([]byte("Err::Router::Frequent_Access"))
 		return
@@ -506,10 +482,7 @@ func (rh *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type LogoutHandler struct {
-}
-
-func (lh *LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func ServeLogout(w http.ResponseWriter, r *http.Request) {
 	u := GetUser(r)
 
 	if !CheckCSRF(r) {

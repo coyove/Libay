@@ -3,13 +3,10 @@ package models
 import (
 	"../auth"
 	"../conf"
-	// "crypto/sha1"
-	_ "database/sql"
-	// "encoding/json"
-	// "fmt"
+
 	"github.com/julienschmidt/httprouter"
-	// "io/ioutil"
-	// "log"
+
+	_ "database/sql"
 	"net/http"
 	"strconv"
 	"strings"

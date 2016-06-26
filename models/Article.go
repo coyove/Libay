@@ -4,22 +4,15 @@ import (
 	"../auth"
 	"../conf"
 
+	"github.com/golang/glog"
+	"github.com/julienschmidt/httprouter"
+
 	_ "database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/glog"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
-	// "reflect"
-	// "os"
-	// "os/exec"
-	// "path/filepath"
-	// "errors"
-	// "regexp"
 	"strconv"
 	"strings"
-	// "sync/atomic"
-	"text/template"
 	"time"
 )
 
@@ -84,16 +77,16 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 	ret := make(map[string]pair)
 
 	rows, err := auth.Gdb.Query(`
-		SELECT
-			history.id, 
-			history.date,
-			users.nickname
-		FROM 
-			history 
-		INNER JOIN 
-			users ON users.id = history.user_id
-		WHERE 
-			article_id = ` + strconv.Itoa(id))
+        SELECT
+            history.id, 
+            history.date,
+              users.nickname
+        FROM 
+            history 
+        INNER JOIN 
+            users ON users.id = history.user_id
+        WHERE 
+            article_id = ` + strconv.Itoa(id))
 
 	if err != nil {
 		glog.Errorln("Database:", err)
@@ -171,13 +164,11 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 		w.Write([]byte("Err::Router::Invalid_Article_Id"))
 		return
 	}
-	// b, _ := strconv.ParseBool(ps.ByName("action"))
-	// w.Write([]byte(auth.DeleteRestoreArticle(u, id, b)))
 
 	var authorID, tag int
 	var locked bool
 
-	if auth.Gdb.QueryRow("select author, tag, locked from articles where id="+strconv.Itoa(id)).
+	if auth.Gdb.QueryRow("SELECT author, tag, locked FROM articles WHERE id = "+strconv.Itoa(id)).
 		Scan(&authorID, &tag, &locked) != nil {
 		w.Write([]byte("Err::DB::Select_Failure"))
 		return
@@ -185,9 +176,7 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 
 	if authorID != u.ID && u.Group != "admin" {
 		if conf.GlobalServerConfig.GetPrivilege(u.Group, "DeleteOthers") {
-
-			// } else if !b && conf.GlobalServerConfig.GetPrivilege(u.Group, "RestoreOthers") {
-
+			// User with "DeleteOthers" privilege can delete others' articles
 		} else {
 			if tag > 100000 && u.ID == tag-100000 {
 				// Both the receiver and the sender can delete the message
@@ -232,12 +221,13 @@ func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// User with "MakeLocked" privilege can (un)lock articles
 	if u.Group != "admin" && !conf.GlobalServerConfig.GetPrivilege(u.Group, "MakeLocked") {
 		w.Write([]byte("Err::Privil::Lock_Action_Denied"))
 		return
 	}
 
-	_, err = auth.Gdb.Exec("update articles set locked=not locked where id=" + strconv.Itoa(id))
+	_, err = auth.Gdb.Exec("UPDATE articles SET locked = NOT locked WHERE id = " + strconv.Itoa(id))
 
 	if err == nil {
 		auth.Gcache.Clear()
@@ -267,7 +257,7 @@ func (th ModelHandler) POST_top_article_ID(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	row, err := auth.Gdb.Query("update articles set stay_top=not stay_top where id=" + strconv.Itoa(id))
+	row, err := auth.Gdb.Query("UPDATE articles SET stay_top = NOT stay_top WHERE id = " + strconv.Itoa(id))
 
 	if err == nil {
 		row.Close()
@@ -323,9 +313,9 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	if r.FormValue("update") == "true" {
-		w.Write([]byte(UpdateArticle(u, id, tag, title, content)))
+		w.Write([]byte(updateArticle(u, id, tag, title, content)))
 	} else {
-		w.Write([]byte(NewArticle(r, u, id, tag, title, content)))
+		w.Write([]byte(newArticle(r, u, id, tag, title, content)))
 	}
 }
 
@@ -337,8 +327,8 @@ func (th ModelHandler) GET_feed_TYPE(w http.ResponseWriter, r *http.Request, ps 
 	}
 }
 
-func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title string, content string) string {
-	_tag := conf.GlobalServerConfig.GetTagIndex(template.HTMLEscapeString(tag))
+func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title string, content string) string {
+	_tag := conf.GlobalServerConfig.GetTagIndex(auth.Escape(tag))
 	_title := auth.Escape(title)
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
 	_preview := auth.Escape(_extracted1)
@@ -369,23 +359,12 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 
 	cooldown := conf.GlobalServerConfig.GetInt(user.Group, "Cooldown")
-
-	// sql := `
-	// 		if now() - (
-	// 			select
-	// 			modified_at
-	// 			from articles
-	// 			where author=%d
-	// 			order by modified_at
-	// 			limit 1
-	// 		) >= '%d seconds'::interval or %d = 0 then
-	// 		insert into articles (title, tag, content, preview, created_at, modified_at, author, parent)
-	// 					values 	 ('%s' , %d , '%s'   , '%s'   , '%s'      , '%s'       , %d    , %d);
-	// 		update articles set modified_at='%s', children=children+1 where id=%d;
-	// 		end if;
-	// 		`
-	sql := `select new_article('%s' , %d , '%s'   , '%s'   , '%s'      , '%s'       , %d    , %d, %d);`
 	_now := auth.Time.Now()
+
+	sql := `SELECT 
+               new_article('%s',   %d,   '%s',     '%s',     '%s', '%s', %d,      %d, %d);`
+	//                      |      |      |         |         |     |    |        |   |
+	//                      V      V      V         V         V     V    V        V   V
 	sql = fmt.Sprintf(sql, _title, _tag, _content, _preview, _now, _now, user.ID, id, cooldown)
 
 	var succ int
@@ -405,8 +384,8 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 }
 
-func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content string) string {
-	_tag := conf.GlobalServerConfig.GetTagIndex(template.HTMLEscapeString(tag))
+func updateArticle(user auth.AuthUser, id int, tag string, title string, content string) string {
+	_tag := conf.GlobalServerConfig.GetTagIndex(auth.Escape(tag))
 	_title := auth.Escape(title)
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
 	_preview := auth.Escape(_extracted1)
@@ -422,17 +401,17 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 	var locked bool
 
 	if auth.Gdb.QueryRow(`
-		SELECT 
-			author,
-			title,
-			content,
-			modified_at,
-			locked,
-			rev 
-		FROM 
-			articles 
-		WHERE 
-			id = `+strconv.Itoa(id)).
+        SELECT 
+            author,
+            title,
+            content,
+            modified_at,
+            locked,
+            rev 
+        FROM 
+            articles 
+        WHERE 
+            id = `+strconv.Itoa(id)).
 		Scan(&authorID, &oldTitle, &oldContent, &oldTime, &locked, &revision) != nil {
 		return "Err::DB::Select_Failure"
 	}
@@ -454,20 +433,13 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 		return "Err::Post::Locked_Article"
 	}
 
-	// sql := `update articles set (title, tag, author, content, preview, modified_at)
-	// 						= 	('%s' , %d , %d    , '%s'   , '%s'   , '%s') where id=%d;
-	// 		insert into history (article_id, date, title, content, user_id)
-	// 					values  (%d        , '%s', '%s' , '%s'   , %d);
-	// 		`
-
-	sql := `select update_article(%d, '%s' , %d , %d    , '%s'   , '%s'   , '%s', '%s',%d, '%s' , '%s'   ,  %d)`
-
-	// sql = fmt.Sprintf(sql, _title, _tag, user.ID, _content, _preview, time.Now().Format(stdTimeFormat), id,
-	// 	id, oldTime.Format(stdTimeFormat), oldTitle, oldContent, authorID)
-
 	cooldown := conf.GlobalServerConfig.GetInt(user.Group, "Cooldown")
-	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, auth.Time.Now(),
-		oldTitle, authorID, oldContent, auth.Time.F(oldTime), cooldown)
+
+	sql := `SELECT 
+            update_article(%d, '%s',   %d,   %d,      '%s',     '%s',     '%s',            '%s',     %d,       '%s',       '%s',                 %d)`
+	//                     |    |      |     |         |         |         |                |        |          |           |                    |
+	//                     V    V      V     V         V         V         V                V        V          V           V                    V
+	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, auth.Time.Now(), oldTitle, authorID, oldContent, auth.Time.F(oldTime), cooldown)
 
 	var succ int
 	err := auth.Gdb.QueryRow(sql).Scan(&succ)

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"sync"
 )
 
 type ServerConfig struct {
@@ -41,6 +42,7 @@ type ServerConfig struct {
 	MaxRevision             int
 	PlaygroundMaxImages     int
 	AllowAnonymousUpload    bool
+	AccessLogging           bool
 	Privilege               map[string]interface{}
 
 	HTMLTags  map[string]bool
@@ -54,10 +56,11 @@ type ServerConfig struct {
 
 	ConfigPath string
 
-	sortedTags  map[int]string
-	sortedTags2 map[int]Tag
-	// sortedVisibleTags []string
+	sortedTags     map[int]string
+	sortedTags2    map[int]Tag
 	presetSqlQuery string
+
+	sync.RWMutex
 }
 
 type Tag struct {
@@ -70,14 +73,23 @@ type Tag struct {
 }
 
 func (sc *ServerConfig) GetTags() map[int]string {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	return sc.sortedTags
 }
 
 func (sc *ServerConfig) GetComplexTags() map[int]Tag {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	return sc.sortedTags2
 }
 
 func (sc *ServerConfig) GetPrivilege(group string, name string) bool {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	if group == "admin" {
 		return true
 	}
@@ -92,6 +104,9 @@ func (sc *ServerConfig) GetPrivilege(group string, name string) bool {
 }
 
 func (sc *ServerConfig) GetInt(group string, name string) int {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	if group == "admin" {
 		return 0
 	}
@@ -106,11 +121,15 @@ func (sc *ServerConfig) GetInt(group string, name string) int {
 }
 
 func (sc *ServerConfig) GetSQL() string {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	return sc.presetSqlQuery
 }
 
 func (sc *ServerConfig) InitTags(db *sql.DB) {
-	// list := sc.Tags.(map[string]interface{})
+	sc.Lock()
+	defer sc.Unlock()
 
 	ret := make(map[int]string)
 	ret2 := make(map[int]Tag)
@@ -176,6 +195,9 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 }
 
 func (sc *ServerConfig) GetTagIndex(t string) int {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	_t, _ := strconv.Atoi(t)
 	if _t >= 100000 {
 		return _t
@@ -191,6 +213,9 @@ func (sc *ServerConfig) GetTagIndex(t string) int {
 }
 
 func (sc *ServerConfig) GetIndexTag(t int) string {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	if t >= 100000 {
 		return sc.sortedTags[sc.MessageArea]
 	}
@@ -199,6 +224,9 @@ func (sc *ServerConfig) GetIndexTag(t int) string {
 }
 
 func (sc *ServerConfig) GetImagesAllowedGroups() []string {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	list := sc.ImagesAllowed.([]interface{})
 	ret := make([]string, len(list))
 	for i, v := range list {
@@ -209,6 +237,9 @@ func (sc *ServerConfig) GetImagesAllowedGroups() []string {
 }
 
 func (sc *ServerConfig) GetPostsAllowedGroups() []string {
+	sc.RLock()
+	defer sc.RUnlock()
+
 	list := sc.PostsAllowed.([]interface{})
 	ret := make([]string, len(list))
 	for i, v := range list {

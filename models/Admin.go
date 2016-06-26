@@ -33,7 +33,7 @@ func ReadTableDirect(table string, page int, whereStat string) ([]string, []Tabl
 	columnNames := make([]string, 0)
 
 	if whereStat != "" {
-		whereStat = "where " + whereStat
+		whereStat = " WHERE " + whereStat
 	}
 
 	_app := conf.GlobalServerConfig.ArticlesPerPage
@@ -56,12 +56,21 @@ func ReadTableDirect(table string, page int, whereStat string) ([]string, []Tabl
 
 	count = len(columnNames)
 
-	if auth.Gdb.QueryRow("select count(id) from "+table+" "+whereStat).Scan(&rowCount) != nil {
+	if auth.Gdb.QueryRow(`
+        SELECT
+            COUNT(id)
+        FROM `+table+
+		whereStat).Scan(&rowCount) != nil {
 		return columnNames, ret, 0
 	}
 
-	rows, err := auth.Gdb.Query("select * from " + table + " " + whereStat +
-		" order by id desc offset " + strconv.Itoa(_start) + " limit " + strconv.Itoa(_app))
+	rows, err := auth.Gdb.Query(`
+        SELECT
+            *
+        FROM ` + table +
+		whereStat + `
+        ORDER BY id DESC 
+        OFFSET ` + strconv.Itoa(_start) + " LIMIT " + strconv.Itoa(_app))
 	if err != nil {
 		return columnNames, ret, 0
 	}
@@ -278,7 +287,10 @@ func (th ModelHandler) POST_config_update(w http.ResponseWriter, r *http.Request
 	newConfig := []byte(r.FormValue("config"))
 
 	err1 := ioutil.WriteFile(path+".bk", oldConfig, 0644)
+
+	conf.GlobalServerConfig.Lock()
 	err3 := json.Unmarshal(newConfig, &conf.GlobalServerConfig)
+	conf.GlobalServerConfig.Unlock()
 
 	if err1 == nil && err3 == nil {
 		glog.Infoln("Config updated")
@@ -291,8 +303,9 @@ func (th ModelHandler) POST_config_update(w http.ResponseWriter, r *http.Request
 			w.Write([]byte("Err::IO::File_IO_Failure"))
 		}
 	} else {
+		conf.GlobalServerConfig.Lock()
 		json.Unmarshal(oldConfig, &conf.GlobalServerConfig)
-		// conf.GlobalServerConfig.InitTags(auth.Gdb)
+		conf.GlobalServerConfig.Unlock()
 
 		glog.Errorln("New config is invalid")
 		w.Write([]byte("Err::IO::File_IO_Failure"))
