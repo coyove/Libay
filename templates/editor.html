@@ -47,7 +47,9 @@
 			  	if (item.kind === 'file') {
 			    	var blob = item.getAsFile();
 		    		Animation.start("uploading-sign");
-					etc.editor.uploadImage('file-uploader', blob, null, true); 
+					etc.editor.uploadImage([blob], function() {
+						Animation.stop();
+					}, {"editor": "thread-content"});
 			  	}
 			}
 		}
@@ -156,32 +158,18 @@
 	}
 
 	function tryPreview(){
-		// etc.let.disable("preview-article");
+		etc.let.disable("preview-article");
 
-		// etc.util.ajax.post("/preview", {
-		// 	"content": etc.id("thread-content").innerHTML
-		// }).then(function(error, text, xhr) {
-		// 	etc.let.enable("preview-article");
-		// 	if (text.indexOf("Err::") == 0) {
-		// 		alert("发生错误: " + text);
-		// 	} else {
-		// 		var win = window.open("", "预览 -- " + etc.id("thread-title").value);
-		// 		win.document.body.innerHTML = '<link rel="stylesheet" type="text/css" href="' +
- 	// 			window.__cdn + '/assets/main.css">' +
-		// 		text;
-		// 	}
-		// });
-		var f = document.createElement("form");
-		f.setAttribute("method", "post");
-		f.setAttribute("action", "/preview");
-		f.setAttribute("target", "_blank");
-
-		var input = document.createElement("input");
-		input.setAttribute("name", "content");
-		input.setAttribute("value", etc.id("thread-content").innerHTML);
-
-		f.appendChild(input);
-		f.submit();
+		etc.util.ajax.post("/preview", {
+			"content": etc.id("thread-content").innerHTML
+		}).then(function(error, text, xhr) {
+			etc.let.enable("preview-article");
+			if (text.indexOf("Err::") == 0) {
+				alert("发生错误: " + text);
+			} else {
+				etc.id("thread-content").innerHTML = text;
+			}
+		});
 	}
 
 	function goBack() {
@@ -233,7 +221,7 @@
 		{{else}}
 			var d = "draft-{{.ReplyTo}}";
 		{{end}}
-		etc.util.storage.delete(d);
+		etc.util.storage.remove(d);
 
 		if (p) return;
 
@@ -276,6 +264,7 @@
 			<span><span id="uploading-sign"></span>
 			<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xf093;</a>
 			<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xf03e;</a>
+			<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xf14c;</a>
 			<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xf0c1;</a>
 			<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xf0cb;</a>
 			<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xf0ca;</a>
@@ -286,25 +275,48 @@
 			<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
 			<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a>
 			
-			<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" 
-			onchange="tryUploadImageImgur()" >
-			<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" 
-			onchange="tryUploadImage()" >
+			<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
+			<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
 
 			<script type="text/javascript">
-				function tryUploadImage() {
-					Animation.start("uploading-sign");
-					etc.editor.uploadImage('file-uploader');
+				etc.id("file-uploader").onchange = function(e) {
+					tryUploadImage('', e);
 				}
-				function tryUploadImageImgur() {
-					Animation.start("uploading-sign");
-					etc.editor.uploadImage('file-uploader-imgur', null, null, true);
+
+				etc.id("file-uploader-imgur").onchange = function(e) {
+					tryUploadImage('-imgur', e);
 				}
+
+				function tryUploadImage(imgur, e) {
+					Animation.start("uploading-sign");
+					etc.editor.uploadImage(etc.file('file-uploader' + imgur, e), function() {
+						etc.id("file-uploader" + imgur).value = "";
+						Animation.stop();
+					}, {"editor": "thread-content", "imgur": imgur});
+				}
+
+				function openUploader() {
+					var w = window.open("", "",
+						"resizable=no, toolbar=no, scrollbars=no, menubar=no, status=no, directories=no, width=500, height=500");
+					w.document.body.innerHTML = ['<form method="post" id="ie-upload-workaround" ',
+					'action="https://www.libay.nl/upload" ',
+					'enctype="multipart/form-data" encoding="multipart/form-data">',
+					'<input name="image" type="file" id="form-uploader"/>',
+					'<input name="width" type="hidden" value="1024" />',
+					'<input name="height" type="hidden" value="1024" />',
+					'<input name="direct" type="hidden" value="direct" />',
+					'<input type="submit" value="上传" /></form>'].join('');
+					
+				}
+				
 			    window.ondragover = function(e) {e.preventDefault();}
 			    window.ondrop = function(e) {
 			    	e.preventDefault(); 
+
 			    	Animation.start("uploading-sign");
-			    	etc.editor.uploadImage('file-uploader', e.dataTransfer.files[0]); 
+			    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function() {
+						Animation.stop();
+					}, {"editor": "thread-content"});
 			    }
 			</script>
 			</span>

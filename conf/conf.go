@@ -30,18 +30,17 @@ type ServerConfig struct {
 	ReplyArea     int
 	MessageArea   int
 
-	AllowRegistration       bool
-	ImagesAllowed           interface{}
-	PostsAllowed            interface{}
-	ArticlesPerPage         int
-	Tags                    interface{}
-	AdminPassword           string
-	MaxImageSize            int
-	MaxImageSizeGuest       int
+	AllowRegistration bool
+	ImagesAllowed     interface{}
+	PostsAllowed      interface{}
+	ArticlesPerPage   int
+	Tags              interface{}
+	AdminPassword     string
+	MaxImageSize      int
+
 	MaxArticleContentLength int
 	MaxRevision             int
 	PlaygroundMaxImages     int
-	AllowAnonymousUpload    bool
 	AccessLogging           bool
 	Privilege               map[string]interface{}
 

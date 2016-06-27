@@ -8,7 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	_ "database/sql"
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -66,7 +66,7 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 	// u := auth.GetUser(r)
 
 	if err != nil {
-		w.WriteHeader(503)
+		Return(w, 503)
 		return
 	}
 
@@ -77,20 +77,20 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 	ret := make(map[string]pair)
 
 	rows, err := auth.Gdb.Query(`
-        SELECT
-            history.id, 
-            history.date,
-              users.nickname
-        FROM 
-            history 
-        INNER JOIN 
-            users ON users.id = history.user_id
-        WHERE 
-            article_id = ` + strconv.Itoa(id))
+	    SELECT
+	        history.id,
+	        history.date,
+	          users.nickname
+	    FROM
+	        history
+	    INNER JOIN
+	        users ON users.id = history.user_id
+	    WHERE
+	        article_id = ` + strconv.Itoa(id))
 
 	if err != nil {
 		glog.Errorln("Database:", err)
-		w.WriteHeader(503)
+		Return(w, 503)
 		return
 	}
 
@@ -106,136 +106,117 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 		ret[strconv.Itoa(id)] = pair{t, username}
 	}
 
-	buf, _ := json.Marshal(ret)
-	w.Write(buf)
+	Return(w, ret)
 }
 
 func (th ModelHandler) GET_article_ID_history_HID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	aid, err := strconv.Atoi(ps.ByName("id"))
 	hid, err2 := strconv.Atoi(ps.ByName("hid"))
 	if err != nil || err2 != nil {
-		w.WriteHeader(503)
+		Return(w, 503)
 		return
 	}
 
 	u := auth.GetUser(r)
 
-	var d bool
-	var uid int
-	if auth.Gdb.QueryRow("SELECT deleted, author FROM articles WHERE id = "+strconv.Itoa(aid)).Scan(&d, &uid) != nil {
-		w.WriteHeader(503)
+	cur, err := auth.Select1("articles", aid, "deleted", "author")
+	if err != nil {
+		Return(w, 503)
 		return
 	}
 
-	if d {
-		if uid != u.ID || !conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") {
-			w.WriteHeader(503)
+	if cur["deleted"].(bool) {
+		if cur["author"].(int) != u.ID || !conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") {
+			Return(w, 503)
 			return
 		}
 	}
 
-	var c, t string
-	if auth.Gdb.QueryRow("SELECT title, content FROM history WHERE id = "+strconv.Itoa(hid)).Scan(&t, &c) != nil {
-		w.WriteHeader(503)
+	if his, err := auth.Select1("history", hid, "title", "content"); err != nil {
+		Return(w, 503)
 	} else {
-		w.Write([]byte("{\"Title\":\"" + t + "\", \"Content\": \"" + c + "\"}"))
+		Return(w, `{
+            "Title": "`+his["title"].(string)+`", 
+            "Content": "`+his["content"].(string)+`"
+        }`)
 	}
 }
 
 func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !auth.LogIP(r) {
-		w.Write([]byte("Err::Router::Frequent_Access"))
+		Return(w, "Err::Router::Frequent_Access")
 		return
 	}
 
 	u := auth.GetUser(r)
 	if !u.CanPost() {
-		w.Write([]byte("Err::Privil::Post_Action_Denied"))
+		Return(w, "Err::Privil::Post_Action_Denied")
 		return
 	}
 
 	if !auth.CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
+		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		w.Write([]byte("Err::Router::Invalid_Article_Id"))
+		Return(w, "Err::Router::Invalid_Article_Id")
 		return
 	}
 
-	var authorID, tag int
-	var locked bool
-
-	if auth.Gdb.QueryRow("SELECT author, tag, locked FROM articles WHERE id = "+strconv.Itoa(id)).
-		Scan(&authorID, &tag, &locked) != nil {
-		w.Write([]byte("Err::DB::Select_Failure"))
+	cur, err := auth.Select1("articles", id, "author", "tag", "locked")
+	if err != nil {
+		Return(w, "Err::DB::Select_Failure")
 		return
 	}
 
-	if authorID != u.ID && u.Group != "admin" {
+	if cur["author"].(int) != u.ID && u.Group != "admin" {
 		if conf.GlobalServerConfig.GetPrivilege(u.Group, "DeleteOthers") {
 			// User with "DeleteOthers" privilege can delete others' articles
 		} else {
-			if tag > 100000 && u.ID == tag-100000 {
+			if u.ID == cur["tag"].(int)-100000 {
 				// Both the receiver and the sender can delete the message
 			} else {
-				w.Write([]byte("Err::Privil::Delete_Restore_Action_Denied"))
+				Return(w, "Err::Privil::Delete_Restore_Action_Denied")
 				return
 			}
 		}
 	}
 
-	if locked && !conf.GlobalServerConfig.GetPrivilege(u.Group, "MakeLocked") {
-		w.Write([]byte("Err::Post::Locked_Article"))
+	if cur["locked"].(bool) && !conf.GlobalServerConfig.GetPrivilege(u.Group, "MakeLocked") {
+		Return(w, "Err::Post::Locked_Article")
 		return
 	}
 
-	_, err = auth.Gdb.Exec("UPDATE articles SET deleted = NOT deleted WHERE id = " + strconv.Itoa(id))
-
-	if err == nil {
-		auth.Gcache.Clear()
-		w.Write([]byte("ok"))
-	} else {
-		glog.Errorln("Database:", err)
-		w.Write([]byte("Err::DB::Update_Failure"))
-	}
+	Return(w, auth.InvertArticleState(id, "deleted"))
 }
 
 func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	if !u.CanPost() {
-		w.Write([]byte("Err::Privil::Post_Action_Denied"))
+		Return(w, "Err::Privil::Post_Action_Denied")
 		return
 	}
 
 	if !auth.CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
+		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		w.Write([]byte("Err::Router::Invalid_Article_Id"))
+		Return(w, "Err::Router::Invalid_Article_Id")
 		return
 	}
 
 	// User with "MakeLocked" privilege can (un)lock articles
 	if u.Group != "admin" && !conf.GlobalServerConfig.GetPrivilege(u.Group, "MakeLocked") {
-		w.Write([]byte("Err::Privil::Lock_Action_Denied"))
+		Return(w, "Err::Privil::Lock_Action_Denied")
 		return
 	}
 
-	_, err = auth.Gdb.Exec("UPDATE articles SET locked = NOT locked WHERE id = " + strconv.Itoa(id))
-
-	if err == nil {
-		auth.Gcache.Clear()
-		w.Write([]byte("ok"))
-	} else {
-		glog.Errorln("Database:", err)
-		w.Write([]byte("Err::DB::Update_Failure"))
-	}
+	Return(w, auth.InvertArticleState(id, "locked"))
 }
 
 func (th ModelHandler) POST_top_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -243,59 +224,50 @@ func (th ModelHandler) POST_top_article_ID(w http.ResponseWriter, r *http.Reques
 
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		w.Write([]byte("Err::Router::Invalid_Article_Id"))
+		Return(w, "Err::Router::Invalid_Article_Id")
 		return
 	}
 
 	if !auth.CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
+		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 
 	if !conf.GlobalServerConfig.GetPrivilege(u.Group, "AnnounceArticle") {
-		w.Write([]byte("Err::Privil::Announce_Action_Denied"))
+		Return(w, "Err::Privil::Announce_Action_Denied")
 		return
 	}
 
-	row, err := auth.Gdb.Query("UPDATE articles SET stay_top = NOT stay_top WHERE id = " + strconv.Itoa(id))
-
-	if err == nil {
-		row.Close()
-		auth.Gcache.Clear()
-		w.Write([]byte("ok"))
-	} else {
-		glog.Errorln("Database:", err)
-		w.Write([]byte("Err::DB::Update_Failure"))
-	}
+	Return(w, auth.InvertArticleState(id, "stay_top"))
 }
 
 func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !auth.LogIP(r) {
-		w.Write([]byte("Err::Router::Frequent_Access"))
+		Return(w, "Err::Router::Frequent_Access")
 		return
 	}
 
 	u := auth.GetUser(r)
 	if !u.CanPost() {
-		w.Write([]byte("Err::Privil::Post_Action_Denied"))
+		Return(w, "Err::Privil::Post_Action_Denied")
 		return
 	}
 
 	if !auth.CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
+		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		w.Write([]byte("Err::Router::Invalid_Article_Id"))
+		Return(w, "Err::Router::Invalid_Article_Id")
 		return
 	}
 
 	content := r.FormValue("content")
 	if len(content) > conf.GlobalServerConfig.MaxArticleContentLength*1024 {
 		ex := len(content) - conf.GlobalServerConfig.MaxArticleContentLength*1024
-		w.Write([]byte(fmt.Sprintf("Err::Post::Content_Too_Long_%d_KiB_Exceeded", ex/1024)))
+		Return(w, fmt.Sprintf("Err::Post::Content_Too_Long_%d_KiB_Exceeded", ex/1024))
 		return
 	}
 
@@ -303,7 +275,7 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 	if len(title) > 512 {
 		title = title[:512]
 	} else if len(title) < 3 {
-		w.Write([]byte("Err::Post::Title_Too_Short"))
+		Return(w, "Err::Post::Title_Too_Short")
 		return
 	}
 
@@ -313,17 +285,22 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	if r.FormValue("update") == "true" {
-		w.Write([]byte(updateArticle(u, id, tag, title, content)))
+		Return(w, updateArticle(u, id, tag, title, content))
 	} else {
-		w.Write([]byte(newArticle(r, u, id, tag, title, content)))
+		Return(w, newArticle(r, u, id, tag, title, content))
 	}
 }
 
-func (th ModelHandler) GET_feed_TYPE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (th ModelHandler) GET_feed_TYPE_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	page, err := strconv.Atoi(ps.ByName("page"))
+	if err != nil {
+		ServePage(w, "404", nil)
+		return
+	}
 	if ps.ByName("type") == "rss" {
-		w.Write([]byte(auth.GenerateRSS(false)))
+		Return(w, auth.GenerateRSS(false, page))
 	} else {
-		w.Write([]byte(auth.GenerateRSS(true)))
+		Return(w, auth.GenerateRSS(true, page))
 	}
 }
 

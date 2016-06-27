@@ -2,11 +2,16 @@ package auth
 
 import (
 	"../conf"
+
+	"github.com/golang/glog"
+	_html "golang.org/x/net/html"
+
 	"bytes"
 	"crypto/sha1"
 	"fmt"
-	_html "golang.org/x/net/html"
 	"html"
+	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -203,4 +208,183 @@ func MakeHash(pass ...interface{}) string {
 		bpl = tmp[:20]
 	}
 	return fmt.Sprintf("%x", bpl)
+}
+
+func Select1(table string, id int, columns ...string) (map[string]interface{}, error) {
+	sql := "SELECT "
+	for _, col := range columns {
+		sql += "\"" + col + "\","
+	}
+	sql = sql[:len(sql)-1] + " FROM " + table + " WHERE id = " + strconv.Itoa(id)
+
+	count := len(columns)
+	ret := make(map[string]interface{})
+	ptrCols := make([]interface{}, count)
+	ptrs := make([]interface{}, count)
+
+	for i, _ := range ptrs {
+		ptrCols[i] = &(ptrs[i])
+	}
+
+	err := Gdb.QueryRow(sql).Scan(ptrCols...)
+
+	if err != nil {
+		return ret, err
+	}
+
+	for i, v := range ptrCols {
+		_v := *(v.(*interface{}))
+		switch _v.(type) {
+		case int64:
+			// For convenient
+			// Since we only run on 64bit platform, there is no difference between int and int64
+			ret[columns[i]] = int(_v.(int64))
+		case []uint8:
+			// []uint8 -> []byte -> string
+			ret[columns[i]] = string(_v.([]uint8))
+		default:
+			ret[columns[i]] = _v
+		}
+	}
+
+	return ret, nil
+}
+
+type TableRow struct {
+	Columns     []string
+	ColumnTypes []string
+	ColumnName  []string
+}
+
+func ReadTableDirect(table string, page int, whereStat string) ([]string, []TableRow, int) {
+	ret := make([]TableRow, 0)
+	columnNames := make([]string, 0)
+
+	if whereStat != "" {
+		whereStat = " WHERE " + whereStat
+	}
+
+	_app := conf.GlobalServerConfig.ArticlesPerPage
+	_start := _app * (page - 1)
+
+	var count, rowCount int
+
+	cols, err := Gdb.Query("SELECT column_name FROM information_schema.columns WHERE table_name = '" + table + "'")
+	if err != nil {
+		return columnNames, ret, 0
+	}
+
+	defer cols.Close()
+
+	for cols.Next() {
+		var cn string
+		cols.Scan(&cn)
+		columnNames = append(columnNames, cn)
+	}
+
+	count = len(columnNames)
+
+	if Gdb.QueryRow(`
+        SELECT
+            COUNT(id)
+        FROM `+table+
+		whereStat).Scan(&rowCount) != nil {
+		return columnNames, ret, 0
+	}
+
+	rows, err := Gdb.Query(`
+        SELECT
+            *
+        FROM ` + table +
+		whereStat + `
+        ORDER BY id DESC 
+        OFFSET ` + strconv.Itoa(_start) + " LIMIT " + strconv.Itoa(_app))
+	if err != nil {
+		return columnNames, ret, 0
+	}
+
+	defer rows.Close()
+
+	ptrCols := make([]interface{}, count)
+	ptrs := make([]interface{}, count)
+	for i, _ := range ptrs {
+		ptrCols[i] = &(ptrs[i])
+	}
+
+	for rows.Next() {
+		rows.Scan(ptrCols...)
+		row := TableRow{}
+		row.ColumnTypes = make([]string, 0)
+		row.Columns = make([]string, 0)
+
+		for _, v := range ptrCols {
+			_v := *(v.(*interface{}))
+			row.ColumnTypes = append(row.ColumnTypes, reflect.ValueOf(_v).String())
+
+			s := ""
+
+			switch _v.(type) {
+			case []uint8:
+				s = string(_v.([]byte))
+			case int64:
+				s = strconv.Itoa(int(_v.(int64)))
+			case bool:
+				s = strconv.FormatBool(_v.(bool))
+			case time.Time:
+				ts := (_v.(time.Time)).Unix()
+				s = "ts:" + strconv.Itoa(int(ts))
+			default:
+				// log.Println("unknown type", reflect.ValueOf(_v).String())
+			}
+
+			if len(s) > 48 {
+				s = s[:48] + "..."
+			}
+			row.Columns = append(row.Columns, s)
+		}
+		ret = append(ret, row)
+	}
+
+	return columnNames, ret, rowCount
+}
+
+func DeleteRowsDirect(table string, ids []int) string {
+	sql := `delete from ` + table + ` where `
+	for i, v := range ids {
+		sql += "id = " + strconv.Itoa(v)
+		if i < len(ids)-1 {
+			sql += " or "
+		}
+	}
+
+	if table == "images" {
+		sql2 := `select image from ` + table + ` where `
+		for i, v := range ids {
+			sql2 += "id = " + strconv.Itoa(v)
+			if i < len(ids)-1 {
+				sql2 += " or "
+			}
+		}
+
+		rows, err := Gdb.Query(sql2)
+		if err == nil {
+			defer rows.Close()
+
+			for rows.Next() {
+				var img string
+				rows.Scan(&img)
+				os.Remove("./images/" + img)
+				os.Remove("./thumbs/" + img)
+			}
+		}
+	}
+
+	_, err := Gdb.Exec(sql)
+
+	if err == nil {
+		return "ok"
+	} else {
+		glog.Errorln("Database:", err)
+		return "Err::DB::General_Failure"
+	}
 }

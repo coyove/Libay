@@ -9,17 +9,17 @@ import (
 )
 
 func (th ModelHandler) POST_login_phase2(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	auth.ServeLoginPhase2(w, r)
+	Return(w, auth.ServeLoginPhase2(w, r))
 }
 
 func (th ModelHandler) POST_login_phase1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	auth.ServeLoginPhase1(w, r)
+	Return(w, auth.ServeLoginPhase1(w, r))
 }
 
 func (th ModelHandler) POST_register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	auth.ServeRegister(w, r)
+	Return(w, auth.ServeRegister(w, r))
 }
 
 func (th ModelHandler) POST_logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	auth.ServeLogout(w, r)
+	Return(w, auth.ServeLogout(w, r))
 }

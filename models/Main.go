@@ -5,6 +5,8 @@ import (
 	"../conf"
 
 	"github.com/golang/glog"
+
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -205,4 +207,18 @@ func LoadTemplates() {
 			time.Sleep(30 * time.Second)
 		}
 	}()
+}
+
+func Return(w http.ResponseWriter, v interface{}) {
+	switch v.(type) {
+	case int:
+		w.WriteHeader(v.(int))
+	case []byte:
+		w.Write(v.([]byte))
+	case string:
+		w.Write([]byte(v.(string)))
+	default:
+		buf, _ := json.Marshal(v)
+		w.Write(buf)
+	}
 }

@@ -3,19 +3,13 @@ package models
 import (
 	"../auth"
 	"../conf"
-	// "crypto/sha1"
-	_ "database/sql"
-	// "encoding/json"
-	// "fmt"
+
 	"github.com/golang/glog"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
-	// "reflect"
-	// "os"
-	// "os/exec"
-	// "path/filepath"
-	// "os"
+
+	_ "database/sql"
 	"html"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -89,6 +83,8 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 			""}
 	} else {
 		glog.Errorln("Database:", err)
+		ServePage(w, "404", nil)
+		return
 	}
 	// }
 
@@ -101,60 +97,54 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	if u.Name == "" {
-		w.Write([]byte("Err::Privil::Invalid_User"))
+		Return(w, "Err::Privil::Invalid_User")
 	}
 
 	c := r.FormValue("comment")
 	if len(c) > 512 {
-		w.Write([]byte("Err::Post::Comment_Too_Long"))
+		Return(w, "Err::Post::Comment_Too_Long")
 		return
 	}
 
-	comment := html.EscapeString(c)
+	comment := auth.Escape(c)
 
 	_, err := auth.Gdb.Exec(`UPDATE user_info SET comment = '` + comment + `' WHERE id = ` + strconv.Itoa(u.ID))
 	if err == nil {
 		w.Write([]byte("ok"))
 	} else {
 		glog.Errorln("Database:", err)
-		w.Write([]byte("Err::DB::General_Failure"))
+		Return(w, "Err::DB::General_Failure")
 	}
 }
 
 // PAGE: Serve user login page and user account panel page
 func (th ModelHandler) GET_account(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	type up struct {
-		Name  string
-		Value bool
-	}
 	var payload struct {
 		auth.AuthUser
-		UserPrivilege []up
+		UserPrivilege map[string]bool
 		IsLoggedIn    bool
 	}
 
 	payload.AuthUser = auth.GetUser(r)
 	payload.IsLoggedIn = payload.AuthUser.Name != ""
-	payload.UserPrivilege = make([]up, 0)
+	payload.UserPrivilege = make(map[string]bool)
 
 	if payload.AuthUser.Group == "admin" {
-		payload.UserPrivilege = append(payload.UserPrivilege, up{"Admin", true})
+		payload.UserPrivilege["Admin"] = true
 	} else {
 		if g, e := conf.GlobalServerConfig.Privilege[payload.AuthUser.Group]; !e {
-			payload.UserPrivilege = append(payload.UserPrivilege, up{"None", true})
+			payload.UserPrivilege["None"] = true
 		} else {
 			for k, v := range g.(map[string]interface{}) {
-				_v, err := v.(bool)
-				if err {
-					payload.UserPrivilege = append(payload.UserPrivilege, up{k, _v})
+				if _v, ok := v.(bool); ok {
+					payload.UserPrivilege[k] = _v
 				}
 			}
 		}
 	}
-	payload.UserPrivilege = append(payload.UserPrivilege, up{
-		"Cooldown:" + strconv.Itoa(conf.GlobalServerConfig.GetInt(payload.AuthUser.Group, "Cooldown")),
-		true,
-	})
+
+	payload.UserPrivilege["Cooldown:"+
+		strconv.Itoa(conf.GlobalServerConfig.GetInt(payload.AuthUser.Group, "Cooldown"))] = true
 	ServePage(w, "account", payload)
 }
 

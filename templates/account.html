@@ -275,8 +275,9 @@
             }
             document.write(s);
             if ("{{.Group}}" == "admin") etc.let.show("admin-nav");
-        </script></b><br>权限: <br>{{range .UserPrivilege}}
-        {{if .Value}}[{{.Name}}]{{else}}[<del>{{.Name}}</del>]{{end}}<br>
+        </script></b><br>权限: <br>
+        {{range $n, $av := .UserPrivilege}}
+            {{if $av}}[{{$n}}]{{else}}[<del>{{$n}}</del>]{{end}}<br>
         {{end}}
     </p>
 </td>

@@ -109,43 +109,46 @@ func GetArticles(page int, filter string, filterType string) (ret []Article, tot
 	case "ua":
 		if _, err := strconv.Atoi(filter); err == nil {
 			/*
-				filter = user's ID
+			   filter = user's ID
 
-				Average visitors/users trying to access someone's article-list,
-				Show them the ICEBERG and filter out all the hidden articles.
+			   Average visitors/users trying to access someone's article-list,
+			   Show them the ICEBERG and filter out all the hidden articles.
 			*/
-			onlyTag += " AND articles.author = " + filter + conf.GlobalServerConfig.GetSQL()
+			onlyTag += " AND (articles.author = " + filter +
+				" OR articles.original_author = " + filter + ") " +
+				conf.GlobalServerConfig.GetSQL()
 		} else {
 			/*
-				filter is not a valid number
+			   filter is not a valid number
 			*/
 			return //ret, 0
 		}
 	case "tag":
 		/*
-			filter = tag's name
+		   filter = tag's name
 
-			GetTagIndex converts name to index, returns -1 if name is not found
+		   GetTagIndex converts name to index, returns -1 if name is not found
 		*/
 		_index := conf.GlobalServerConfig.GetTagIndex(filter)
 		onlyTag += " AND articles.tag = " + itoa(_index)
 	case "owa":
 		/*
-			filter = user-id:tag-id-1:tag-id-2:....:tag-id-n
+		   filter = user-id:tag-id-1:tag-id-2:....:tag-id-n
 
-			"owa" means showing all articles, authentication was made in models/Page.go.
-			Signed user can view his own articles, users with "ViewOtherTrash" privilege can
-			view others' articles.
+		   "owa" means showing all articles, authentication was made in models/Page.go.
+		   Signed user can view his own articles, users with "ViewOtherTrash" privilege can
+		   view others' articles.
 		*/
 		_arr := strings.Split(filter, ":")
 		if _arr[0] == "0" {
 			/*
-				"0" means accessing all articles.
+			   "0" means accessing all articles.
 			*/
 			onlyTag = "1 = 1"
 		} else {
 			// Note this overrides "articles.deleted=false"
-			onlyTag = "articles.author = " + _arr[0]
+			onlyTag = "(articles.author = " + _arr[0] +
+				" OR articles.original_author = " + _arr[0] + ")"
 		}
 		for i := 1; i < len(_arr); i++ {
 			_id, err := strconv.Atoi(_arr[i])
@@ -176,28 +179,28 @@ func GetArticles(page int, filter string, filterType string) (ret []Article, tot
 	}
 	// log.Println(conf.GlobalServerConfig.GetSQL())
 	rows, err := Gdb.Query(`
-		SELECT
-			articles.id, 
-			articles.title, 
-			articles.tag as tag, 
-			articles.author, 
-			   users.nickname, 
-			articles.preview,
-			articles.created_at,
-			articles.modified_at,
-			articles.stay_top,
-			articles.deleted,
-			articles.hits,
-			articles.children
-		FROM
-			articles 
-		INNER JOIN 
-			users ON users.id = articles.author
-		WHERE
-			` + onlyTag + ` 
-		ORDER BY
-			` + orderBy + ` 
-		OFFSET ` + itoa(_start) + " LIMIT " + itoa(_app))
+        SELECT
+            articles.id, 
+            articles.title, 
+            articles.tag as tag, 
+            articles.author, 
+               users.nickname, 
+            articles.preview,
+            articles.created_at,
+            articles.modified_at,
+            articles.stay_top,
+            articles.deleted,
+            articles.hits,
+            articles.children
+        FROM
+            articles 
+        INNER JOIN 
+            users ON users.id = articles.author
+        WHERE
+            ` + onlyTag + ` 
+        ORDER BY
+            ` + orderBy + ` 
+        OFFSET ` + itoa(_start) + " LIMIT " + itoa(_app))
 
 	if err != nil {
 		glog.Errorln("Database:", err)
@@ -239,9 +242,9 @@ func GetArticles(page int, filter string, filterType string) (ret []Article, tot
 	// var totalArticles int
 
 	if Gdb.QueryRow(`
-		SELECT COUNT(id)
-		FROM   articles 
-		WHERE `+onlyTag).Scan(&totalArticles) != nil {
+        SELECT COUNT(id)
+        FROM   articles 
+        WHERE `+onlyTag).Scan(&totalArticles) != nil {
 		glog.Errorln("Database:", err)
 		return // ret, 0
 	}
@@ -250,61 +253,7 @@ func GetArticles(page int, filter string, filterType string) (ret []Article, tot
 }
 
 func SearchArticles(r *http.Request, page int, filter string) []Article {
-	// user := GetUser(r)
 	ret := make([]Article, 0)
-
-	// if !LogIP(r) {
-	// 	return ret
-	// }
-
-	// _app := conf.GlobalServerConfig.ArticlesPerPage
-	// _start := _app * (page - 1)
-
-	// words := strings.Split(filter, " ")
-	// for i, _ := range words {
-	// 	words[i] = html.EscapeString(words[i])
-	// }
-
-	// query := "~* E'(" + strings.Join(words, "|") + ")'"
-
-	// rows, err := Gdb.Query(`select
-	// 	articles.id,
-	// 	articles.title,
-	// 	articles.tag,
-	// 	articles.author,
-	// 	users.nickname,
-	// 	articles.created_at,
-	// 	articles.modified_at,
-	// 	articles.hits
-	// 	from articles
-	// 	inner join users on users.id = articles.author
-	// 	where (articles.content ` + query + `
-	// 	or articles.title ` + query + `)` + conf.GlobalServerConfig.GetSQL() + `
-	// 	order by created_at desc
-	// 	offset ` + strconv.Itoa(_start) + " limit " + strconv.Itoa(_app))
-
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return ret
-	// }
-
-	// defer rows.Close()
-
-	// for rows.Next() {
-	// 	var id, tag, authorID, hits int
-	// 	var title, author string
-	// 	var createdAt, modifiedAt time.Time
-
-	// 	rows.Scan(&id, &title, &tag, &authorID, &author, &createdAt, &modifiedAt, &hits)
-	// 	// title = html.UnescapeString(title)
-	// 	// content = html.UnescapeString(content)
-
-	// 	_tag := conf.GlobalServerConfig.GetTags()[tag]
-
-	// 	ret = append(ret, Article{id, title, _tag, author, authorID, "", int(createdAt.Unix()),
-	// 		int(modifiedAt.Unix()), false, false, false, hits, 0, "", 0})
-	// }
-
 	return ret
 }
 
@@ -322,26 +271,26 @@ func GetMessages(page int, userID int, lookupID int) ([]Message, int) {
 	}
 
 	rows, err := Gdb.Query(`
-		SELECT
-			articles.id, 
-			articles.title, 
-			articles.preview,
-			articles.tag as tag, 
-			      u2.nickname, 
-			articles.author, 
-			   users.nickname, 
-			articles.created_at
-		FROM
-			articles 
-		INNER JOIN
-		 	users ON users.id = articles.author
-		INNER JOIN 
-			users AS u2 ON u2.id = articles.tag - 100000
-		WHERE 
-			articles.deleted = false ` + onlyTag + ` 
-		ORDER BY
-		 	created_at DESC 
-		OFFSET ` + strconv.Itoa(_start) + " LIMIT " + strconv.Itoa(_app))
+        SELECT
+            articles.id, 
+            articles.title, 
+            articles.preview,
+            articles.tag as tag, 
+                  u2.nickname, 
+            articles.author, 
+               users.nickname, 
+            articles.created_at
+        FROM
+            articles 
+        INNER JOIN
+            users ON users.id = articles.author
+        INNER JOIN 
+            users AS u2 ON u2.id = articles.tag - 100000
+        WHERE 
+            articles.deleted = false ` + onlyTag + ` 
+        ORDER BY
+            created_at DESC 
+        OFFSET ` + strconv.Itoa(_start) + " LIMIT " + strconv.Itoa(_app))
 
 	if err != nil {
 		glog.Errorln("Database:", err)
@@ -370,9 +319,9 @@ func GetMessages(page int, userID int, lookupID int) ([]Message, int) {
 	var totalArticles int
 
 	if Gdb.QueryRow(`
-		SELECT COUNT(id)
-		FROM   articles 
-		WHERE  articles.deleted = false `+onlyTag).Scan(&totalArticles) != nil {
+        SELECT COUNT(id)
+        FROM   articles 
+        WHERE  articles.deleted = false `+onlyTag).Scan(&totalArticles) != nil {
 		glog.Errorln("Database:", err)
 		return ret, 0
 	}
@@ -397,34 +346,34 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	}
 
 	rows, err := Gdb.Query(`
-		SELECT 
-			articles.id, 
-			articles.title, 
-			articles.tag, 
-			articles.content, 
-			articles.author, 
-			   users.nickname, 
-			articles.created_at,
-			articles.modified_at,
-			articles.deleted,
-			articles.locked,
-			articles.stay_top,
-			articles.hits,
-			articles.parent,
-			articles.children,
-			articles.rev,
-			(SELECT 
-				sub.title 
-			FROM 
-				articles AS sub 
-			WHERE 
-				sub.id = articles.parent) AS parent_title
-		FROM 
-			articles 
-		INNER JOIN 
-			users ON users.id = articles.author
-		WHERE 
-			articles.id = ` + strconv.Itoa(id))
+        SELECT 
+            articles.id, 
+            articles.title, 
+            articles.tag, 
+            articles.content, 
+            articles.author, 
+               users.nickname, 
+            articles.created_at,
+            articles.modified_at,
+            articles.deleted,
+            articles.locked,
+            articles.stay_top,
+            articles.hits,
+            articles.parent,
+            articles.children,
+            articles.rev,
+            (SELECT 
+                sub.title 
+            FROM 
+                articles AS sub 
+            WHERE 
+                sub.id = articles.parent) AS parent_title
+        FROM 
+            articles 
+        INNER JOIN 
+            users ON users.id = articles.author
+        WHERE 
+            articles.id = ` + strconv.Itoa(id))
 
 	if err != nil {
 		glog.Errorln("Database:", err)
@@ -480,7 +429,19 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	return //ret
 }
 
-func GenerateRSS(atom bool) string {
+func InvertArticleState(id int, state string) string {
+	_, err := Gdb.Exec(fmt.Sprintf("UPDATE articles SET %s = NOT %s WHERE id = %d", state, state, id))
+
+	if err == nil {
+		Gcache.Clear()
+		return "ok"
+	} else {
+		glog.Errorln("Database:", err, id, state)
+		return "Err::DB::Update_Failure"
+	}
+}
+
+func GenerateRSS(atom bool, page int) string {
 	now := time.Now()
 	feed := &feeds.Feed{
 		Title:       conf.GlobalServerConfig.Title,
@@ -492,7 +453,7 @@ func GenerateRSS(atom bool) string {
 
 	feed.Items = make([]*feeds.Item, 0)
 
-	a, _ := GetArticles(1, "", "")
+	a, _ := GetArticles(page, "", "")
 
 	for _, v := range a {
 		feed.Items = append(feed.Items, &feeds.Item{
@@ -507,7 +468,7 @@ func GenerateRSS(atom bool) string {
 	if atom {
 		ret, err := feed.ToAtom()
 		if err != nil {
-			glog.Errorln("RSS:", err)
+			glog.Errorln("Atom:", err)
 		}
 
 		return ret

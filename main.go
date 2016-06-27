@@ -34,6 +34,7 @@ import (
 var configPath = flag.String("c", "./config.json", "Load config from file")
 var logPath = flag.String("l", "./log", "Log saving directory for glog, alias of '-log_dir'")
 var debugMode = flag.Bool("d", false, "Debug mode")
+var debugPort = flag.Int("debug-port", 731, "Debug server port")
 
 func main() {
 
@@ -143,18 +144,25 @@ Disallow: /tag/`))
 					referer := strings.Replace(r.Referer(), conf.GlobalServerConfig.Host, "", -1)
 					referer = strings.Replace(referer, conf.GlobalServerConfig.DebugHost, "", -1)
 
+					ip := auth.GetIP(r)
+					url := strings.Split(r.URL.String(), "?")[0]
+
+					info := ip
 					if cookie, err := r.Cookie("uid"); err == nil {
 						cookies := strings.Split(cookie.Value, ":")
 
 						if len(cookies) >= 2 {
-							glog.Infoln(auth.GetIP(r), cookies[1]+"("+cookies[0]+")", referer, "->", r.URL)
+							info = cookies[0] + "." + cookies[1] + "." + info
 						} else {
-							glog.Infoln(auth.GetIP(r), "Invalid(?)", referer, "->", r.URL)
+							info = "0.invalid." + info
 						}
 					} else {
-						glog.Infoln(auth.GetIP(r), "Guest(0)", referer, "->", r.URL)
+						info = "guest." + info
 					}
+
+					glog.Infoln(info, referer, "->", url)
 				}
+
 				handler(w, r, ps)
 			})
 		// } else {
@@ -163,13 +171,13 @@ Disallow: /tag/`))
 	}
 
 	mux.Handle("/", router)
-	glog.Infoln("Routers loaded in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
+	glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
 
 	if *debugMode {
-		glog.Infoln("Debug server on 731")
-		glog.Fatalln(http.ListenAndServe(":731", mux))
+		glog.Infoln("Start debug server on", *debugPort)
+		glog.Fatalln(http.ListenAndServe(":"+strconv.Itoa(*debugPort), mux))
 	} else {
-		glog.Infoln("Start HTTP Server:", conf.GlobalServerConfig.Listen)
+		glog.Infoln("Start HTTP server on", conf.GlobalServerConfig.Listen)
 		glog.Fatalln(http.ListenAndServe("127.0.0.1:"+conf.GlobalServerConfig.Listen, mux))
 	}
 	// }

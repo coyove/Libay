@@ -3,12 +3,13 @@ package models
 import (
 	"../auth"
 	"../conf"
-	"crypto/sha1"
-	_ "database/sql"
-	"encoding/json"
-	"fmt"
+
 	"github.com/golang/glog"
 	"github.com/julienschmidt/httprouter"
+
+	"crypto/sha1"
+	_ "database/sql"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -20,9 +21,9 @@ import (
 
 func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
-	restrict := !u.CanPost() || !u.CanPostImages()
+
 	if !u.CanPostImages() {
-		w.Write([]byte("{\"Error\": true, \"R\": \"P\"}"))
+		Return(w, `{"Error": true, "R": "P"}`)
 		return
 	}
 
@@ -38,28 +39,33 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	in, header, err := r.FormFile("image")
 	ava := r.FormValue("avatar")
 	if err != nil {
-		w.Write([]byte("{\"Error\": true, \"R\": \"H\"}"))
+		Return(w, `{"Error": true, "R": "H"}`)
 		return
 	}
 	defer in.Close()
 
 	if ava == "true" && !auth.CheckCSRF(r) {
-		w.Write([]byte("{\"Error\": true, \"R\": \"C\"}"))
+		Return(w, `{"Error": true, "R": "C"}`)
 		return
 	}
 
 	hashBuf, _ := ioutil.ReadAll(in)
-	// log.Println(restrict, len(hashBuf), conf.GlobalServerConfig.AllowAnonymousUpload)
-	if (restrict && len(hashBuf) > 1024*1024*conf.GlobalServerConfig.MaxImageSizeGuest) ||
-		(restrict && !conf.GlobalServerConfig.AllowAnonymousUpload) {
-		w.Write([]byte("{\"Error\": true, \"R\": \"R\"}"))
+
+	if len(hashBuf) > 1024*1024*conf.GlobalServerConfig.MaxImageSize {
+		Return(w, `{"Error": true, "R": "R"}`)
 		return
 	}
 
 	fn := fmt.Sprintf("%x", sha1.Sum(hashBuf))
 	dirs := string(fn[0]) + "/" + string(fn[1]) + "/"
 	fn = dirs + fn[2:]
-	fn += filepath.Ext(header.Filename)
+	ext := filepath.Ext(header.Filename)
+
+	if ext == "" {
+		ext = ".jpg"
+	}
+
+	fn += ext
 
 	os.MkdirAll("./images/"+dirs, 0777)
 	os.MkdirAll("./thumbs/"+dirs, 0777)
@@ -68,7 +74,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	if _, err := os.Stat("./images/" + fn); os.IsNotExist(err) {
 		out, err := os.Create("./images/" + fn)
 		if err != nil {
-			w.Write([]byte("{\"Error\": true, \"R\": \"I\"}"))
+			Return(w, `{"Error": true, "R": "I"}`)
 			return
 		}
 		out.Write(hashBuf)
@@ -92,7 +98,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	writeFakeThumb := func() bool {
 		thumb, err := os.Create("./thumbs/" + fn)
 		if err != nil {
-			w.Write([]byte("{\"Error\": true, \"R\": \"T\"}"))
+			Return(w, `{"Error": true, "R": "T"}`)
 			return false
 		}
 		thumb.Write(hashBuf)
@@ -140,20 +146,14 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		}
 	}
 
-	if restrict {
-		u.ID = 0
-	}
-
 	imageSize := strconv.Itoa(len(hashBuf))
 	if alreadyUploaded {
 		imageSize = "0"
 	}
 
-	_, err = auth.Gdb.Exec(`insert into images 
-		(image, uploader) values 
-		('` + fn + "', " + strconv.Itoa(u.ID) + `);
-		update user_info set image_usage=image_usage+` + imageSize + `
-		where id=` + strconv.Itoa(u.ID))
+	_, err = auth.Gdb.Exec(`
+		INSERT INTO images (image, uploader) VALUES ('` + fn + "', " + strconv.Itoa(u.ID) + `);
+		UPDATE user_info SET image_usage = image_usage + ` + imageSize + `WHERE id = ` + strconv.Itoa(u.ID))
 
 	payload.Error = err != nil
 
@@ -173,19 +173,22 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		// payload.Avatar = auth.SetUserAvatar(u, fn)
 	}
 
-	j, _ := json.Marshal(payload)
-	w.Write(j)
+	if r.FormValue("direct") != "direct" {
+		Return(w, payload)
+	} else {
+		http.ServeFile(w, r, "."+payload.Link)
+	}
 }
 
 func (th ModelHandler) POST_upload_file(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	if !conf.GlobalServerConfig.GetPrivilege(u.Group, "UploadFile") {
-		w.Write([]byte("{\"Error\": true}"))
+		Return(w, `{"Error": true}`)
 		return
 	}
 
 	if !auth.CheckCSRF(r) {
-		w.Write([]byte("{\"Error\": true}"))
+		Return(w, `{"Error": true}`)
 		return
 	}
 
@@ -198,7 +201,7 @@ func (th ModelHandler) POST_upload_file(w http.ResponseWriter, r *http.Request, 
 
 	in, header, err := r.FormFile("file")
 	if err != nil {
-		w.Write([]byte("{\"Error\": true}"))
+		Return(w, `{"Error": true}`)
 		return
 	}
 	defer in.Close()
@@ -211,7 +214,7 @@ func (th ModelHandler) POST_upload_file(w http.ResponseWriter, r *http.Request, 
 	if _, err := os.Stat("./images/" + fn); os.IsNotExist(err) {
 		out, err := os.Create("./images/" + fn)
 		if err != nil {
-			w.Write([]byte("{\"Error\": true}"))
+			Return(w, `{"Error": true}`)
 			return
 		}
 		out.Write(hashBuf)
@@ -227,11 +230,9 @@ func (th ModelHandler) POST_upload_file(w http.ResponseWriter, r *http.Request, 
 		imageSize = "0"
 	}
 
-	_, err = auth.Gdb.Exec(`insert into images 
-		(image, uploader) values 
-		('` + fn + "', " + strconv.Itoa(u.ID) + `);
-		update user_info set image_usage=image_usage+` + imageSize + `
-		where id=` + strconv.Itoa(u.ID))
+	_, err = auth.Gdb.Exec(`
+		INSERT INTO images (image, uploader) VALUES ('` + fn + "', " + strconv.Itoa(u.ID) + `);
+		UPDATE user_info SET image_usage = image_usage + ` + imageSize + ` WHERE id = ` + strconv.Itoa(u.ID))
 
 	payload.Error = err != nil
 
@@ -239,6 +240,5 @@ func (th ModelHandler) POST_upload_file(w http.ResponseWriter, r *http.Request, 
 		glog.Errorln("Database:", err)
 	}
 
-	j, _ := json.Marshal(payload)
-	w.Write(j)
+	Return(w, payload)
 }

@@ -3,22 +3,13 @@ package models
 import (
 	"../auth"
 	"../conf"
-	// "crypto/sha1"
-	_ "database/sql"
-	// "encoding/json"
-	"fmt"
+
 	"github.com/julienschmidt/httprouter"
-	// "io/ioutil"
-	// "log"
+
+	_ "database/sql"
+	"fmt"
 	"net/http"
-	// "reflect"
-	// "os"
-	// "os/exec"
-	// "path/filepath"
-	// "os"
 	"strconv"
-	// "strings"
-	// "time"
 )
 
 type EditorStruct struct {
@@ -36,13 +27,14 @@ type EditorStruct struct {
 func (th ModelHandler) POST_preview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	content := r.FormValue("content")
 	if len(content) > conf.GlobalServerConfig.MaxArticleContentLength*1024 {
-		w.Write([]byte(fmt.Sprintf("Err::Post::Content_Too_Long_%d_KiB_Exceeded",
-			(len(content)-conf.GlobalServerConfig.MaxArticleContentLength*1024)/1024)))
+		ex := len(content) - conf.GlobalServerConfig.MaxArticleContentLength*1024
+		Return(w, fmt.Sprintf("Err::Post::Content_Too_Long_%d_KiB_Exceeded", ex/1024))
 		return
 	}
 	_, p, _ := auth.ExtractContent(content, auth.AuthUser{})
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(p))
+
+	Return(w, p)
 }
 
 func PrepareEditor(r *http.Request) (EditorStruct, auth.AuthUser) {
@@ -58,11 +50,6 @@ func PrepareEditor(r *http.Request) (EditorStruct, auth.AuthUser) {
 }
 
 func (th ModelHandler) GET_new_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// var payload EditorStruct
-	// u := auth.GetUser(r)
-	// payload.Username = u.Name
-	// payload.IsLoggedIn = u.Name != ""
-	// payload.Tags = conf.GlobalServerConfig.GetComplexTags()
 	payload, _ := PrepareEditor(r)
 
 	id, err := strconv.Atoi(ps.ByName("id"))
@@ -79,11 +66,6 @@ func (th ModelHandler) GET_new_article_ID(w http.ResponseWriter, r *http.Request
 
 // PAGE: Serve editor page where user can edit an article by id
 func (th ModelHandler) GET_edit_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// var payload EditorStruct
-	// u := auth.GetUser(r)
-	// payload.Username = u.Name
-	// payload.IsLoggedIn = u.Name != ""
-	// payload.Tags = conf.GlobalServerConfig.GetComplexTags()
 	payload, u := PrepareEditor(r)
 
 	id, err := strconv.Atoi(ps.ByName("id"))
@@ -112,11 +94,6 @@ func (th ModelHandler) GET_edit_article_ID(w http.ResponseWriter, r *http.Reques
 }
 
 func (th ModelHandler) GET_new_message_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// var payload EditorStruct
-	// u := auth.GetUser(r)
-	// payload.Username = u.Name
-	// payload.IsLoggedIn = u.Name != ""
-	// payload.Tags = conf.GlobalServerConfig.GetComplexTags()
 	payload, u := PrepareEditor(r)
 
 	id, err := strconv.Atoi(ps.ByName("id"))

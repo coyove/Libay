@@ -2,6 +2,11 @@ package auth
 
 import (
 	"../conf"
+
+	"github.com/dchest/captcha"
+	"github.com/golang/glog"
+	"golang.org/x/crypto/openpgp"
+
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
@@ -12,9 +17,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dchest/captcha"
-	"github.com/golang/glog"
-	"golang.org/x/crypto/openpgp"
 	"io"
 	"io/ioutil"
 	"net"
@@ -28,8 +30,6 @@ import (
 )
 
 const (
-	// commonPrefix          = "auth/"
-	// accountHTML           = commonPrefix + "account.html"
 	stdTimeFormat         = "2006-01-02 15:04:05"
 	maxRetryOpportunities = 2
 	cooldownTime          = 30
@@ -200,29 +200,26 @@ func LogIPnv(r *http.Request) bool {
 	}
 }
 
-func ServeLoginPhase1(w http.ResponseWriter, r *http.Request) {
+func ServeLoginPhase1(w http.ResponseWriter, r *http.Request) string {
 	if !LogIP(r) {
-		w.Write([]byte("Err::Router::Frequent_Access"))
-		return
+		return "Err::Router::Frequent_Access"
 	}
 
 	if !CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
-		return
+		return "Err::CSRF::CSRF_Failure"
 	}
 
 	u := CleanString(r.FormValue("username"))
 
 	if u == "" {
-		w.Write([]byte("Err::Login::Empty_Username"))
-		return
+		return "Err::Login::Empty_Username"
 	}
 
 	var pk string
 	var pass string
 	var id int
 
-	if Gdb.QueryRow("select id, password, public_key_file from users where username='"+u+"'").
+	if Gdb.QueryRow("SELECT id, password, public_key_file FROM users WHERE username = '"+u+"'").
 		Scan(&id, &pass, &pk) == nil {
 
 		_start := time.Now()
@@ -237,8 +234,7 @@ func ServeLoginPhase1(w http.ResponseWriter, r *http.Request) {
 		if pk != "" {
 			_, err := Gdb.Exec("UPDATE users SET password = '" + password + "' WHERE id = " + strconv.Itoa(id))
 			if err != nil {
-				w.Write([]byte("Err::DB::Update_Failure"))
-				return
+				return "Err::DB::Update_Failure"
 			}
 
 			_password, err := gpgEncrypt(password, "./public_keys/"+pk)
@@ -251,29 +247,26 @@ Version: GnuPG v2` + "\n" + _password + "\n" + `-----END PGP MESSAGE-----`
 
 			if err == nil {
 				buf, _ := json.Marshal(&payload)
-				w.Write(buf)
-				return
+				return string(buf)
 			}
 
-			w.Write([]byte("Err::IO::File_IO_Failure"))
+			return "Err::IO::File_IO_Failure"
 		} else {
-			w.Write([]byte("Err::Login::No_Public_Key"))
+			return "Err::Login::No_Public_Key"
 		}
-	} else {
-		w.Write([]byte("Err::DB::Select_Failure"))
 	}
+
+	return "Err::DB::Select_Failure"
 
 }
 
-func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) {
+func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 	if !LogIP(r) {
-		w.Write([]byte("Err::Router::Frequent_Access"))
-		return
+		return "Err::Router::Frequent_Access"
 	}
 
 	if !CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
-		return
+		return "Err::CSRF::CSRF_Failure"
 	}
 
 	u := CleanString(r.FormValue("username"))
@@ -288,13 +281,11 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) {
 	// log.Println(r.RemoteAddr)
 
 	if u == "" {
-		w.Write([]byte("Err::Login::Empty_Username"))
-		return
+		return "Err::Login::Empty_Username"
 	}
 
 	if p == "" {
-		w.Write([]byte("Err::Login::Empty_Password"))
-		return
+		return "Err::Login::Empty_Password"
 	}
 
 	var pass, lastLoginIP string
@@ -319,8 +310,7 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) {
 		// 	Scan()
 		mins := int(time.Now().Sub(lockDate).Minutes())
 		if mins < cooldownTime {
-			w.Write([]byte("Err::Login::Cooldown_" + strconv.Itoa(cooldownTime-mins) + "min"))
-			return
+			return "Err::Login::Cooldown_" + strconv.Itoa(cooldownTime-mins) + "min"
 		}
 
 		if pass == p {
@@ -333,54 +323,54 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) {
 				Value:   userToken,
 				Expires: exp, HttpOnly: true, Path: "/"})
 
-			_, err := Gdb.Exec("update users set last_login_date='" + time.Now().Format(stdTimeFormat) +
-				"', last_last_login_date='" + lastLogin.Format(stdTimeFormat) +
-				"', last_login_ip='" + GetIP(r) +
-				"', last_last_login_ip='" + lastLoginIP +
-				"', session_id='" + new_session_id +
-				"', retry=0 where id=" + strconv.Itoa(id))
+			_, err := Gdb.Exec(`
+				UPDATE 
+                    users 
+                SET 
+                    last_login_date      = '` + Time.Now() + `', 
+                    last_last_login_date = '` + Time.F(lastLogin) + `', 
+                    last_login_ip        = '` + GetIP(r) + `', 
+                    last_last_login_ip   = '` + lastLoginIP + `', 
+                    session_id           = '` + new_session_id + `', 
+                    retry                = 0 
+                WHERE 
+                    id = ` + strconv.Itoa(id))
 
 			if err != nil {
 				glog.Errorln("Database:", err)
 			}
 
-			w.Write([]byte("ok " + strconv.Itoa(id)))
-			return
+			return "ok " + strconv.Itoa(id)
 			// finish a successful login procedure
 		}
 
 		if retry > maxRetryOpportunities {
-			Gdb.Exec("update users set retry=0, lock_date='" +
-				time.Now().Format(stdTimeFormat) + "' where id=" + strconv.Itoa(id))
-			w.Write([]byte("Err::Login::Account_Locked"))
-
+			Gdb.Exec("UPDATE users SET retry = 0, lock_date = '" + Time.Now() + "' WHERE id = " + strconv.Itoa(id))
+			glog.Errorln("Account locked by", GetIP(r))
+			return "Err::Login::Account_Locked"
 		} else {
-			Gdb.Exec("update users set retry=retry+1 where id=" + strconv.Itoa(id))
-			w.Write([]byte("Err::Login::Retry_" + strconv.Itoa(retry)))
+			Gdb.Exec("UPDATE users SET retry = retry + 1 WHERE id = " + strconv.Itoa(id))
+			return "Err::Login::Retry_" + strconv.Itoa(retry)
 		}
 
-		return
 	} else {
 		glog.Errorln("Database:", err)
-		w.Write([]byte("Err::DB::Select_Failure"))
 	}
+	return "Err::DB::Select_Failure"
 
 }
 
-func ServeRegister(w http.ResponseWriter, r *http.Request) {
+func ServeRegister(w http.ResponseWriter, r *http.Request) string {
 	if !LogIP(r) {
-		w.Write([]byte("Err::Router::Frequent_Access"))
-		return
+		return "Err::Router::Frequent_Access"
 	}
 
 	if !CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
-		return
+		return "Err::CSRF::CSRF_Failure"
 	}
 
 	if !conf.GlobalServerConfig.AllowRegistration {
-		w.Write([]byte("Err::Regr::Registration_Closed"))
-		return
+		return "Err::Regr::Registration_Closed"
 	}
 
 	r.ParseMultipartForm(1024)
@@ -388,54 +378,51 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) {
 	nk := CleanString(r.FormValue("nickname"))
 
 	if !captcha.VerifyString(r.FormValue("captcha-challenge"), r.FormValue("captcha-answer")) {
-		w.Write([]byte("Err::Regr::Challenge_Failed"))
-		return
+		glog.Errorln("Challenge failed by", GetIP(r))
+		return "Err::Regr::Challenge_Failed"
 	}
 
 	if len(u) < 4 {
-		w.Write([]byte("Err::Regr::Username_Too_Short"))
-		return
+		return "Err::Regr::Username_Too_Short"
 	}
 
 	if len(nk) < 4 {
-		w.Write([]byte("Err::Regr::Nickname_Too_Short"))
-		return
+		return "Err::Regr::Nickname_Too_Short"
 	}
 
 	var _id int
-	Gdb.QueryRow("select id from users where username='" + u + "' or nickname='" + nk + "'").Scan(&_id)
+	Gdb.QueryRow("SELECT id FROM users WHERE username = '" + u + "' OR nickname = '" + nk + "'").Scan(&_id)
 
 	if _id != 0 {
-		w.Write([]byte("Err::Regr::Username_Nickname_Existed"))
-		return
+		return "Err::Regr::Username_Nickname_Existed"
 	}
 
 	if r.FormValue("use-simple-password") == "true" {
 		sp := CleanString(r.FormValue("simple-password"))
 		if len(sp) < 4 {
-			w.Write([]byte("Err::Regr::Password_Too_Short"))
-			return
+			return "Err::Regr::Password_Too_Short"
 		}
 
-		_, err := Gdb.Exec("insert into users (username, nickname, signup_date, password, public_key_file, retry) values ('" + u +
-			"', '" + nk +
-			"', '" + time.Now().Format(stdTimeFormat) +
-			"', '" + sp +
-			"', '', 0)")
+		_, err := Gdb.Exec(`
+            INSERT INTO users 
+                (username, nickname, signup_date, password, public_key_file, retry) 
+            VALUES (
+                '` + u + `', 
+                '` + nk + `', 
+                '` + Time.Now() + `', 
+                '` + sp + `', 
+                '', 
+                0)`)
 
 		if err != nil {
 			glog.Errorln("Database:", err)
-			w.Write([]byte("Err::DB::Insert_Failure"))
-			return
+			return "Err::DB::Insert_Failure"
 		}
-
-		w.Write([]byte("ok"))
 	} else {
 
 		in, header, err := r.FormFile("public_key")
 		if err != nil {
-			w.Write([]byte("Err::IO::File_IO_Failure"))
-			return
+			return "Err::IO::File_IO_Failure"
 		}
 		defer in.Close()
 
@@ -445,14 +432,12 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) {
 		fn := fmt.Sprintf("%x", sha1.Sum(hashBuf)) + ext
 
 		if _, err := os.Stat("./public_keys/" + fn); err == nil {
-			w.Write([]byte("Err::Regr::Public_Key_Existed"))
-			return
+			return "Err::Regr::Public_Key_Existed"
 		}
 
 		out, err := os.Create("./public_keys/" + fn)
 		if err != nil {
-			w.Write([]byte("Err::IO::File_IO_Failure"))
-			return
+			return "Err::IO::File_IO_Failure"
 		}
 		// io.Copy(out, in)
 		out.Write(hashBuf)
@@ -462,43 +447,43 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			glog.Errorln("PK:", err)
-			w.Write([]byte("Err::Regr::Invalid_Public_Key"))
-			return
+			return "Err::Regr::Invalid_Public_Key"
 		}
-		_, err = Gdb.Exec("insert into users (username, nickname, signup_date, password, public_key_file, retry) values ('" + u +
-			"', '" + nk +
-			"', '" + Time.Now() +
-			"', '" +
-			"', '" + fn +
-			"', 0)")
+		_, err = Gdb.Exec(`
+            INSERT INTO users 
+                (username, nickname, signup_date, password, public_key_file, retry) 
+            VALUES (
+                '` + u + `', 
+                '` + nk + `', 
+                '` + Time.Now() + `', 
+                '', 
+                '` + fn + `', 
+                0)`)
 
 		if err != nil {
 			glog.Errorln("Database:", err)
-			w.Write([]byte("Err::DB::Insert_Failure"))
-			return
+			return "Err::DB::Insert_Failure"
 		}
-
-		w.Write([]byte("ok"))
 	}
+
+	return "ok"
 }
 
-func ServeLogout(w http.ResponseWriter, r *http.Request) {
+func ServeLogout(w http.ResponseWriter, r *http.Request) string {
 	u := GetUser(r)
 
 	if !CheckCSRF(r) {
-		w.Write([]byte("Err::CSRF::CSRF_Failure"))
-		return
+		return "Err::CSRF::CSRF_Failure"
 	}
 
 	if u.Name != "" {
-		_, reer := Gdb.Exec("update users set session_id='" + MakeHash(u.Name) + "' where id=" + strconv.Itoa(u.ID))
-		if reer == nil {
-			w.Write([]byte("ok"))
-			return
+		_, err := Gdb.Exec("UPDATE users SET session_id = '" + MakeHash() + "' WHERE id = " + strconv.Itoa(u.ID))
+		if err == nil {
+			return "ok"
 		}
 	}
 
-	w.Write([]byte("Err::Privil::Invalid_User"))
+	return "Err::Privil::Invalid_User"
 }
 
 func ConnectDatabase(t string, conn string) error {
@@ -514,9 +499,7 @@ func ConnectDatabase(t string, conn string) error {
 		Gdb.SetMaxOpenConns(conf.GlobalServerConfig.MaxOpenConns)
 
 		Gcache = NewCache(conf.GlobalServerConfig.CacheEntities)
-		// Guser = NewCache(10)
 		Gcache.Start()
-		// Guser.Start()
 
 		return nil
 	}

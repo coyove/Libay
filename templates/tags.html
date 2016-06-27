@@ -1,10 +1,6 @@
-<title>所有标签</title>
-<p id="breadcrumbs">所有标签 | 
-<a href="javascript:toggleDesc()">显示隐藏描述</a> |
-最近更新
-	{{range .HotTags}}
-		| <a href="/tag/{{.}}/page/1">{{.}}</a>
-	{{end}}
+<title>标签组</title>
+<p id="breadcrumbs">标签组 | 
+<a href="javascript:toggleDesc()">显示隐藏描述</a>
 </p>
 
 <script type="text/javascript">
@@ -19,7 +15,18 @@
 	}
 </script>
 
-<ul id="tags">
+
+最近更新:
+<ul class="tags">
+	{{range .HotTags}}
+	<li><a href="/tag/{{.}}/page/1">{{.}}</a></li>
+	{{end}}
+</ul>
+<br style="clear: both">
+<br>
+
+全部标签:
+<ul class="tags">
 	<li>
 		<a href="/playground" class="title"><b>play</b>: Playground</a><br>
 	</li>

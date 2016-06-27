@@ -205,7 +205,7 @@
             ENOXHR: 1,
             ETIMEOUT: 2,
 
-            ajaxTimeout: 0
+            ajaxTimeout: 20000
         };
     }
 
@@ -331,14 +331,24 @@
     g.etc = {
         "id": _id,
 
-        "file": function(id) {
+        "file": function(id, ev) {
+            if (id[0] && id[0].type && id.length) {
+                var ret = [];
+                for (var i = 0; i < id.length; i++) ret.push(id[i]);
+                return ret;
+            }
+
             var f = _id(id);
-            if (f.files && f.files[0])
-                return f.files[0];
-            else if (f.target && f.target.value)
-                return f.target.value;
+            if (f.files && f.files[0]) {
+                var ret = [];
+                for (var i = 0; i < f.files.length; i++) ret.push(f.files[i]);
+
+                return ret;
+            }
+            else if (ev && ev.target && ev.target.value)
+                return [ev.target.value];
             else
-                return null;
+                return [];
         },
 
         "get": function(selector) { return document.querySelectorAll(selector); },
@@ -606,7 +616,7 @@
             },
 
             "storage": {
-                "delete": function(key) {
+                "remove": function(key) {
                     if (window.attachEvent && !window.addEventListener) {
                         // IE8, return
                         return null;
@@ -626,23 +636,26 @@
 
             "isInside": _insideEditor,
 
-            "uploadImage": function(id, f, callback, imgur) {
-                if (callback) {}
-                else {
-                    if (!_insideEditor()) {
-                        _id(id).value = "";
-                        Animation.stop();
-                        return;
-                    }
+            "uploadImage": function(files, callback, options) {
+                options = options || {};
+
+                if (files.length == 0) {
+                    callback();
+                    return;
                 }
-                file = f ? f : g.etc.file(id);
+
+                var file = files.shift();
 
                 var onError = function(A) {
                     alert("Err::Upload::" + A);
-                    _id(id).value = "";
-                    Animation.stop();
+                    if (callback) callback();
                 };
-                // console.log(file);
+
+                if (!_insideEditor() && options["editor"]) {
+                    if (callback) callback();
+                    return;
+                }
+
                 if (!file || !file.type.match(/image.*/)) {
                     if (/\.(jpg|png)\-(small|large)/.test(file.name)) {
                         // Twitter images
@@ -652,71 +665,52 @@
                     }
                 }
 
-                var A = new FormData();
-                A.append("image", file);
                 var _URL = window.URL || window.webkitURL;
                 var img = new Image();
-                var upload = new XMLHttpRequest();
 
-                img.onload = function() {
-                    A.append("width", this.width);
-                    A.append("height", this.height);
-
-                    upload.send(A);
-                };
-
-                if (imgur) {
-                    upload.open("POST", "https://api.imgur.com/3/image");
-                    upload.onload = function() {
+                var onLoad = function(w, h) {
+                    etc.util.ajax.$post(options["imgur"] ? "https://api.imgur.com/3/image" : "/upload",
+                    {
+                        "image": file,
+                        "width": w,
+                        "height": h,
+                    }, {
+                        'Authorization': 'Client-ID c37fc05199a05b7'
+                    }).then(function(e, rt, x) {
+                        if (e) {
+                            onError("AJAX");
+                            return;
+                        }
                         try {
-                            var data = JSON.parse(upload.responseText).data;
-                        } catch(e) {
+                            var D = options["imgur"] ? JSON.parse(rt).data : JSON.parse(rt);
+                        } catch (E) {
                             return onError("JSON");
                         }
-                        if(data.error) {
-                            return onError(data.error);
+
+                        if (D.Error || D.error) {
+                            return onError("Server_Failure_" + D.R || D.error);
                         }
 
-                        var lk = data.link.replace("http://", "https://");
+                        var _link = (D.Link || D.link).replace("http://", "https://");
+                        var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
 
-                        _id(_editorId).focus();
-                        _insertHTML("<a href='" + lk + "' target='_blank'><img src='" + lk + "' class='article-image'></a>");
-                        _id(id).value = "";
-
-                        Animation.stop();
-                    }
-                    upload.setRequestHeader('Authorization', 'Client-ID c37fc05199a05b7');
-                } else {
-                    upload.open("POST", "/upload");
-                    upload.onload = function() {
-                        try {
-                            var D = JSON.parse(upload.responseText)
-                        } catch (E) {
-                            return onError("JSON")
-                        }
-                        if (D.Error) {
-                            return onError("Server_Failure")
-                        }
-
-                        var _link = D.Link;
-                        var _thumb = D.Thumbnail;
-
-                        if (callback) {
-                            callback(_link, _thumb);
-                        } else {
-
-                            _id(_editorId).focus();
+                        if (options["editor"]) {
+                            _id(options["editor"]).focus();
                             _insertHTML("<a href='" + _link +
                                 "' target='_blank'><img src='" + _thumb + "' class='article-image'></a>");
                         }
-                        _id(id).value = "";
-
-                        Animation.stop();
-                    };
+                        etc.editor.uploadImage(files, callback, options);
+                    });
                 }
-                upload.onerror = onError;
 
-                img.src = _URL.createObjectURL(file);
+                img.onload = function() {
+                    onLoad(this.width, this.height);
+                };
+
+                if (_URL && _URL.createObjectURL)
+                    img.src = _URL.createObjectURL(file);
+                else
+                    onLoad(1024, 1024);
             },
 
             "insertLink": function() {
