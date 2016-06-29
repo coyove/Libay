@@ -191,6 +191,10 @@ func CleanString(s string) (ret string) {
 }
 
 func MakeHash(pass ...interface{}) string {
+	return fmt.Sprintf("%x", MakeHashRaw(pass...))
+}
+
+func MakeHashRaw(pass ...interface{}) []byte {
 	pl := Salt
 
 	if len(pass) == 0 {
@@ -207,7 +211,8 @@ func MakeHash(pass ...interface{}) string {
 		tmp := sha1.Sum(bpl)
 		bpl = tmp[:20]
 	}
-	return fmt.Sprintf("%x", bpl)
+
+	return bpl
 }
 
 func Select1(table string, id int, columns ...string) (map[string]interface{}, error) {

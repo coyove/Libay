@@ -71,7 +71,7 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 	}
 
 	type pair struct {
-		Date time.Time
+		Date int
 		User string
 	}
 	ret := make(map[string]pair)
@@ -99,7 +99,7 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 	for rows.Next() {
 		var id int
 		var username string
-		var t time.Time
+		var t int
 
 		rows.Scan(&id, &t, &username)
 
@@ -336,10 +336,10 @@ func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 
 	cooldown := conf.GlobalServerConfig.GetInt(user.Group, "Cooldown")
-	_now := auth.Time.Now()
+	_now := time.Now().Unix()
 
 	sql := `SELECT 
-               new_article('%s',   %d,   '%s',     '%s',     '%s', '%s', %d,      %d, %d);`
+               new_article('%s',   %d,   '%s',     '%s',      %d,   %d,  %d,      %d, %d);`
 	//                      |      |      |         |         |     |    |        |   |
 	//                      V      V      V         V         V     V    V        V   V
 	sql = fmt.Sprintf(sql, _title, _tag, _content, _preview, _now, _now, user.ID, id, cooldown)
@@ -354,7 +354,7 @@ func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 			// \d+\-%d\-ua -> user
 			// \d+\-(%d|0).+\-owa -> owa
 			// \d+\-%d\-reply -> reply
-			auth.Gcache.Remove(fmt.Sprintf(`(\d+\-%s\-tag|\d+\-%d\-ua|\d+\-(%d|0).?\-owa|\d+\-%d\-reply|\d+\-\-|\d+\-%d\-(true|false))`,
+			auth.Gcache.Remove(fmt.Sprintf(`(.+-%s-tag|.+-%d-ua|.+-(%d|0).?-owa|.+-%d-reply|.+--|.+-%d-(true|false))`,
 				regexp.QuoteMeta(tag),
 				user.ID,
 				user.ID,
@@ -383,9 +383,9 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 		return "Err::Post::Invalid_Tag"
 	}
 
-	var authorID, revision, oldTag, oauthor int
+	var authorID, revision, oldTag, oauthor, oldParent int
 	var oldContent, oldTitle string
-	var oldTime time.Time
+	var oldTime int
 	var locked bool
 
 	if auth.Gdb.QueryRow(`
@@ -397,12 +397,13 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
             content,
             modified_at,
             locked,
+            parent,
             rev 
         FROM 
             articles 
         WHERE 
             id = `+strconv.Itoa(id)).
-		Scan(&authorID, &oauthor, &oldTag, &oldTitle, &oldContent, &oldTime, &locked, &revision) != nil {
+		Scan(&authorID, &oauthor, &oldTag, &oldTitle, &oldContent, &oldTime, &locked, &oldParent, &revision) != nil {
 		return "Err::DB::Select_Failure"
 	}
 
@@ -426,10 +427,10 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 	cooldown := conf.GlobalServerConfig.GetInt(user.Group, "Cooldown")
 
 	sql := `SELECT 
-            update_article(%d, '%s',   %d,   %d,      '%s',     '%s',     '%s',            '%s',     %d,       '%s',       '%s',                 %d)`
-	//                     |    |      |     |         |         |         |                |        |          |           |                    |
-	//                     V    V      V     V         V         V         V                V        V          V           V                    V
-	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, auth.Time.Now(), oldTitle, authorID, oldContent, auth.Time.F(oldTime), cooldown)
+            update_article(%d, '%s',   %d,   %d,      '%s',     '%s',      %d,            '%s',     %d,       '%s',         %d,       %d)`
+	//                     |    |      |     |         |         |         |                |        |          |           |         |
+	//                     V    V      V     V         V         V         V                V        V          V           V         V
+	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, time.Now().Unix(), oldTitle, authorID, oldContent, oldTime, cooldown)
 
 	var succ int
 	err := auth.Gdb.QueryRow(sql).Scan(&succ)
@@ -438,11 +439,11 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 		// row.Close()
 		if succ == 0 {
 			_oldTag := conf.GlobalServerConfig.GetIndexTag(oldTag)
-			auth.Gcache.Remove(fmt.Sprintf(`(\d+-(%s|%s)-tag|\d+-(%d|%d)-ua|\d+-((%d|0).?|(%d|0).?)-owa|\d+--|\d+-%d-(true|false))`,
+			auth.Gcache.Remove(fmt.Sprintf(`(.+-(%s|%s)-tag|.+-(%d|%d)-ua|.+-((%d|0).?|(%d|0).?)-owa|.+--|.+-%d-(true|false)|.+-%d-reply)`,
 				regexp.QuoteMeta(tag), regexp.QuoteMeta(_oldTag),
 				user.ID, oauthor,
 				user.ID, oauthor,
-				id,
+				id, oldParent,
 			))
 			return "ok"
 		} else {

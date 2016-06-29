@@ -24,13 +24,20 @@ type PageStruct struct {
 	Messages      []auth.Message
 	TotalArticles int
 	CurPage       int
-	TotalPages    int
-	PagerLinks    []pager
 
-	IsSearch  bool
-	IsReply   bool
-	IsMessage bool
-	IsOWA     bool
+	IndexPage string
+	LastPage  string
+
+	Nav auth.BackForth
+
+	IsSearch   bool
+	IsReply    bool
+	IsMessage  bool
+	IsOWA      bool
+	IsLastPage bool
+
+	IsOWAViewingGlobal  bool
+	IsMessageViewingAll bool
 
 	ShowAlwaysTop   bool
 	CurTag          string
@@ -40,19 +47,12 @@ type PageStruct struct {
 }
 
 func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var page int
+	// var page int
 	if index {
 		ServePage(w, "index", nil)
 		return
-	} else {
-		_page, err := strconv.Atoi(ps.ByName("page"))
-		if err != nil {
-			ServePage(w, "404", nil)
-			return
-		}
-
-		page = _page
 	}
+	page := ps.ByName("page")
 
 	_startRender := time.Now().UnixNano()
 	defer func() {
@@ -69,10 +69,13 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 	payload.IsReply = filterType == "reply"
 	payload.IsOWA = filterType == "owa"
 
-	payload.ShowAlwaysTop = page == 1
-	payload.CurPage = page
+	payload.ShowAlwaysTop = page == "1"
+
 	payload.CurTag = filter
 	payload.CurType = filterType
+	payload.IndexPage = strings.Replace("/"+filterType+"/"+filter+"/page/1", "/"+filterType+"//", "/", -1)
+	payload.LastPage = payload.IndexPage[:len(payload.IndexPage)-1] + "last"
+	payload.IsLastPage = page == "last"
 
 	if filterType == "reply" {
 		// You cannot view replies under an invalid article
@@ -114,39 +117,27 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 	}
 
 	if filterType == "message" {
-		// "message" tag needs different functions
 		user := auth.GetUser(r)
 		userID, err := strconv.Atoi(filter)
-		if err != nil {
+		if err != nil || userID < 0 {
 			ServePage(w, "404", nil)
 			return
 		}
-
-		payload.Messages, payload.TotalArticles = auth.GetMessages(page, user.ID, userID)
+		payload.IsMessageViewingAll = user.ID == userID
+		payload.Messages, payload.Nav = auth.GetMessages(page, user.ID, userID)
 	} else {
-		payload.Articles, payload.TotalArticles = auth.GetArticles(page, filter, filterType)
+		payload.Articles, payload.Nav = auth.GetArticles(page, filter, filterType)
 	}
+
+	if len(payload.Articles) == 0 && len(payload.Messages) == 0 && page != "1" {
+		http.Redirect(w, r,
+			payload.IndexPage,
+			http.StatusFound)
+		return
+	}
+
 	payload.Tags = conf.GlobalServerConfig.GetTags()
-
-	maxPages := int(payload.TotalArticles / conf.GlobalServerConfig.ArticlesPerPage)
-	if maxPages*conf.GlobalServerConfig.ArticlesPerPage != payload.TotalArticles {
-		maxPages++
-	}
-
-	payload.TotalPages = maxPages
 	payload.ArticlesPerPage = conf.GlobalServerConfig.ArticlesPerPage
-
-	for i := page - 5; i <= page+5; i++ {
-		if i >= 1 && i <= maxPages {
-			if i == page {
-				payload.PagerLinks = append(payload.PagerLinks, pager{})
-			} else {
-				s := "/" + filterType + "/" + filter + "/page/" + strconv.Itoa(i)
-				payload.PagerLinks = append(payload.PagerLinks,
-					pager{strings.Replace(s, "/"+filterType+"//", "/", -1), i})
-			}
-		}
-	}
 
 	ServePage(w, "articles", payload)
 }

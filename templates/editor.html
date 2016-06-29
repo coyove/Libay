@@ -92,7 +92,7 @@
 				var _html = ["历史版本:&nbsp;<select onchange='getHistory(this.value)'>"];
 				for(var k in j) {
 					_html.push("<option value='"+k+"'>历史版本: " + 
-						etc.date.format(j[k].Date, true) + "(" + j[k].User +
+						etc.date.format(j[k].Date * 1000, true) + "(" + j[k].User +
 						")</option>");
 				}
 				_html.push("<option value='-1' selected>当前版本: " +

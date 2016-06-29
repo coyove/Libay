@@ -9,25 +9,36 @@
 		document.write('<p id="breadcrumbs">');
 		// document.title = window.__title;
 		if ("{{.CurType}}" == "") {
-			document.title = "全部文章 第{{.CurPage}}页";
-			document.write('全部文章 | 共{{.TotalArticles}}篇');
+			document.title = "全部文章";
+			document.write('全部文章');
 		} else if ("{{.CurType}}" == "reply") {
-			document.title = "文章回复 第{{.CurPage}}页";
-			document.write('文章回复 <badge>{{.CurTag}}</badge> | 共{{.TotalArticles}}篇');
+			document.title = "文章回复";
+			document.write('文章回复 <badge>{{.CurTag}}</badge>');
 		} else if ("{{.CurType}}" == "ua") {
-			document.title = "用户 第{{.CurPage}}页";
-			document.write('用户 <badge>{{.CurTag}}</badge> | 共{{.TotalArticles}}篇');
+			document.title = "用户";
+			document.write('用户 <badge>{{.CurTag}}</badge>');
 		} else if ("{{.CurType}}" == "message") {
-			document.title = "私信 第{{.CurPage}}页";
-			document.write('共{{.TotalArticles}}条');
+			document.title = "私信";
+			{{if .IsMessageViewingAll}}
+			document.write('所有私信');
+			{{else}}
+			document.write('用户 <badge>{{.CurTag}}</badge> 的私信');
+			{{end}}
 		} else if ("{{.CurType}}" == "owa") {
-			document.title = "用户文章管理 第{{.CurPage}}页";
-			document.write('共{{.TotalArticles}}篇');
+			document.title = "用户文章管理";
+			{{if .IsOWAViewingGlobal}}
+			document.write('全局所有文章');
+			{{else}}
+			document.write('用户文章管理');
+			{{end}}
 		} else {
-			document.title = "{{.CurTag}} 第{{.CurPage}}页";
-			document.write('{{.CurTag}} | 共{{.TotalArticles}}篇');
+			document.title = "{{.CurTag}}";
+			document.write('{{.CurTag}}');
 		}
-		document.write(' | 第{{.CurPage}}页</p>');
+
+		document.title += " " + etc.date.format({{.Nav.Range.End}} * 1000, true);
+		document.write(' | ' + etc.date.format({{.Nav.Range.Start}} * 1000, true) + 
+			' &raquo; ' + etc.date.format({{.Nav.Range.End}} * 1000, true) + '</p>');
 	{{end}}
 </script>
 
@@ -102,13 +113,24 @@
 {{end}}
 
 <div class="pager">
-	{{range .PagerLinks}}
-		{{if .Page}}
-			[<a href="{{.Link}}"> {{.Page}} </a>]
-		{{else}}
-			<strong>[ {{$.CurPage}} ]</strong>
-		{{end}}
-	{{end}} 
+	{{if .ShowAlwaysTop}}[ <b>首页</b> ]{{else}}
+	[
+	<a href="{{.IndexPage}}"> 首页 </a> |
+	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	]
+	{{end}}
+
+	{{if .IsLastPage}}
+	[ <b>尾页</b> ]
+	{{else}}
+	[
+	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
+	<a href="{{.Nav.LastWeekPage}}" >7d</a> |
+	<a href="{{.Nav.LastMonthPage}}">30d</a> |
+	<a href="{{.Nav.LastYearPage}}" >1y</a> |
+	<a href="{{.LastPage}}" >尾页</a>
+	]
+	{{end}}
 </div>
 
 {{if .IsReply}}
@@ -261,16 +283,23 @@
 {{end}}
 
 <div class="pager">
-	{{range .PagerLinks}}
-		{{if .Page}}
-		[<a href="{{.Link}}"> {{.Page}} </a>]
-		{{else}}
-		<strong>[ {{$.CurPage}} ]</strong>
-		{{end}}
-	{{end}} 
-	<div style="float:right">
-	前往: <input id="goto-page" type="textbox" style="width:30px; text-align:center"/> (共{{.TotalPages}}页)
-	</div><br style="clear:both">
+	{{if .ShowAlwaysTop}}[ <b>首页</b> ]{{else}}
+	[
+	<a href="{{.IndexPage}}"> 首页 </a> |
+	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	]
+	{{end}}
+	{{if .IsLastPage}}
+	[ <b>尾页</b> ]
+	{{else}}
+	[
+	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
+	<a href="{{.Nav.LastWeekPage}}" >7d</a> |
+	<a href="{{.Nav.LastMonthPage}}">30d</a> |
+	<a href="{{.Nav.LastYearPage}}" >1y</a> |
+	<a href="{{.LastPage}}" >尾页</a>
+	]
+	{{end}}
 </div>
 
 <script type="text/javascript">

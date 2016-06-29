@@ -263,8 +263,8 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 	cc := auth.Gcache.GetLowLevelCache()
 	caches := make([]string, 0)
 
-	rindex := regexp.MustCompile(`(\d+)--`)
-	rpage := regexp.MustCompile(`(\d+)-(.+)-(ua|owa|reply|tag)`)
+	rindex := regexp.MustCompile(`(.+)--`)
+	rpage := regexp.MustCompile(`(.+)-(.+)-(ua|owa|reply|tag)`)
 	rarticle := regexp.MustCompile(`(\d+)-(\d+)-(true|false)`)
 	makehref := func(url string) string {
 		return fmt.Sprintf(`<a href='%s' target='_blank'>%s</a>`, url, url)
