@@ -8,9 +8,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	_ "database/sql"
-	// "encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -348,9 +348,20 @@ func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	err := auth.Gdb.QueryRow(sql).Scan(&succ)
 
 	if err == nil {
-		// row.Close()
+
 		if succ == 0 {
-			auth.Gcache.Clear()
+			// \d+\-%s\-tag -> tag
+			// \d+\-%d\-ua -> user
+			// \d+\-(%d|0).+\-owa -> owa
+			// \d+\-%d\-reply -> reply
+			auth.Gcache.Remove(fmt.Sprintf(`(\d+\-%s\-tag|\d+\-%d\-ua|\d+\-(%d|0).?\-owa|\d+\-%d\-reply|\d+\-\-|\d+\-%d\-(true|false))`,
+				regexp.QuoteMeta(tag),
+				user.ID,
+				user.ID,
+				id,
+				id,
+			))
+			// auth.Gcache.Clear()
 			return "ok"
 		} else {
 			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ) + "s"
@@ -372,7 +383,7 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 		return "Err::Post::Invalid_Tag"
 	}
 
-	var authorID, revision int
+	var authorID, revision, oldTag, oauthor int
 	var oldContent, oldTitle string
 	var oldTime time.Time
 	var locked bool
@@ -380,6 +391,8 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 	if auth.Gdb.QueryRow(`
         SELECT 
             author,
+            original_author,
+            tag,
             title,
             content,
             modified_at,
@@ -389,7 +402,7 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
             articles 
         WHERE 
             id = `+strconv.Itoa(id)).
-		Scan(&authorID, &oldTitle, &oldContent, &oldTime, &locked, &revision) != nil {
+		Scan(&authorID, &oauthor, &oldTag, &oldTitle, &oldContent, &oldTime, &locked, &revision) != nil {
 		return "Err::DB::Select_Failure"
 	}
 
@@ -424,7 +437,13 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 	if err == nil {
 		// row.Close()
 		if succ == 0 {
-			auth.Gcache.Clear()
+			_oldTag := conf.GlobalServerConfig.GetIndexTag(oldTag)
+			auth.Gcache.Remove(fmt.Sprintf(`(\d+-(%s|%s)-tag|\d+-(%d|%d)-ua|\d+-((%d|0).?|(%d|0).?)-owa|\d+--|\d+-%d-(true|false))`,
+				regexp.QuoteMeta(tag), regexp.QuoteMeta(_oldTag),
+				user.ID, oauthor,
+				user.ID, oauthor,
+				id,
+			))
 			return "ok"
 		} else {
 			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ) + "s"

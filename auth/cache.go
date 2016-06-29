@@ -2,7 +2,7 @@ package auth
 
 import (
 	"container/list"
-	// "github.com/golang/glog"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -33,6 +33,7 @@ type entry struct {
 	value interface{}
 	born  int64
 	ttl   int64
+	hits  int64
 }
 
 // New creates a new Cache.
@@ -59,6 +60,11 @@ func (c *Cache) GetLowLevelCache() map[interface{}]*list.Element {
 	defer c.RUnlock()
 
 	return c.cache
+}
+
+func (c *Cache) Info(v *list.Element) (int, int) {
+	elem := v.Value.(*entry)
+	return int((elem.born + elem.ttl) - time.Now().Unix()), int(elem.hits)
 }
 
 func (c *Cache) Start() {
@@ -96,13 +102,16 @@ func (c *Cache) Add(key Key, value interface{}, ttl int) {
 
 	if ee, ok := c.cache[key]; ok {
 		c.ll.MoveToFront(ee)
-		ee.Value.(*entry).value = value
-		ee.Value.(*entry).born = time.Now().Unix()
-		ee.Value.(*entry).ttl = int64(ttl)
+		e := ee.Value.(*entry)
+
+		e.value = value
+		e.born = time.Now().Unix()
+		e.ttl = int64(ttl)
+		e.hits++
 		return
 	}
 
-	ele := c.ll.PushFront(&entry{key, value, time.Now().Unix(), int64(ttl)})
+	ele := c.ll.PushFront(&entry{key, value, time.Now().Unix(), int64(ttl), 0})
 	c.cache[key] = ele
 	if c.MaxEntries != 0 && c.ll.Len() > c.MaxEntries {
 		c.removeOldest()
@@ -126,8 +135,9 @@ func (c *Cache) Get(key Key) (value interface{}, ok bool) {
 			return
 		}
 
+		e.hits++
 		c.ll.MoveToFront(ele)
-		return ele.Value.(*entry).value, true
+		return e.value, true
 	}
 
 	return
@@ -143,6 +153,16 @@ func (c *Cache) Remove(key Key) {
 	}
 	if ele, hit := c.cache[key]; hit {
 		c.removeElement(ele)
+	} else {
+		switch key.(type) {
+		case string:
+			re := regexp.MustCompile(key.(string))
+			for k, v := range c.cache {
+				if re.MatchString(k.(string)) {
+					c.removeElement(v)
+				}
+			}
+		}
 	}
 }
 

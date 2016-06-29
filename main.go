@@ -37,7 +37,6 @@ var debugMode = flag.Bool("d", false, "Debug mode")
 var debugPort = flag.Int("debug-port", 731, "Debug server port")
 
 func main() {
-
 	flag.Parse()
 	filename, _ := osext.Executable()
 	exebuf, _ := ioutil.ReadFile(filename)

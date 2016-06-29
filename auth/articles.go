@@ -430,10 +430,22 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 }
 
 func InvertArticleState(id int, state string) string {
-	_, err := Gdb.Exec(fmt.Sprintf("UPDATE articles SET %s = NOT %s WHERE id = %d", state, state, id))
+	var _tag, author, oauthor int
 
+	err := Gdb.QueryRow(fmt.Sprintf(`
+		UPDATE articles SET %s = NOT %s WHERE id = %d;
+		SELECT tag, author, original_author FROM articles WHERE id = %d;
+		`, state, state, id, id)).Scan(&_tag, &author, &oauthor)
+
+	tag := conf.GlobalServerConfig.GetIndexTag(_tag)
 	if err == nil {
-		Gcache.Clear()
+		// Gcache.Clear()
+		Gcache.Remove(fmt.Sprintf(`(\d+-(%s)-tag|\d+-(%d|%d)-ua|\d+-(%d|0).?-owa|\d+-(%d|0).?-owa|\d+--|\d+-%d-(true|false))`,
+			tag,
+			author, oauthor,
+			author, oauthor,
+			id,
+		))
 		return "ok"
 	} else {
 		glog.Errorln("Database:", err, id, state)

@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -84,7 +85,9 @@ func (th ModelHandler) POST_database_TABLE_delete(w http.ResponseWriter, r *http
 		}
 	}
 
-	Return(w, auth.DeleteRowsDirect(ps.ByName("table"), ids))
+	ret := auth.DeleteRowsDirect(ps.ByName("table"), ids)
+	auth.Gcache.Clear()
+	Return(w, ret)
 }
 
 func (th ModelHandler) POST_database_TABLE_exec(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -97,6 +100,7 @@ func (th ModelHandler) POST_database_TABLE_exec(w http.ResponseWriter, r *http.R
 
 	_, err := auth.Gdb.Exec(r.FormValue("statement"))
 	if err == nil {
+		auth.Gcache.Clear()
 		Return(w, "ok")
 	} else {
 		Return(w, fmt.Sprintf("Err::DB::General_Failure_%s", err))
@@ -259,9 +263,38 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 	cc := auth.Gcache.GetLowLevelCache()
 	caches := make([]string, 0)
 
-	for k, _ := range cc {
-		caches = append(caches, k.(string))
+	rindex := regexp.MustCompile(`(\d+)--`)
+	rpage := regexp.MustCompile(`(\d+)-(.+)-(ua|owa|reply|tag)`)
+	rarticle := regexp.MustCompile(`(\d+)-(\d+)-(true|false)`)
+	makehref := func(url string) string {
+		return fmt.Sprintf(`<a href='%s' target='_blank'>%s</a>`, url, url)
 	}
 
-	Return(w, caches)
+	for k, v := range cc {
+		name := k.(string)
+		url := []string{}
+
+		if rindex.MatchString(name) {
+			url = []string{"/page/" + rindex.FindStringSubmatch(name)[1], ""}
+
+		} else if rpage.MatchString(name) {
+			pages := rpage.FindStringSubmatch(name)
+			url = []string{fmt.Sprintf("/%s/%s/page/%s", pages[3], pages[2], pages[1]), ""}
+
+		} else if rarticle.MatchString(name) {
+			articles := rarticle.FindStringSubmatch(name)
+			url = []string{"/article/" + articles[2], "/user/" + articles[1]}
+		}
+
+		sec, hits := auth.Gcache.Info(v)
+
+		if sec < 0 {
+			caches = append(caches, fmt.Sprintf("Hits: %5d, waits purging: %s %s", hits, makehref(url[0]), makehref(url[1])))
+		} else {
+			caches = append(caches, fmt.Sprintf("Hits: %5d, expires in %d: %s %s", hits, sec, makehref(url[0]), makehref(url[1])))
+		}
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	Return(w, strings.Join(caches, "<br>"))
 }
