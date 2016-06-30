@@ -5,6 +5,7 @@
     <a href="/ua/{{.ID}}/page/1">冰山(可见文章)</a> |
     <a href="/owa/{{.ID}}/page/1">全部文章</a> |
     <a href="/message/{{.ID}}/page/1">站内信箱</a>
+    <badge id="message-box-count" style="display: none;"></badge>
 </p>
 
 {{else}}
@@ -119,6 +120,8 @@
                 "csrf": etc.util.CSRF()
             }).then(function (e, data, x) {
                 if (data.indexOf("ok") == 0) {
+                    var rs = data.split(" ");
+                    etc.util.cookie.write("unread", rs[2], 3600 * 24 * 1000);
                     window.location.href = returnURL;
                 } else {
                     etc.let.show("login-result").$.innerHTML = "登入失败: " + data;
@@ -164,88 +167,92 @@
     }
 
     {{if .IsLoggedIn}}
-    var tryLogout = function(){
-        etc.let.disable("logout-button");
-        etc.util.ajax.post("/logout").then(function (e, data, x) {
-            window.location.reload();
-        });
-    }
-
-    var tryUpdateComment = function(){
-        etc.let.disable("update-comment");
-
-        etc.util.ajax.post("/user/update/comment", {
-            "comment": etc.id("user-comment").value,
-            "csrf": etc.util.CSRF()
-        }).then(function(e, d, x){
-            if (d == "ok") {
-                alert("更新备注成功");
+        var tryLogout = function(){
+            etc.let.disable("logout-button");
+            etc.util.ajax.post("/logout").then(function (e, data, x) {
+                etc.util.cookie.delete("unread");
                 window.location.reload();
-            } else {
-                alert("更新失败: " + d);
-                etc.let.enable("update-comment");
-            }
-        });
-    }
-
-    var tryUpdateAvatar = function(){
-        etc.let.disable("update-avatar");
-
-        etc.util.ajax.$post("/upload", {
-            "image": etc.file("user-avatar"),
-            "avatar": "true",
-            "csrf": etc.util.CSRF()
-        }).then(function(e, d, x){
-            etc.let.enable("update-avatar");
-
-            var j = JSON.parse(d);
-
-            if (j.Avatar == "ok"){
-                alert("上传成功");
-                etc.id("avatar-image").attr("src", j.Thumbnail).parentNode.href = j.Link;
-            } else {
-                alert("发生错误");
-            }
-        });
-    }
-    {{else}}
-    window.onload = function() {
-        etc.util.lazyLoad(["/assets/openpgp.min.js"]);
-
-        var q = (window.location.href).split("?");
-        if (q.length > 1) returnURL = q[1];
-
-        etc.id("uname").on("blur", tryLoginPhase1);
-        etc.id("pp").on("focus", function(ev) { if (ev && encryptedContent == "") tryLoginPhase1(); })
-        .on("keydown", function(ev) { if (ev.keyCode == 13) tryLoginPhase2(); });
-        etc.id("simple-password").on("keydown", function(ev) { if (ev.keyCode == 13) tryLogin(); });
-
-        etc.id('private-key').on('change', function (evt) {
-            var f = evt.target.files[0]; 
-
-            if (f) {
-                var r = new FileReader();
-                r.onload = function(e) { 
-                    privateKeyContent = e.target.result;
-                    etc.id("private-key-content").value = privateKeyContent;
-                }
-                r.readAsText(f);
-            } else { 
-                alert("无法打开文件");
-            }
-        }, false);
-
-        etc.id("encrypted").on("click", tryLoginPhase1);
-        etc.id("private-key-content").on("click", function(ev) { etc.id("private-key").click(); });
-
-        privateKeyContent = etc.util.read("private_key");
-        if (privateKeyContent != null) {
-            etc.id("private-key-content").value = privateKeyContent;
-            etc.id("allow-local-storage").checked = true;
+            });
         }
 
-        etc.let.disable('login-phase2');
-    }
+        var tryUpdateComment = function(){
+            etc.let.disable("update-comment");
+
+            etc.util.ajax.post("/user/update/comment", {
+                "comment": etc.id("user-comment").value,
+                "csrf": etc.util.CSRF()
+            }).then(function(e, d, x){
+                if (d == "ok") {
+                    alert("更新备注成功");
+                    window.location.reload();
+                } else {
+                    alert("更新失败: " + d);
+                    etc.let.enable("update-comment");
+                }
+            });
+        }
+
+        var tryUpdateAvatar = function(){
+            etc.let.disable("update-avatar");
+
+            etc.util.ajax.$post("/upload", {
+                "image": etc.file("user-avatar")[0],
+                "avatar": "true",
+                "csrf": etc.util.CSRF()
+            }).then(function(e, d, x){
+                etc.let.enable("update-avatar");
+
+                var j = JSON.parse(d);
+
+                if (j.Avatar == "ok"){
+                    alert("上传成功");
+                    etc.id("avatar-image").attr("src", j.Thumbnail).parentNode.href = j.Link;
+                } else {
+                    alert("发生错误");
+                }
+            });
+        }
+
+        if (window.__unread > 0) 
+            etc.id("message-box-count").html(window.__unread).style.display = "inline";
+    {{else}}
+        window.onload = function() {
+            etc.util.lazyLoad(["/assets/openpgp.min.js"]);
+
+            var q = (window.location.href).split("?");
+            if (q.length > 1) returnURL = q[1];
+
+            etc.id("uname").on("blur", tryLoginPhase1);
+            etc.id("pp").on("focus", function(ev) { if (ev && encryptedContent == "") tryLoginPhase1(); })
+            .on("keydown", function(ev) { if (ev.keyCode == 13) tryLoginPhase2(); });
+            etc.id("simple-password").on("keydown", function(ev) { if (ev.keyCode == 13) tryLogin(); });
+
+            etc.id('private-key').on('change', function (evt) {
+                var f = evt.target.files[0]; 
+
+                if (f) {
+                    var r = new FileReader();
+                    r.onload = function(e) { 
+                        privateKeyContent = e.target.result;
+                        etc.id("private-key-content").value = privateKeyContent;
+                    }
+                    r.readAsText(f);
+                } else { 
+                    alert("无法打开文件");
+                }
+            }, false);
+
+            etc.id("encrypted").on("click", tryLoginPhase1);
+            etc.id("private-key-content").on("click", function(ev) { etc.id("private-key").click(); });
+
+            privateKeyContent = etc.util.read("private_key");
+            if (privateKeyContent != null) {
+                etc.id("private-key-content").value = privateKeyContent;
+                etc.id("allow-local-storage").checked = true;
+            }
+
+            etc.let.disable('login-phase2');
+        }
     {{end}}
 </script>
 

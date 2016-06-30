@@ -32,7 +32,6 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 
 		User       auth.AuthUser
 		IsLoggedIn bool
-		IsMessage  bool
 	}
 	u := auth.GetUser(r)
 	vtt := conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOtherTrash")
@@ -189,7 +188,7 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 		return
 	}
 
-	Return(w, auth.InvertArticleState(id, "deleted"))
+	Return(w, auth.InvertArticleState(u, id, "deleted"))
 }
 
 func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -216,30 +215,30 @@ func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	Return(w, auth.InvertArticleState(id, "locked"))
+	Return(w, auth.InvertArticleState(u, id, "locked"))
 }
 
-func (th ModelHandler) POST_top_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	u := auth.GetUser(r)
+// func (th ModelHandler) POST_announce_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// 	u := auth.GetUser(r)
 
-	id, err := strconv.Atoi(ps.ByName("id"))
-	if err != nil {
-		Return(w, "Err::Router::Invalid_Article_Id")
-		return
-	}
+// 	id, err := strconv.Atoi(ps.ByName("id"))
+// 	if err != nil {
+// 		Return(w, "Err::Router::Invalid_Article_Id")
+// 		return
+// 	}
 
-	if !auth.CheckCSRF(r) {
-		Return(w, "Err::CSRF::CSRF_Failure")
-		return
-	}
+// 	if !auth.CheckCSRF(r) {
+// 		Return(w, "Err::CSRF::CSRF_Failure")
+// 		return
+// 	}
 
-	if !conf.GlobalServerConfig.GetPrivilege(u.Group, "AnnounceArticle") {
-		Return(w, "Err::Privil::Announce_Action_Denied")
-		return
-	}
+// 	if !conf.GlobalServerConfig.GetPrivilege(u.Group, "AnnounceArticle") {
+// 		Return(w, "Err::Privil::Announce_Action_Denied")
+// 		return
+// 	}
 
-	Return(w, auth.InvertArticleState(id, "stay_top"))
-}
+// 	Return(w, auth.InvertArticleState(id, "stay_top"))
+// }
 
 func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !auth.LogIP(r) {
@@ -285,26 +284,26 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	if r.FormValue("update") == "true" {
-		Return(w, updateArticle(u, id, tag, title, content))
+		Return(w, UpdateArticle(u, id, tag, title, content))
 	} else {
-		Return(w, newArticle(r, u, id, tag, title, content))
+		Return(w, NewArticle(r, u, id, tag, title, content))
 	}
 }
 
-func (th ModelHandler) GET_feed_TYPE_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	page, err := strconv.Atoi(ps.ByName("page"))
-	if err != nil {
-		ServePage(w, "404", nil)
-		return
-	}
+func (th ModelHandler) GET_feed_TYPE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// page, err := strconv.Atoi(ps.ByName("page"))
+	// if err != nil {
+	// 	ServePage(w, "404", nil)
+	// 	return
+	// }
 	if ps.ByName("type") == "rss" {
-		Return(w, auth.GenerateRSS(false, page))
+		Return(w, auth.GenerateRSS(false, 0))
 	} else {
-		Return(w, auth.GenerateRSS(true, page))
+		Return(w, auth.GenerateRSS(true, 0))
 	}
 }
 
-func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title string, content string) string {
+func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title string, content string) string {
 	_tag := conf.GlobalServerConfig.GetTagIndex(auth.Escape(tag))
 	_title := auth.Escape(title)
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
@@ -336,7 +335,7 @@ func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 
 	cooldown := conf.GlobalServerConfig.GetInt(user.Group, "Cooldown")
-	_now := time.Now().Unix()
+	_now := time.Now().UnixNano() / 1e6
 
 	sql := `SELECT 
                new_article('%s',   %d,   '%s',     '%s',      %d,   %d,  %d,      %d, %d);`
@@ -364,7 +363,7 @@ func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 			// auth.Gcache.Clear()
 			return "ok"
 		} else {
-			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ) + "s"
+			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ/1e3) + "s"
 		}
 	} else {
 		glog.Errorln("Database:", err)
@@ -372,7 +371,7 @@ func newArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 }
 
-func updateArticle(user auth.AuthUser, id int, tag string, title string, content string) string {
+func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content string) string {
 	_tag := conf.GlobalServerConfig.GetTagIndex(auth.Escape(tag))
 	_title := auth.Escape(title)
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
@@ -430,7 +429,7 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
             update_article(%d, '%s',   %d,   %d,      '%s',     '%s',      %d,            '%s',     %d,       '%s',         %d,       %d)`
 	//                     |    |      |     |         |         |         |                |        |          |           |         |
 	//                     V    V      V     V         V         V         V                V        V          V           V         V
-	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, time.Now().Unix(), oldTitle, authorID, oldContent, oldTime, cooldown)
+	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, time.Now().UnixNano()/1e6, oldTitle, authorID, oldContent, oldTime, cooldown)
 
 	var succ int
 	err := auth.Gdb.QueryRow(sql).Scan(&succ)
@@ -447,7 +446,7 @@ func updateArticle(user auth.AuthUser, id int, tag string, title string, content
 			))
 			return "ok"
 		} else {
-			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ) + "s"
+			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ/1e3) + "s"
 		}
 	} else {
 		glog.Errorln("Database:", err)

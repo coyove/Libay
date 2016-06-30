@@ -55,9 +55,10 @@ type ServerConfig struct {
 
 	ConfigPath string
 
-	sortedTags     map[int]string
-	sortedTags2    map[int]Tag
-	presetSqlQuery string
+	sortedTags        map[int]string
+	sortedTagsReverse map[string]int
+	sortedTags2       map[int]Tag
+	presetSqlQuery    string
 
 	sync.RWMutex
 }
@@ -69,6 +70,7 @@ type Tag struct {
 	Restricted  bool
 	PermittedTo []string
 	Short       string
+	AnnounceID  int
 }
 
 func (sc *ServerConfig) GetTags() map[int]string {
@@ -131,12 +133,22 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 	defer sc.Unlock()
 
 	ret := make(map[int]string)
+	retReverse := make(map[string]int)
 	ret2 := make(map[int]Tag)
 
 	sc.presetSqlQuery = ""
 
-	// buf, _ := json.Marshal(t.PermittedTo)
-	rows, err := db.Query("SELECT id, name, description, restricted, hidden, short FROM tags;")
+	rows, err := db.Query(`
+        SELECT 
+            id, 
+            name, 
+            description, 
+            restricted, 
+            hidden, 
+            short,
+            announce_id
+        FROM 
+            tags`)
 
 	if err != nil {
 		glog.Fatalln("Init tags failed")
@@ -146,23 +158,25 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 
 	// for k, v := range list {
 	for rows.Next() {
-		var id int
+		var id, announceID int
 		var hidden bool
 		var name, description, restricted, short string
 
-		rows.Scan(&id, &name, &description, &restricted, &hidden, &short)
+		rows.Scan(&id, &name, &description, &restricted, &hidden, &short, &announceID)
 
 		if hidden || id == sc.AnonymousArea || id == sc.ReplyArea {
 			sc.presetSqlQuery += (" AND tag != " + strconv.Itoa(id))
 		}
 
 		ret[id] = name
+		retReverse[name] = id
+
 		t := Tag{}
 		t.Name = name
 		t.Description = html.UnescapeString(description) // _v["description"].(string)
 		t.Visible = !hidden                              // !_v["hidden"].(bool)
 		t.Short = short                                  // _v["short"].(string)
-		// log.Println(id, name, restricted, hidden, short)
+		t.AnnounceID = announceID
 
 		// ra := _v["restricted"].([]interface{})
 		var arr interface{}
@@ -190,7 +204,7 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 
 	sc.sortedTags = ret
 	sc.sortedTags2 = ret2
-	// sc.sortedVisibleTags = ret3
+	sc.sortedTagsReverse = retReverse
 }
 
 func (sc *ServerConfig) GetTagIndex(t string) int {
@@ -202,10 +216,13 @@ func (sc *ServerConfig) GetTagIndex(t string) int {
 		return _t
 	}
 
-	for k, v := range sc.sortedTags2 {
-		if v.Name == t {
-			return k
-		}
+	// for k, v := range sc.sortedTags2 {
+	// 	if v.Name == t {
+	// 		return k
+	// 	}
+	// }
+	if v, ok := sc.sortedTagsReverse[t]; ok {
+		return v
 	}
 
 	return -1

@@ -1,5 +1,5 @@
 <title>{{.Table}}</title>
-<p id="breadcrumbs">数据库: {{.Table}}</p>
+<p id="breadcrumbs">数据库 | {{.Table}}</p>
 
 <script type="text/javascript">
 	function tryDelete() {
@@ -90,6 +90,10 @@
 			case "unlock":
 			etc.id("sql-statement").value = "update user_info set \"status\"='ok' where id="; 
 			break;
+			case "newtag":
+			etc.id("sql-statement").value = "insert into tags (id, name, description, restricted, hidden, short)" +
+				" values (?,'','','[]',false,'')";
+			break;
 		}
 	}
 </script>
@@ -111,6 +115,7 @@
 	<button onclick="tryExec()">执行SQL</button>
 	<button onclick="_update('lock')">封锁用户</button>
 	<button onclick="_update('unlock')">解锁用户</button>
+	<button onclick="_update('newtag')">添加标签</button>
 	<button onclick="tryUpdateTags()">更新标签</button>
 	</div>
 </div>

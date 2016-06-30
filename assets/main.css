@@ -122,10 +122,15 @@ table.account-info td {
     padding-bottom: 2em;
     display: table-cell;
 }
+
 .article-image {
     max-width: 250px;
     max-height: 250px;
 }
+
+.smaller { font-size: 90%; }
+.larger { font-size: 110%; }
+
 .small-preview {
 	max-width:100px;
 	max-height:100px;
@@ -259,7 +264,10 @@ hr {
     border-right: dotted 1px;
     
 }
-.pager {margin-top: 5px; }
+.pager {
+    margin: 5px 0; 
+    word-spacing: -0.1em; 
+}
 
 table._table { 
     border-collapse: collapse;
@@ -408,9 +416,11 @@ div#editor textarea {
 }
 
 span.right-block {
-    display: block; 
-    float:right; 
-    margin-right: 8px
+    display: block;
+    float: right;
+    margin-right: 8px;
+    margin-top: -2em;
+    font-size: 80%;
 }
 
 .editor-panel span {

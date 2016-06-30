@@ -13,7 +13,7 @@
 	标签: <a href="/tag/{{.Article.Tag}}/page/1">{{.Article.Tag}}</a> |
 
 	<script type="text/javascript">
-		document.write(etc.date.format({{.Article.ModTimestamp}} * 1000, true));
+		document.write(etc.date.format({{.Article.ModTimestamp}}, true));
 	</script> |
 
 	{{.Article.Hits}}次查看
@@ -23,21 +23,6 @@
 <script type="text/javascript">
 function goEdit() {
 	window.location.href="/edit/article/{{.Article.ID}}?" + window.location.href;
-}
-
-function goChange() {
-	etc.let.hide("make-top");
-
-	etc.util.ajax.post("/top/article/{{.Article.ID}}", {"csrf": etc.util.CSRF()}).then(function(e, d, x){
-		if (d == "ok") {
-			alert("操作成功");
-			window.location.reload();
-		}
-		else {
-			alert("发生错误: " + d);
-			etc.let.show("make-top");
-		}
-	});
 }
 
 function goLock() {
@@ -95,6 +80,19 @@ function tryDeleteRestore(del){
 	});
 }
 
+function tryUnread(id) {
+	etc.let.hide("unread-message");
+	etc.util.ajax.post("/unread/message/" + id, {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+		if (text == "ok") {
+			alert("已将该消息标记为未读");
+			window.history.back();
+		} else {
+			alert("发生错误: " + text);
+			etc.let.show("unread-message");
+		}
+	});
+}
+
 function switchView() {
 	var el = etc.id("switch-mode");
 
@@ -118,17 +116,17 @@ function switchView() {
 	<table class="toa"><tr>
 		{{if .Article.ParentID}}
 		{{else}}
-			{{if .Article.IsMessage}}{{else}}
-				<script type="text/javascript">
-				if (etc.util.isNumber("{{.Article.Tag}}"))
-					document.write('<td><a href="/new/message/{{.Article.AuthorID}}"><b>回复私信</b></a></td>');
-				else {
-					if ({{.Article.Children}} > 0)
-						document.write('<td><a href="/reply/{{.Article.ID}}/page/1"><b>{{.Article.Children}}篇回复</b></a></td>');
-
-					document.write('<td><a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1"><b>回复文章</b></a></td>');
-				}
-				</script>
+			{{if .Article.IsMessage}}
+				{{if .Article.IsMessageSentout}}
+				{{else}}
+				<td><a href="/new/message/{{.Article.AuthorID}}"><b>回复私信</b></a></td>
+				<td><a id="unread-message" href="javascript:tryUnread({{.Article.ID}})">标记为未读</a></td>
+				{{end}}
+			{{else}}
+				{{if .Article.Children}}
+					<td><a href="/reply/{{.Article.ID}}/page/1"><b>{{.Article.Children}}篇回复</b></a></td>
+				{{end}}
+				<td><a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1"><b>回复文章</b></a></td>
 			{{end}}
 		{{end}}
 		{{if .IsLoggedIn}}
@@ -140,14 +138,6 @@ function switchView() {
 					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(true)">删除</a></td>
 				{{end}}
 			{{end}}
-
-			{{if .CanMakeTop}}
-				{{if .Article.StayTop}}
-					<td><a id="make-top" href='javascript:goChange()'>取消置顶</a></td>
-				{{else}}
-					<td><a id="make-top" href='javascript:goChange()'>置顶</a></td>
-				{{end}}
-			{{end}}	
 
 			{{if .CanMakeLocked}}
 				{{if .Article.Locked}}
@@ -177,7 +167,7 @@ function switchView() {
 		<li><em>您没有查看权限</em></li>
 		{{end}}
 
-		{{if .Article.IsMessage}}
+		{{if .Article.IsOthersMessage}}
 		<li><em>这是他人私信文章</em></li>
 		{{end}}
 	</ul>

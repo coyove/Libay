@@ -42,29 +42,29 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 	var usage int
 
 	err = auth.Gdb.QueryRow(`
-		SELECT
-			    users.nickname,
-			    users.last_login_date,
-			    users.signup_date,
-			user_info.status,
-			user_info.group,
-			user_info.comment,
-			user_info.avatar,
-			user_info.image_usage 
-		FROM
-			users 
-		INNER JOIN 
-			user_info ON user_info.id = users.id
-		WHERE
-			users.id = `+strconv.Itoa(id)).
+        SELECT
+                users.nickname,
+                users.last_login_date,
+                users.signup_date,
+            user_info.status,
+            user_info.group,
+            user_info.comment,
+            user_info.avatar,
+            user_info.image_usage 
+        FROM
+            users 
+        INNER JOIN 
+            user_info ON user_info.id = users.id
+        WHERE
+            users.id = `+strconv.Itoa(id)).
 		Scan(&nickname,
-			&date,
-			&signupDate,
-			&status,
-			&group,
-			&comment,
-			&avatar,
-			&usage)
+		&date,
+		&signupDate,
+		&status,
+		&group,
+		&comment,
+		&avatar,
+		&usage)
 
 	if err == nil {
 		comment = html.UnescapeString(comment)
@@ -76,7 +76,6 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 			"",
 			strings.Trim(status, " "),
 			strings.Trim(group, " "),
-			false,
 			comment,
 			avatar,
 			usage,
@@ -110,6 +109,44 @@ func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.R
 
 	_, err := auth.Gdb.Exec(`UPDATE user_info SET comment = '` + comment + `' WHERE id = ` + strconv.Itoa(u.ID))
 	if err == nil {
+		w.Write([]byte("ok"))
+	} else {
+		glog.Errorln("Database:", err)
+		Return(w, "Err::DB::General_Failure")
+	}
+}
+
+func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	u := auth.GetUser(r)
+	if u.Name == "" {
+		Return(w, "Err::Privil::Invalid_User")
+	}
+
+	id, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		Return(w, "Err::Router::Invalid_Article_Id")
+		return
+	}
+
+	if id == 0 {
+		messageLimit := int(time.Now().UnixNano()/1e6 - 3600000*24*365)
+		_, err = auth.Gdb.Exec(`
+        UPDATE articles 
+        SET    read = true
+        WHERE 
+            tag = ` + strconv.Itoa(u.ID+100000) + `
+        AND created_at > ` + strconv.Itoa(messageLimit))
+	} else {
+		_, err = auth.Gdb.Exec(`
+        UPDATE articles 
+        SET    read = false 
+        WHERE 
+            id = ` + strconv.Itoa(id) + ` 
+        AND 
+            tag = ` + strconv.Itoa(u.ID+100000))
+	}
+	if err == nil {
+		auth.Gcache.Remove(`.+-` + strconv.Itoa(id) + `-(true|false)`)
 		w.Write([]byte("ok"))
 	} else {
 		glog.Errorln("Database:", err)

@@ -3,11 +3,13 @@ package auth
 import (
 	"../conf"
 	_ "database/sql"
+	"encoding/binary"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/gorilla/feeds"
 	"html"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,15 +27,17 @@ type Article struct {
 	ModTimestamp int
 	Deleted      bool
 	Locked       bool
-	StayTop      bool
+	Read         bool
 	Hits         int
 	ParentID     int
 	ParentTitle  string
 	Children     int
-	// EmptyContent bool
-	IsRestricted bool
-	IsMessage    bool
 	Revision     int
+
+	IsRestricted     bool
+	IsOthersMessage  bool
+	IsMessage        bool
+	IsMessageSentout bool
 }
 
 type Message struct {
@@ -46,6 +50,7 @@ type Message struct {
 	SenderName   string
 	Sentout      bool
 	Timestamp    int
+	Read         bool
 }
 
 type BackForth struct {
@@ -88,7 +93,7 @@ func ArticleCounter() {
 			articleCounter.Lock()
 			var query string = ""
 			for id, c := range articleCounter.articles {
-				query += "UPDATE articles SET hits=hits+" + strconv.Itoa(c) + " WHERE id=" + strconv.Itoa(id) + ";"
+				query += "UPDATE articles SET hits = hits + " + strconv.Itoa(c) + " WHERE id=" + strconv.Itoa(id) + ";"
 				delete(articleCounter.articles, id)
 			}
 
@@ -105,62 +110,57 @@ func ArticleCounter() {
 var itoa = strconv.Itoa
 
 func HashTS(ts int) string {
-	lookup := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	buf := MakeHashRaw(ts)
-	ret := []byte{0, 0, 0, 0}
-	for i := 0; i < 4; i++ {
-		ret[i] = lookup[buf[i]&63]
-	}
-	return string(ret)
+
+	return To60(uint64(binary.BigEndian.Uint32(buf[:4])))[:3]
 }
 
 func ExtractTS(enc string) (string, string, int, bool) {
 	switch enc {
 	case "1":
-		return "DESC", "<", int(time.Now().Unix()), false
+		return "DESC", "<", int(time.Now().UnixNano() / 1e6), false
 	case "last":
 		return "ASC", ">", 0, false
 	default:
-		if len(enc) != 13 {
+		matches := tsReg.FindStringSubmatch(enc)
+		if len(matches) != 4 {
 			return "", "", 0, true
 		}
 
-		verify := enc[9:]
-		direction := "DESC"
-
-		if enc[8] == '-' {
-			direction = "ASC"
+		verify := matches[2]
+		direction, ok := IIF{"before": "DESC", "after": "ASC"}[matches[1]]
+		if !ok {
+			return "", "", 0, true
 		}
+		ts := From60(matches[3])
 
-		ts, _ := strconv.ParseInt(enc[:8], 16, 64)
-
-		if HashTS(int(ts)) != verify {
+		if HashTS(ts) != verify {
 			return "", "", 0, true
 		} else {
-			return direction, map[bool]string{true: "<", false: ">"}[direction == "DESC"], int(ts), false
+			return direction, IIF{true: "<", false: ">"}[direction == "DESC"], ts, false
 		}
 	}
 }
 
 func (bf *BackForth) Set(prev, next int) {
 	make1 := func(t int) string {
-		return fmt.Sprintf("%x+%s", t, HashTS(t))
+		return fmt.Sprintf("before=%s_%s", HashTS(t), To60(uint64(t)))
 	}
 
 	make2 := func(t int) string {
-		return fmt.Sprintf("%x-%s", t, HashTS(t))
+		return fmt.Sprintf("after=%s_%s", HashTS(t), To60(uint64(t)))
 	}
 
 	bf.PrevPage = make2(prev)
 	bf.NextPage = make1(next)
 
-	bf.LastWeekPage = make1(prev - 3600*24*7)
-	bf.LastMonthPage = make1(prev - 3600*24*30)
-	bf.LastYearPage = make1(prev - 3600*24*365)
+	bf.LastWeekPage = make1(prev - 3600000*24*7)
+	bf.LastMonthPage = make1(prev - 3600000*24*30)
+	bf.LastYearPage = make1(prev - 3600000*24*365)
 
-	bf.NextWeekPage = make2(prev + 3600*24*7)
-	bf.NextMonthPage = make2(prev + 3600*24*30)
-	bf.NextYearPage = make2(prev + 3600*24*365)
+	bf.NextWeekPage = make2(prev + 3600000*24*7)
+	bf.NextMonthPage = make2(prev + 3600000*24*30)
+	bf.NextYearPage = make2(prev + 3600000*24*365)
 
 	bf.Range.Start = next
 	bf.Range.End = prev
@@ -168,11 +168,8 @@ func (bf *BackForth) Set(prev, next int) {
 
 func GetArticles(enc string, filter string, filterType string) (ret []Article, nav BackForth) {
 	ret = make([]Article, 0)
-	// nav.PrevPage = ""
-	// nav.NextPage, nav.LastMonthPage, nav.LastYearPage, nav.LastWeekPage = "1", "1", "1", "1"
 
 	direction, compare, ts, invalid := ExtractTS(enc)
-
 	if invalid {
 		return
 	}
@@ -265,11 +262,6 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		onlyTag += conf.GlobalServerConfig.GetSQL()
 	}
 
-	if enc == "1" {
-		orderBy = "stay_top DESC," + orderBy
-	}
-
-	// log.Println(conf.GlobalServerConfig.GetSQL())
 	rows, err := Gdb.Query(`
         SELECT
             articles.id, 
@@ -280,7 +272,6 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
             articles.preview,
             articles.created_at,
             articles.modified_at,
-            articles.stay_top,
             articles.deleted,
             articles.hits,
             articles.children
@@ -289,7 +280,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
         INNER JOIN 
             users ON users.id = articles.author
         WHERE
-        	` + orderByDate + ` ` + compare + ` ` + itoa(ts) + ` AND
+            ` + orderByDate + compare + itoa(ts) + ` AND
             (` + onlyTag + `)
         ORDER BY
             ` + orderBy + ` 
@@ -297,7 +288,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 
 	if err != nil {
 		glog.Errorln("Database:", err)
-		return //ret, 0
+		return
 	}
 
 	defer rows.Close()
@@ -306,11 +297,11 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		var id, tag, authorID, hits, childrenCount int
 		var title, author, preview string
 		var createdAt, modifiedAt int
-		var stayTop, deleted bool
+		var deleted bool
 
 		rows.Scan(&id, &title, &tag, &authorID, &author, &preview,
 			&createdAt, &modifiedAt,
-			&stayTop, &deleted,
+			&deleted,
 			&hits, &childrenCount)
 
 		_tag := conf.GlobalServerConfig.GetIndexTag(tag)
@@ -320,16 +311,19 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 			}
 		}
 
-		ret = append(ret, Article{id, title, _tag, author, authorID, preview,
-			createdAt,
-			modifiedAt,
-			deleted,
-			false,
-			stayTop,
-			hits, 0, "", childrenCount,
-			false,
-			false,
-			0})
+		ret = append(ret, Article{
+			ID:           id,
+			Title:        title,
+			Tag:          _tag,
+			Author:       author,
+			AuthorID:     authorID,
+			Content:      preview,
+			Timestamp:    createdAt,
+			ModTimestamp: modifiedAt,
+			Deleted:      deleted,
+			Hits:         hits,
+			Children:     childrenCount,
+		})
 	}
 
 	if direction == "ASC" {
@@ -340,18 +334,12 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 
 	if len(ret) > 0 {
 		first := ret[0]
-		for _, v := range ret {
-			if !v.StayTop {
-				first = v
-				break
-			}
-		}
 		last := ret[len(ret)-1]
 
 		nav.Set(first.ModTimestamp, last.ModTimestamp)
 	}
 
-	return // ret, totalArticles
+	return
 }
 
 func SearchArticles(r *http.Request, page int, filter string) []Article {
@@ -363,7 +351,6 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 	ret = make([]Message, 0)
 
 	direction, compare, ts, invalid := ExtractTS(enc)
-
 	if invalid {
 		return
 	}
@@ -377,11 +364,14 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 		onlyTag += fmt.Sprintf(" AND (articles.author = %d OR articles.tag = %d) ", lookupID, lookupID+100000)
 	}
 
+	messageLimit := int(time.Now().UnixNano()/1e6 - 3600000*24*365)
+
 	rows, err := Gdb.Query(`
         SELECT
             articles.id, 
             articles.title, 
             articles.preview,
+            articles.read,
             articles.tag as tag, 
                   u2.nickname, 
             articles.author, 
@@ -394,7 +384,8 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
         INNER JOIN 
             users AS u2 ON u2.id = articles.tag - 100000
         WHERE 
-        	created_at ` + compare + ` ` + itoa(ts) + ` AND
+            created_at ` + compare + itoa(ts) + ` AND
+            created_at > ` + itoa(messageLimit) + ` AND
             (articles.deleted = false ` + onlyTag + ` )
         ORDER BY
             created_at ` + direction + ` 
@@ -408,11 +399,11 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 	defer rows.Close()
 
 	for rows.Next() {
-		var id, senderID, receiverID int
+		var id, senderID, receiverID, createdAt int
 		var title, senderName, receiverName, preview string
-		var createdAt int
+		var read bool
 
-		rows.Scan(&id, &title, &preview,
+		rows.Scan(&id, &title, &preview, &read,
 			&receiverID, &receiverName,
 			&senderID, &senderName,
 			&createdAt)
@@ -421,7 +412,7 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 			receiverID - 100000, receiverName,
 			senderID, senderName,
 			senderID == userID,
-			createdAt})
+			createdAt, read})
 	}
 
 	if direction == "ASC" {
@@ -454,6 +445,12 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	}
 
 	rows, err := Gdb.Query(`
+        UPDATE articles
+        SET    read = true
+        WHERE  
+            id = ` + itoa(id) + ` 
+        AND tag = ` + itoa(user.ID+100000) + `;
+
         SELECT 
             articles.id, 
             articles.title, 
@@ -465,7 +462,6 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
             articles.modified_at,
             articles.deleted,
             articles.locked,
-            articles.stay_top,
             articles.hits,
             articles.parent,
             articles.children,
@@ -481,7 +477,7 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
         INNER JOIN 
             users ON users.id = articles.author
         WHERE 
-            articles.id = ` + strconv.Itoa(id))
+            articles.id = ` + itoa(id))
 
 	if err != nil {
 		glog.Errorln("Database:", err)
@@ -494,11 +490,11 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 		var id, tag, authorID, hits, parentID, childrenCount, revision int
 		var title, content, author, parentTitle string
 		var createdAt, modifiedAt int
-		var deleted, stayTop, locked bool
+		var deleted, locked bool
 
 		rows.Scan(&id, &title, &tag, &content, &authorID,
 			&author, &createdAt, &modifiedAt, &deleted, &locked,
-			&stayTop, &hits, &parentID, &childrenCount, &revision,
+			&hits, &parentID, &childrenCount, &revision,
 			&parentTitle)
 
 		if !noEscape {
@@ -508,15 +504,30 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 		}
 
 		var _tag string
-		if tag >= 100000 {
-			_tag = strconv.Itoa(tag) // conf.GlobalServerConfig.GetIndexTag(tag)
-		} else {
-			_tag = conf.GlobalServerConfig.GetTags()[tag]
-		}
+		// if tag >= 100000 {
+		// 	_tag = strconv.Itoa(tag) //
+		// } else {
+		// 	_tag = conf.GlobalServerConfig.GetTags()[tag]
+		// }
+		_tag = conf.GlobalServerConfig.GetIndexTag(tag)
 
-		ret = Article{id, title, _tag, author, authorID, content,
-			createdAt, modifiedAt,
-			deleted, locked, stayTop, hits, parentID, parentTitle, childrenCount, false, false, revision}
+		ret = Article{
+			ID:           id,
+			Title:        title,
+			Tag:          _tag,
+			Author:       author,
+			AuthorID:     authorID,
+			Content:      content,
+			Timestamp:    createdAt,
+			ModTimestamp: modifiedAt,
+			Deleted:      deleted,
+			Locked:       locked,
+			Hits:         hits,
+			ParentID:     parentID,
+			ParentTitle:  parentTitle,
+			Children:     childrenCount,
+			Revision:     revision,
+		}
 
 		if !user.CanView(tag) {
 			// content = "[ Restricted Contents to '" + user.Group + "' Group ]"
@@ -525,11 +536,17 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 		}
 
 		if tag >= 100000 {
-			// log.Println(authorID, tag, user.ID)
-			if user.ID != authorID && user.ID != tag-100000 {
+			ret.IsMessage = true
+
+			if user.ID == authorID {
+				ret.IsMessageSentout = true
+			} else if user.ID == tag-100000 {
+				ret.IsMessageSentout = false
+			} else {
+				// if user.ID != authorID && user.ID != tag-100000 {
 				ret.Content = ""
 				ret.Title = "---"
-				ret.IsMessage = true
+				ret.IsOthersMessage = true
 			}
 		}
 	}
@@ -537,23 +554,50 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	return //ret
 }
 
-func InvertArticleState(id int, state string) string {
+func InvertArticleState(user AuthUser, id int, state string) string {
 	var _tag, author, oauthor int
 
-	err := Gdb.QueryRow(fmt.Sprintf(`
-		UPDATE articles SET %s = NOT %s WHERE id = %d;
-		SELECT tag, author, original_author FROM articles WHERE id = %d;
-		`, state, state, id, id)).Scan(&_tag, &author, &oauthor)
+	err := Gdb.QueryRow(`SELECT tag, author, original_author FROM articles WHERE id = `+itoa(id)).
+		Scan(&_tag, &author, &oauthor)
+
+	if err != nil {
+		glog.Errorln("Database:", err, id, state)
+		return "Err::DB::Select_Failure"
+	}
+
+	if _tag >= 100000 {
+		// Sender wants to delete the message, after deletion, sender = anonymous
+		if user.ID == author {
+			_, err = Gdb.Exec(`UPDATE articles SET author = 0 WHERE id = ` + itoa(id))
+		}
+
+		// Receiver wants to delete the message, after deletion, receiver = anonymous
+		if user.ID == _tag-100000 {
+			_, err = Gdb.Exec(`UPDATE articles SET tag = 100000 WHERE id = ` + itoa(id))
+		}
+
+		// Currently message box doesn't have cache
+		if err == nil {
+			return "ok"
+		} else {
+			return "Err::DB::Update_Failure"
+		}
+	}
 
 	tag := conf.GlobalServerConfig.GetIndexTag(_tag)
+
+	_, err = Gdb.Exec(fmt.Sprintf(`UPDATE articles SET %s = NOT %s WHERE id = %d;`, state, state, id))
+
 	if err == nil {
-		// Gcache.Clear()
-		Gcache.Remove(fmt.Sprintf(`(\d+-(%s)-tag|\d+-(%d|%d)-ua|\d+-(%d|0).?-owa|\d+-(%d|0).?-owa|\d+--|\d+-%d-(true|false))`,
-			tag,
+		pattern := fmt.Sprintf(`(\d+-(%s)-tag|\d+-(%d|%d)-ua|\d+-(%d|0).?-owa|\d+-(%d|0).?-owa|\d+--|\d+-%d-(true|false))`,
+			regexp.QuoteMeta(tag),
 			author, oauthor,
 			author, oauthor,
 			id,
-		))
+		)
+
+		Gcache.Remove(pattern)
+
 		return "ok"
 	} else {
 		glog.Errorln("Database:", err, id, state)

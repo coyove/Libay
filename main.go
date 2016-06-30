@@ -37,6 +37,12 @@ var debugMode = flag.Bool("d", false, "Debug mode")
 var debugPort = flag.Int("debug-port", 731, "Debug server port")
 
 func main() {
+	// _h := time.Now().UnixNano()
+	// for i := 0; i < 1000000; i++ {
+	// 	auth.To60(uint64(time.Now().UnixNano()))
+	// }
+	// fmt.Println((time.Now().UnixNano() - _h) / 1e6)
+
 	flag.Parse()
 	filename, _ := osext.Executable()
 	exebuf, _ := ioutil.ReadFile(filename)
@@ -113,9 +119,6 @@ Disallow: /tag/`))
 
 	router := httprouter.New()
 
-	s1 := rand.NewSource(time.Now().UnixNano())
-	rand.New(s1)
-
 	glog.Infoln("Installing routers...")
 	_start := time.Now()
 
@@ -164,13 +167,33 @@ Disallow: /tag/`))
 
 				handler(w, r, ps)
 			})
-		// } else {
-		// 	router.Handle(method, routerPath, handler)
-		// }
 	}
 
 	mux.Handle("/", router)
 	glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
+
+	// _start = time.Now()
+	s1 := rand.NewSource(time.Now().UnixNano())
+	rand.New(s1)
+	// tags := conf.GlobalServerConfig.GetComplexTags()
+
+	// for i := 0; i < 1000; i++ {
+	// 	go func(idx int) {
+	// 		// glog.Infoln(models.Article(nil,
+	// 		// 	auth.DummyUsers[_rand.Intn(5)],
+	// 		// 	0,
+	// 		// 	tags[_rand.Intn(5)].Name,
+	// 		// 	"test"+strconv.Itoa(idx),
+	// 		// 	auth.MakeHash()))
+	// 		glog.Infoln(models.UpdateArticle(
+	// 			auth.DummyUsers[_rand.Intn(5)],
+	// 			_rand.Intn(60)+195,
+	// 			tags[_rand.Intn(5)].Name,
+	// 			"new"+strconv.Itoa(idx),
+	// 			"new"+auth.MakeHash()))
+	// 	}(i)
+	// }
+	// glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
 
 	if *debugMode {
 		glog.Infoln("Start debug server on", *debugPort)

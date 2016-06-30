@@ -284,6 +284,8 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 		} else if rarticle.MatchString(name) {
 			articles := rarticle.FindStringSubmatch(name)
 			url = []string{"/article/" + articles[2], "/user/" + articles[1]}
+		} else {
+			url = []string{name, ""}
 		}
 
 		sec, hits := auth.Gcache.Info(v)

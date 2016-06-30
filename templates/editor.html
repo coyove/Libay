@@ -92,11 +92,11 @@
 				var _html = ["历史版本:&nbsp;<select onchange='getHistory(this.value)'>"];
 				for(var k in j) {
 					_html.push("<option value='"+k+"'>历史版本: " + 
-						etc.date.format(j[k].Date * 1000, true) + "(" + j[k].User +
+						etc.date.format(j[k].Date, true) + "(" + j[k].User +
 						")</option>");
 				}
 				_html.push("<option value='-1' selected>当前版本: " +
-					etc.date.format({{.Article.ModTimestamp}} * 1000, true) + 
+					etc.date.format({{.Article.ModTimestamp}}, true) + 
 					"({{.Article.Author}})</option></select>");
 
 				etc.id("article-history-list").innerHTML = _html.join('');
@@ -274,6 +274,8 @@
 			<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
 			<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
 			<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a>
+			<a href="javascript:etc.editor.insertFontsize('larger')" title="字号变大">&#xf055;</a>
+			<a href="javascript:etc.editor.insertFontsize('smaller')" title="字号变小">&#xf056;</a>
 			
 			<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
 			<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>

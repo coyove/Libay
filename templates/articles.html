@@ -13,32 +13,32 @@
 			document.write('全部文章');
 		} else if ("{{.CurType}}" == "reply") {
 			document.title = "文章回复";
-			document.write('文章回复 <badge>{{.CurTag}}</badge>');
+			document.write('文章 <badge>{{.CurTag}}</badge> 的回复');
 		} else if ("{{.CurType}}" == "ua") {
-			document.title = "用户";
-			document.write('用户 <badge>{{.CurTag}}</badge>');
+			document.title = "用户文章";
+			document.write('用户 <badge>{{.CurTag}}</badge> 的文章');
 		} else if ("{{.CurType}}" == "message") {
 			document.title = "私信";
 			{{if .IsMessageViewingAll}}
 			document.write('所有私信');
 			{{else}}
-			document.write('用户 <badge>{{.CurTag}}</badge> 的私信');
+			document.write('与用户 <badge>{{.CurTag}}</badge> 的私信');
 			{{end}}
 		} else if ("{{.CurType}}" == "owa") {
-			document.title = "用户文章管理";
+			document.title = "个人文章管理";
 			{{if .IsOWAViewingGlobal}}
-			document.write('全局所有文章');
+			document.write('全局文章');
 			{{else}}
-			document.write('用户文章管理');
+			document.write('文章管理');
 			{{end}}
 		} else {
 			document.title = "{{.CurTag}}";
-			document.write('{{.CurTag}}');
+			document.write('"{{.CurTag}}"文章');
 		}
 
-		document.title += " " + etc.date.format({{.Nav.Range.End}} * 1000, true);
-		document.write(' | ' + etc.date.format({{.Nav.Range.Start}} * 1000, true) + 
-			' &raquo; ' + etc.date.format({{.Nav.Range.End}} * 1000, true) + '</p>');
+		document.title += " -- " + etc.date.format({{.Nav.Range.End}}, true);
+		document.write(' | ' + etc.date.format({{.Nav.Range.Start}}, true) + 
+			' &raquo; ' + etc.date.format({{.Nav.Range.End}}, true) + '</p>');
 	{{end}}
 </script>
 
@@ -112,8 +112,35 @@
 	<button onclick="reverseTag()">反选</button>
 {{end}}
 
+{{if .IsMessage}}
+<script type="text/javascript">
+	function tryReadAll() {
+		etc.let.hide("read-all-message");
+		etc.util.ajax.post("/unread/message/0", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			if (text == "ok") {
+				alert("已将标记所有消息为已读");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + text);
+				etc.let.show("read-all-message");
+			}
+		});
+	}
+</script>
+<button id="read-all-message" onclick="tryReadAll()">标记所有消息为已读</button>
+{{end}}
+
+{{if .AnnounceContent}}
+<div style="border-bottom: dotted 1px grey;">
+	{{.AnnounceContent}}
+	{{if .AnnounceID}}
+	<span class="right-block"><a href="/article/{{.AnnounceID}}">{{.AnnounceID}}</a></span>
+	{{end}}
+</div>
+{{end}}
+
 <div class="pager">
-	{{if .ShowAlwaysTop}}[ <b>首页</b> ]{{else}}
+	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
 	[
 	<a href="{{.IndexPage}}"> 首页 </a> |
 	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
@@ -154,11 +181,11 @@
 				{{if .Content}}•{{end}}
 			</a><br>
 			<span class="time">
-			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>
 			</span>
 		</td>
 		<td class="fit last">
-		[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>]
+		[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>]
 		</td>
 	</tr>
 	<tr><td colspan="4"><span class="preview-content">{{.Content}}</span></td>
@@ -172,18 +199,20 @@
 {{else}}
 {{if .IsMessage}}
 	<script type="text/javascript">
-	function tryDelete(id) {
-		etc.let.hide("delete-message");
-		etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
-			if (text == "ok") {
-				alert("已经删除该消息");
-				window.location.reload();
-			} else {
-				alert("发生错误: " + text);
-				etc.let.show("delete-message");
-			}
-		});
-	}
+		function tryDelete(id) {
+			etc.let.hide("delete-message-" + id);
+			etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+				if (text == "ok") {
+					alert("已经删除该消息");
+					window.location.reload();
+				} else {
+					alert("发生错误: " + text);
+					etc.let.show("delete-message-" + id);
+				}
+			});
+		}
+
+		etc.util.cookie.delete("unread");
 	</script>
 	<table id="articles">
 	<tr>
@@ -207,10 +236,17 @@
 		</td>
 		<td class="fit">:</td>
 		<td class="title">
-		<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
-		<span class="time">
-		<script type="text/javascript">document.write(etc.date.format({{.Timestamp}} * 1000, true));</script>
-		</span>
+			{{if .Sentout}}
+			{{else}}
+				{{if .Read}}
+				{{else}}
+					<badge>未读</badge>
+				{{end}}
+			{{end}}
+			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+			<span class="time">
+				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>
+			</span>
 		</td>
 		<td class="fit">
 		{{if .Sentout}}
@@ -219,9 +255,9 @@
 			<a href="/new/message/{{.SenderID}}">回复</a>
 		{{end}}
 		</td>
-		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message">删除</a></td>
+		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message-{{.ID}}">删除</a></td>
 		<td class="fit last">
-			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}} * 1000, true));</script>]
+			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>]
 		</td>
 	</tr>
 	<tr>
@@ -242,19 +278,11 @@
 </tr>
 	{{range .Articles}}
 	<tr class="darken">
-		<!-- <td class="fit pr0">[</td> -->
+
 		<td class="fit center">
-			{{if .StayTop}}
-			{{if $.ShowAlwaysTop}}
-				<span class="block"><b>置顶</b></span>
-			{{else}}
-				<a class="block" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
-			{{end}}
-			{{else}}
 			<a class="block" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
-			{{end}}
 		</td>
-		<!-- <td class="fit pl0">]</td> -->
+
 		<td class="title">
 			<a href="/article/{{.ID}}" class="title">
 			{{if .Deleted}}
@@ -264,14 +292,14 @@
 			{{end}}
 			</a><br>
 			<span class="time">
-			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>
 			</span>
 		</td>
 		<td class="fit center"><a href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="fit center"><a href="/reply/{{.ID}}/page/1"><em>{{.Children}}</em></a></td>
 		<td class="fit center"><em>{{.Hits}}</em></td>
 		<td class="fit last">
-			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}} * 1000, true));</script>]
+			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>]
 		</td>
 	</tr>
 	<tr>
@@ -283,7 +311,7 @@
 {{end}}
 
 <div class="pager">
-	{{if .ShowAlwaysTop}}[ <b>首页</b> ]{{else}}
+	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
 	[
 	<a href="{{.IndexPage}}"> 首页 </a> |
 	<a href="{{.Nav.PrevPage}}"> 上一页 </a>

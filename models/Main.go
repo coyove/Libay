@@ -138,6 +138,7 @@ func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
 	case "tags":
 		title.CurrentNav = "nv-tags"
 	case "user":
+		title.CurrentNav = "nv-user"
 	}
 
 	t := template.Must(templates["header.html"].Content, nil)

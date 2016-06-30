@@ -45,8 +45,7 @@ var Hostname string
 
 var Gdb *sql.DB
 var Gcache *Cache
-
-// var Guser *Cache
+var Guser *Cache
 
 func AESEncrypt(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
@@ -323,7 +322,10 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 				Value:   userToken,
 				Expires: exp, HttpOnly: true, Path: "/"})
 
-			_, err := Gdb.Exec(`
+			var unread int
+			unreadLimit := int(time.Now().UnixNano()/1e6 - 365*3600000*24)
+
+			err := Gdb.QueryRow(`
 				UPDATE 
                     users 
                 SET 
@@ -334,13 +336,22 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
                     session_id           = '` + new_session_id + `', 
                     retry                = 0 
                 WHERE 
-                    id = ` + strconv.Itoa(id))
+                    id = ` + strconv.Itoa(id) + `;
+
+                SELECT 
+                	COUNT(id) 
+            	FROM 
+            		articles
+            	WHERE
+            		created_at > ` + strconv.Itoa(unreadLimit) + ` AND
+            		(tag = ` + strconv.Itoa(id+100000) + ` AND read = false AND deleted = false)
+            	LIMIT 20`).Scan(&unread)
 
 			if err != nil {
 				glog.Errorln("Database:", err)
 			}
 
-			return "ok " + strconv.Itoa(id)
+			return "ok " + strconv.Itoa(id) + " " + strconv.Itoa(unread)
 			// finish a successful login procedure
 		}
 
@@ -499,7 +510,9 @@ func ConnectDatabase(t string, conn string) error {
 		Gdb.SetMaxOpenConns(conf.GlobalServerConfig.MaxOpenConns)
 
 		Gcache = NewCache(conf.GlobalServerConfig.CacheEntities)
+		// Guser = NewCache(conf.GlobalServerConfig.CacheEntities)
 		Gcache.Start()
+		// Guser.Start()
 
 		return nil
 	}

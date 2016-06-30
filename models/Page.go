@@ -30,16 +30,20 @@ type PageStruct struct {
 
 	Nav auth.BackForth
 
-	IsSearch   bool
-	IsReply    bool
-	IsMessage  bool
-	IsOWA      bool
-	IsLastPage bool
+	IsSearch  bool
+	IsReply   bool
+	IsMessage bool
+	IsOWA     bool
+
+	IsLastPage  bool
+	IsIndexPage bool
 
 	IsOWAViewingGlobal  bool
 	IsMessageViewingAll bool
 
-	ShowAlwaysTop   bool
+	AnnounceContent string
+	AnnounceID      int
+
 	CurTag          string
 	CurType         string
 	Tags            map[int]string
@@ -69,7 +73,7 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 	payload.IsReply = filterType == "reply"
 	payload.IsOWA = filterType == "owa"
 
-	payload.ShowAlwaysTop = page == "1"
+	payload.IsIndexPage = page == "1"
 
 	payload.CurTag = filter
 	payload.CurType = filterType
@@ -106,6 +110,8 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 				ServePage(w, "404", nil)
 				return
 			}
+
+			payload.IsOWAViewingGlobal = true
 		} else {
 			// Each user by default can only access his own articles
 			// Admin and users with "ViewOtherTrash" privilege can access others' articles
@@ -127,6 +133,19 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 		payload.Messages, payload.Nav = auth.GetMessages(page, user.ID, userID)
 	} else {
 		payload.Articles, payload.Nav = auth.GetArticles(page, filter, filterType)
+
+		if page == "1" {
+			id := 0
+			if filterType == "tag" {
+				_tag := conf.GlobalServerConfig.GetTagIndex(filter)
+				id = conf.GlobalServerConfig.GetComplexTags()[_tag].AnnounceID
+			} else if filterType == "" {
+				id = conf.GlobalServerConfig.GetComplexTags()[0].AnnounceID
+			}
+
+			payload.AnnounceContent = auth.GetArticle(r, auth.AuthUser{Group: "admin"}, id, false).Content
+			payload.AnnounceID = id
+		}
 	}
 
 	if len(payload.Articles) == 0 && len(payload.Messages) == 0 && page != "1" {

@@ -10,6 +10,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"html"
+	"math"
 	"os"
 	"reflect"
 	"regexp"
@@ -38,8 +39,12 @@ func (ss *SStack) Pop() (ret string) {
 	return
 }
 
+type IIF map[interface{}]string
+
 var Escape = html.EscapeString
 var Unescape = html.UnescapeString
+
+var tsReg = regexp.MustCompile(`(after|before)=(.+)_(.+)`)
 
 type _time struct {
 }
@@ -392,4 +397,53 @@ func DeleteRowsDirect(table string, ids []int) string {
 		glog.Errorln("Database:", err)
 		return "Err::DB::General_Failure"
 	}
+}
+
+func To60(v uint64) string {
+	lookup := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567"
+	ret := []byte{}
+
+	for {
+		if v < 60 {
+			ret = append(ret, lookup[v])
+			break
+		}
+
+		m := v % 60
+		v = v / 60
+		ret = append(ret, lookup[m])
+	}
+
+	return string(ret)
+}
+
+func From60(v string) int {
+	find := func(b byte) byte {
+		if b >= 'a' && b <= 'z' {
+			return b - 'a'
+		}
+
+		if b >= 'A' && b <= 'Z' {
+			return b - 'A' + 26
+		}
+
+		if b >= '0' && b <= '7' {
+			return b - '0' + 52
+		}
+
+		return 60
+	}
+
+	var ret int
+
+	for i, _ := range v {
+		idx := int(find(v[i]))
+		if idx == 60 {
+			return 0
+		}
+
+		ret += idx * int(math.Pow(60, float64(i)))
+	}
+
+	return ret
 }

@@ -227,6 +227,8 @@
                 e.innerHTML = html;
             else if (html.innerHTML) 
                 e.innerHTML = html.innerHTML;
+            else
+                e.innerHTML = html;
 
             return e;
         }
@@ -627,6 +629,34 @@
                     }
                 },
             },
+
+            "cookie": {
+                "read": function (cname) {
+                    var name = cname + "=";
+                    var ca = document.cookie.split(';');
+                    for(var i = 0; i <ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0)==' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length,c.length);
+                        }
+                    }
+                    return "";
+                },
+
+                "write": function (cname, cvalue, exp) {
+                    var d = new Date();
+                    d.setTime(d.getTime() + exp);
+
+                    document.cookie = cname + "=" + cvalue + "; expires=" + d.toUTCString() + "; path=/;";
+                },
+
+                "delete": function(cname) {
+                    document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                }
+            },
         },
         
         "editor": {
@@ -635,6 +665,10 @@
             "insertHTML": _insertHTML,
 
             "isInside": _insideEditor,
+
+            "getSelected": function() {
+                return (window.getSelection) ? window.getSelection() : document.selection;
+            },
 
             "uploadImage": function(files, callback, options) {
                 options = options || {};
@@ -716,7 +750,7 @@
             "insertLink": function() {
                 if (!_insideEditor()) return;
 
-                var A = prompt("URL:", "http://");//this.inputs.href.value;
+                var A = prompt("URL:", "http://");
                 var B = (window.getSelection) ? window.getSelection() : document.selection;
 
                 if (A == "http://" || A == "") return;
@@ -724,6 +758,10 @@
 
                 _id(_editorId).focus();
                 _insertHTML("<a href='" + A + "' target='_blank'>" + B + "</a>");
+            },
+
+            "insertFontsize": function(size) {
+                _insertHTML("<span class='" + size + "'>" + etc.editor.getSelected() + "</span>");
             },
 
             "insertList": function(elem) {

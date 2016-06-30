@@ -2,9 +2,10 @@ package auth
 
 import (
 	"../conf"
-	_ "database/sql"
 
 	"github.com/golang/glog"
+
+	_ "database/sql"
 	"html"
 	"net/http"
 	"strconv"
@@ -21,11 +22,18 @@ type AuthUser struct {
 	LastLoginIP   string
 	Status        string
 	Group         string
-	Expired       bool
 	Comment       string
 	Avatar        string
 	ImageUsage    int
 	Unread        string
+}
+
+var DummyUsers = []AuthUser{
+	AuthUser{ID: 1, Group: "admin"},
+	AuthUser{ID: 2, Group: "user"},
+	AuthUser{ID: 3, Group: "user"},
+	AuthUser{ID: 4, Group: "user"},
+	AuthUser{ID: 5, Group: "user"},
 }
 
 func (au *AuthUser) CanPost() bool {
@@ -126,37 +134,37 @@ func GetUser(r *http.Request) (ret AuthUser) {
 		var usage int
 
 		if err := Gdb.QueryRow(`
-			SELECT
-				    users.id,
-				    users.session_id,
-				    users.nickname,
-				    users.last_last_login_date,
-				    users.last_last_login_ip,
-				    users.signup_date,
-				user_info.status,
-				user_info.group,
-				user_info.comment,
-				user_info.avatar,
-				user_info.image_usage,
-				user_info.unread
-			FROM 
-				users
-			INNER JOIN
-				user_info ON user_info.id = users.id
-			WHERE 
-				users.id = `+b_id).
+            SELECT
+                    users.id,
+                    users.session_id,
+                    users.nickname,
+                    users.last_last_login_date,
+                    users.last_last_login_ip,
+                    users.signup_date,
+                user_info.status,
+                user_info.group,
+                user_info.comment,
+                user_info.avatar,
+                user_info.image_usage,
+                user_info.unread
+            FROM 
+                users
+            INNER JOIN
+                user_info ON user_info.id = users.id
+            WHERE 
+                users.id = `+b_id).
 			Scan(&_id,
-				&session_id,
-				&nickname,
-				&date,
-				&ip,
-				&signupDate,
-				&status,
-				&group,
-				&comment,
-				&avatar,
-				&usage,
-				&unread); err == nil {
+			&session_id,
+			&nickname,
+			&date,
+			&ip,
+			&signupDate,
+			&status,
+			&group,
+			&comment,
+			&avatar,
+			&usage,
+			&unread); err == nil {
 
 			if session_id != b_session_id {
 				return
@@ -171,7 +179,6 @@ func GetUser(r *http.Request) (ret AuthUser) {
 				ip,
 				strings.Trim(status, " "),
 				strings.Trim(group, " "),
-				false,
 				comment,
 				avatar,
 				usage,
@@ -184,5 +191,39 @@ func GetUser(r *http.Request) (ret AuthUser) {
 	}
 
 	invalid = true
-	return //AuthUser{}
+	return
+}
+
+func TranslateUserID(id int) (ret AuthUser) {
+	var _id int
+	var nickname, status, group string
+
+	if v, ok := Gcache.Get("user-" + strconv.Itoa(id)); ok {
+		return v.(AuthUser)
+	}
+
+	defer func() {
+		Gcache.Add("user-"+strconv.Itoa(id), ret, conf.GlobalServerConfig.CacheLifetime)
+	}()
+
+	if err := Gdb.QueryRow(`
+            SELECT
+                    users.id,
+                    users.nickname,
+                user_info.status,
+                user_info.group,
+            FROM 
+                users
+            INNER JOIN
+                user_info ON user_info.id = users.id
+            WHERE 
+                users.id = `+strconv.Itoa(id)).
+		Scan(&_id, &nickname, &status, &group); err == nil {
+
+		ret = AuthUser{ID: _id, NickName: nickname, Status: strings.Trim(status, " "), Group: strings.Trim(group, " ")}
+	} else {
+		glog.Errorln("Database:", err)
+	}
+
+	return
 }
