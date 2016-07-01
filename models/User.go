@@ -8,10 +8,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	_ "database/sql"
-	"html"
+	// "html"
 	"net/http"
 	"strconv"
-	"strings"
+	// "strings"
 	"time"
 )
 
@@ -25,7 +25,7 @@ type AuthUserArticle struct {
 
 func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
-	if err != nil {
+	if err != nil || id <= 0 {
 		ServePage(w, "404", nil)
 		return
 	}
@@ -36,60 +36,12 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 		Tags          map[int]string
 	}
 
-	var nickname string
-	var date, signupDate time.Time
-	var status, group, comment, avatar string
-	var usage int
-
-	err = auth.Gdb.QueryRow(`
-        SELECT
-                users.nickname,
-                users.last_login_date,
-                users.signup_date,
-            user_info.status,
-            user_info.group,
-            user_info.comment,
-            user_info.avatar,
-            user_info.image_usage 
-        FROM
-            users 
-        INNER JOIN 
-            user_info ON user_info.id = users.id
-        WHERE
-            users.id = `+strconv.Itoa(id)).
-		Scan(&nickname,
-		&date,
-		&signupDate,
-		&status,
-		&group,
-		&comment,
-		&avatar,
-		&usage)
-
-	if err == nil {
-		comment = html.UnescapeString(comment)
-		payload.User = auth.AuthUser{id,
-			"",
-			nickname,
-			int(date.Unix()),
-			int(signupDate.Unix()),
-			"",
-			strings.Trim(status, " "),
-			strings.Trim(group, " "),
-			comment,
-			avatar,
-			usage,
-			""}
-	} else {
-		glog.Errorln("Database:", err)
+	payload.User = auth.GetUserByID(id)
+	if payload.User.ID == 0 {
 		ServePage(w, "404", nil)
 		return
 	}
-	// }
-
 	payload.Tags = conf.GlobalServerConfig.GetTags()
-	// payload.TotalArticles = auth.GetArticlesCount(ps.ByName("id"), "ua")
-
 	ServePage(w, "user", payload)
 }
 

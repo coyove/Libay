@@ -62,9 +62,12 @@ func (c *Cache) GetLowLevelCache() map[interface{}]*list.Element {
 	return c.cache
 }
 
-func (c *Cache) Info(v *list.Element) (int, int) {
+func (c *Cache) Info(v *list.Element) (interface{}, int, int) {
+	c.RLock()
+	defer c.RUnlock()
+
 	elem := v.Value.(*entry)
-	return int((elem.born + elem.ttl) - time.Now().Unix()), int(elem.hits)
+	return elem.value, int((elem.born + elem.ttl) - time.Now().Unix()), int(elem.hits)
 }
 
 func (c *Cache) Start() {

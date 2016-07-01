@@ -423,7 +423,11 @@ span.right-block {
     font-size: 80%;
 }
 
-.editor-panel span {
+#editor-panel a { 
+    font-family: FontAwesome; 
+}
+
+#editor-panel span {
    -moz-user-select: -moz-none;
    -khtml-user-select: none;
    -webkit-user-select: none;
@@ -431,16 +435,33 @@ span.right-block {
    user-select: none;
 }
 
-.editor-panel a {
+#editor-panel a {
     text-decoration: none;
-    text-shadow: 0 1px 0 white;
     color: #ccc;
     margin: 0 0.2em;
 }
 
-.editor-panel a:hover {
+#editor-panel a:hover {
     color:#0F6080;
     text-shadow: 0 0 0;
+}
+
+#tr-edit div { width: 100%; box-sizing: border-box; }
+
+#content-container {
+    border: 1px solid #ccc;
+    border-top: solid 1.5px #ddd;
+    overflow-y: auto;
+    overflow-x: hidden; 
+    background-color: white;
+    text-align: left;
+}
+
+#editor-outter-panel {
+    overflow: hidden; 
+    border: 1px solid #ccc; 
+    border-bottom: 1px solid #d0d0d0;
+    background-color: #efefef;
 }
 
 .CodeMirror {

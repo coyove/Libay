@@ -131,10 +131,16 @@ function switchView() {
 		{{end}}
 		{{if .IsLoggedIn}}
 			{{if .AuthorSelf}}
-				<td><a href='javascript:goEdit()'>编辑</a></td>
+				{{if .Article.IsMessage}}{{else}}
+					<td><a href='javascript:goEdit()'>编辑</a></td>
+				{{end}}
 				{{if .Article.Deleted}}
 					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(false)">恢复</a></td>
 				{{else}}
+					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(true)">删除</a></td>
+				{{end}}
+			{{else}}
+				{{if .Article.IsMessage}}
 					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(true)">删除</a></td>
 				{{end}}
 			{{end}}

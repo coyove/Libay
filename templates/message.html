@@ -1,0 +1,140 @@
+<title>私信</title>
+<p id="breadcrumbs">
+<script type="text/javascript">
+	{{if .Message.IsViewingAll}}
+		document.write('所有私信');
+	{{else}}
+		document.write('与用户"{{.Message.ViewingOtherName}}"的私信');
+	{{end}}
+
+	document.title += " -- " + etc.date.format({{.Nav.Range.End}}, true);
+	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}, true) + 
+		' &raquo; ' + etc.date.format({{.Nav.Range.End}}, true));
+</script>
+</p>
+
+<script type="text/javascript">
+	function tryReadAll() {
+		etc.let.hide("read-all-message");
+		etc.util.ajax.post("/unread/message/0", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			if (text == "ok") {
+				alert("已将标记所有消息为已读");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + text);
+				etc.let.show("read-all-message");
+			}
+		});
+	}
+
+	function tryDelete(id) {
+		etc.let.hide("delete-message-" + id);
+		etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			if (text == "ok") {
+				alert("已经删除该私信\n\n" + 
+					"(* 对方仍可以看到该私信，但发件人变为匿名)\n" +
+					"(** 在管理面板的“全部文章”内仍可以看到该私信)\n");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + text);
+				etc.let.show("delete-message-" + id);
+			}
+		});
+	}
+
+	etc.util.cookie.delete("unread");
+</script>
+
+<div class="pager">
+	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	[
+	<a href="{{.IndexPage}}"> 首页 </a> |
+	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	]
+	{{end}}
+
+	{{if .IsLastPage}}
+	[ <b>尾页</b> ]
+	{{else}}
+	[
+	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
+	<a href="{{.Nav.LastWeekPage}}" >7d</a> |
+	<a href="{{.Nav.LastMonthPage}}">30d</a> |
+	<a href="{{.LastPage}}" >尾页</a>
+	]
+	{{end}}
+
+	[ <a id="read-all-message" href="javascript:tryReadAll()">标记所有为已读</a> ]
+</div>
+
+
+<table id="articles">
+	<tr>
+	<th class="fit">方向</th><th></th><th style="text-align: left">标题</th><th colspan="2">操作</th>
+	<th class="fit last">回复日期</th>
+	</tr>
+	{{range .Messages}}
+	<tr class="darken">
+		<td class="fit">
+		{{if .Sentout}}
+			<em>{{.SenderName}}</em>
+		{{else}}
+			<b><a class="block" href="/user/{{.SenderID}}">{{.SenderName}}</a></b>
+		{{end}}
+		→
+		{{if .Sentout}}
+			<b><a class="block" href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a></b>
+		{{else}}
+			<em>{{.ReceiverName}}</em>
+		{{end}}
+		</td>
+		<td class="fit">:</td>
+		<td class="title">
+			{{if .Sentout}}
+			{{else}}
+				{{if .Read}}
+				{{else}}
+					<badge>未读</badge>
+				{{end}}
+			{{end}}
+			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+			<span class="time">
+				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>
+			</span>
+		</td>
+		<td class="fit">
+		{{if .Sentout}}
+			<a href="/message/{{.ReceiverID}}/page/1">对话</a>
+		{{else}}
+			<a href="/new/message/{{.SenderID}}">回复</a>
+		{{end}}
+		</td>
+		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message-{{.ID}}">删除</a></td>
+		<td class="fit last">
+			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>]
+		</td>
+	</tr>
+	<tr>
+	<td colspan="6"><span class="preview-content">{{.Preview}}</span></td>
+	</tr>
+	{{end}}
+</table>
+
+<div class="pager">
+	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	[
+	<a href="{{.IndexPage}}"> 首页 </a> |
+	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	]
+	{{end}}
+	{{if .IsLastPage}}
+	[ <b>尾页</b> ]
+	{{else}}
+	[
+	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
+	<a href="{{.Nav.LastWeekPage}}" >7d</a> |
+	<a href="{{.Nav.LastMonthPage}}">30d</a> |
+	<a href="{{.LastPage}}" >尾页</a>
+	]
+	{{end}}
+</div>

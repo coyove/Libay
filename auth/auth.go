@@ -490,6 +490,7 @@ func ServeLogout(w http.ResponseWriter, r *http.Request) string {
 	if u.Name != "" {
 		_, err := Gdb.Exec("UPDATE users SET session_id = '" + MakeHash() + "' WHERE id = " + strconv.Itoa(u.ID))
 		if err == nil {
+			Guser.Remove(u.ID)
 			return "ok"
 		}
 	}
@@ -510,9 +511,9 @@ func ConnectDatabase(t string, conn string) error {
 		Gdb.SetMaxOpenConns(conf.GlobalServerConfig.MaxOpenConns)
 
 		Gcache = NewCache(conf.GlobalServerConfig.CacheEntities)
-		// Guser = NewCache(conf.GlobalServerConfig.CacheEntities)
+		Guser = NewCache(conf.GlobalServerConfig.CacheEntities)
 		Gcache.Start()
-		// Guser.Start()
+		Guser.Start()
 
 		return nil
 	}

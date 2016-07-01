@@ -2,11 +2,13 @@ package auth
 
 import (
 	"../conf"
+
+	"github.com/golang/glog"
+	"github.com/gorilla/feeds"
+
 	_ "database/sql"
 	"encoding/binary"
 	"fmt"
-	"github.com/golang/glog"
-	"github.com/gorilla/feeds"
 	"html"
 	"net/http"
 	"regexp"
@@ -543,9 +545,6 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 			} else if user.ID == tag-100000 {
 				ret.IsMessageSentout = false
 			} else {
-				// if user.ID != authorID && user.ID != tag-100000 {
-				ret.Content = ""
-				ret.Title = "---"
 				ret.IsOthersMessage = true
 			}
 		}
@@ -565,7 +564,7 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 		return "Err::DB::Select_Failure"
 	}
 
-	if _tag >= 100000 {
+	if _tag >= 100000 && state == "deleted" {
 		// Sender wants to delete the message, after deletion, sender = anonymous
 		if user.ID == author {
 			_, err = Gdb.Exec(`UPDATE articles SET author = 0 WHERE id = ` + itoa(id))
@@ -576,8 +575,9 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 			_, err = Gdb.Exec(`UPDATE articles SET tag = 100000 WHERE id = ` + itoa(id))
 		}
 
-		// Currently message box doesn't have cache
 		if err == nil {
+			glog.Infoln(user.Name, user.NickName, "deleted", id)
+			Gcache.Remove(`\d+-` + strconv.Itoa(id) + `-(true|false)`)
 			return "ok"
 		} else {
 			return "Err::DB::Update_Failure"
@@ -597,7 +597,7 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 		)
 
 		Gcache.Remove(pattern)
-
+		glog.Infoln(user.Name, user.NickName, "inverted", state, "of", id)
 		return "ok"
 	} else {
 		glog.Errorln("Database:", err, id, state)

@@ -102,9 +102,7 @@ func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
 		title.CurrentNav = "nv-index"
 	case "articles":
 		ps := pl.(PageStruct)
-		// if ps.CurType == "" && ps.CurPage == 1 {
 
-		// } else {
 		switch ps.CurType {
 		case "":
 			title.CurrentNav = "nv-articles"
@@ -114,12 +112,11 @@ func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
 			title.CurrentNav = "nv-tag-articles"
 		case "reply":
 			title.CurrentNav = "nv-replies"
-		case "message":
-			title.CurrentNav = "nv-messages"
 		case "owa":
 			title.CurrentNav = "nv-owa"
 		}
-		// }
+	case "message":
+		title.CurrentNav = "nv-messages"
 	case "bootstrap":
 		title.CurrentNav = "nv-bootstrap"
 	case "config":

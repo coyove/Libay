@@ -6,13 +6,13 @@
 
 <p id="breadcrumbs">
 	{{if .Message}}
-		发送私信至用户 <badge>{{.ReplyTo}}</badge> | <a href='/user/{{.ReplyTo}}'>查看用户</a>
+		发送私信至"{{.MessageReceiverName}}" | <a href='/user/{{.ReplyTo}}'>查看用户</a>
 	{{else}}
 		{{if .Update}}
-			修改文章 <badge>{{.ReplyTo}}</badge> | <a href='/article/{{.ReplyTo}}'>查看文章</a>
+			修改文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>查看文章</a>
 		{{else}}
 			{{if .ReplyTo}}
-				回复文章 <badge>{{.ReplyTo}}</badge> | <a href='/article/{{.ReplyTo}}'>查看文章</a>
+				回复文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>查看文章</a>
 			{{else}}
 				发布新文章
 			{{end}}
@@ -23,9 +23,6 @@
 		{{.Username}}
 	{{else}}
 		匿名
-		{{if .Message}}
-		| 匿名用户不能发送私信
-		{{end}}
 	{{end}}
 </p>
 
@@ -119,14 +116,13 @@
   	});
 
 	function setupScroll() {
-		// window.scrollTo(0, 0);
 		var elem = etc.id("editor-container");
 		var t = elem.getBoundingClientRect().top;
 		var dt = document.body.getBoundingClientRect().top;
 		t = t - dt;
-// console.log(t, dt, document.body.scrollTop)
+
 		window.onscroll = function(e) {
-		    	// console.log(t, document.body.scrollTop)
+
 		    if (document.body.scrollTop > t) {
 		        elem.setAttribute("style", "position:fixed;left:0;top:0");
 		    } else {
@@ -249,84 +245,85 @@
 
 <div id="editor">
 <div>
-	标题:&nbsp;<span id="title-length"></span><br>
+	标题:
+	<span id="title-length"></span><br>
 	<textarea id="thread-title" rows="2"></textarea>
 </div>
 <div id="article-history-list" style="display: none"></div>
 	<div id="tr-edit">
-      内容:
-		<div id="editor-container" unselectable="on" style="width: 100%;">
-		<div class="nicEdit-panelContain" unselectable="on" style="overflow: hidden; width: 100%; border: 1px solid rgb(204, 204, 204); background-color: rgb(239, 239, 239);">
-		<div class="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em">
-		<style type="text/css">
-			.editor-panel a { font-family: FontAwesome; }
-		</style>
-			<span><span id="uploading-sign"></span>
-			<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xf093;</a>
-			<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xf03e;</a>
-			<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xf14c;</a>
-			<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xf0c1;</a>
-			<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xf0cb;</a>
-			<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xf0ca;</a>
-			<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xf0ce;</a>
-			<a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
-			<a href="javascript:etc.editor.insertNode('Bold')" title="粗体">&#xf032;</a>
-			<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
-			<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
-			<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a>
-			<a href="javascript:etc.editor.insertFontsize('larger')" title="字号变大">&#xf055;</a>
-			<a href="javascript:etc.editor.insertFontsize('smaller')" title="字号变小">&#xf056;</a>
-			
-			<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
-			<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
-
-			<script type="text/javascript">
-				etc.id("file-uploader").onchange = function(e) {
-					tryUploadImage('', e);
-				}
-
-				etc.id("file-uploader-imgur").onchange = function(e) {
-					tryUploadImage('-imgur', e);
-				}
-
-				function tryUploadImage(imgur, e) {
-					Animation.start("uploading-sign");
-					etc.editor.uploadImage(etc.file('file-uploader' + imgur, e), function() {
-						etc.id("file-uploader" + imgur).value = "";
-						Animation.stop();
-					}, {"editor": "thread-content", "imgur": imgur});
-				}
-
-				function openUploader() {
-					var w = window.open("", "",
-						"resizable=no, toolbar=no, scrollbars=no, menubar=no, status=no, directories=no, width=500, height=500");
-					w.document.body.innerHTML = ['<form method="post" id="ie-upload-workaround" ',
-					'action="https://www.libay.nl/upload" ',
-					'enctype="multipart/form-data" encoding="multipart/form-data">',
-					'<input name="image" type="file" id="form-uploader"/>',
-					'<input name="width" type="hidden" value="1024" />',
-					'<input name="height" type="hidden" value="1024" />',
-					'<input name="direct" type="hidden" value="direct" />',
-					'<input type="submit" value="上传" /></form>'].join('');
+		内容:
+		<div id="editor-container" unselectable="on">
+			<div id="editor-outter-panel" unselectable="on">
+				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em">
+					<span><span id="uploading-sign"></span>
+					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xf093;</a>
+					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xf03e;</a>
+					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xf14c;</a>
+					<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xf0c1;</a>
+					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xf0cb;</a>
+					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xf0ca;</a>
+					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xf0ce;</a>
+					<a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
+					<a href="javascript:etc.editor.insertNode('Bold')" title="粗体">&#xf032;</a>
+					<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
+					<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
+					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a>
+					<a href="javascript:etc.editor.insertFontsize('larger')" title="字体变大">&#xf055;</a>
+					<a href="javascript:etc.editor.insertFontsize('smaller')" title="字体变小">&#xf056;</a>
 					
-				}
-				
-			    window.ondragover = function(e) {e.preventDefault();}
-			    window.ondrop = function(e) {
-			    	e.preventDefault(); 
+					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
+					<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
 
-			    	Animation.start("uploading-sign");
-			    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function() {
-						Animation.stop();
-					}, {"editor": "thread-content"});
-			    }
-			</script>
-			</span>
-		</div></div></div>
-		<div style="width: 100%;border: 1px solid #ccc;border-top: 0;overflow-y: auto;overflow-x: hidden;box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);background-color: white;text-align: left">
-        <div contenteditable="true" id="thread-content" style="width: 100%; min-height: 100px; padding: 4px; box-sizing: border-box"></div>
+					<script type="text/javascript">
+						etc.id("file-uploader").onchange = function(e) {
+							tryUploadImage('', e);
+						}
+
+						etc.id("file-uploader-imgur").onchange = function(e) {
+							tryUploadImage('-imgur', e);
+						}
+
+						function tryUploadImage(imgur, e) {
+							Animation.start("uploading-sign");
+							etc.editor.uploadImage(etc.file('file-uploader' + imgur, e), function() {
+								etc.id("file-uploader" + imgur).value = "";
+								Animation.stop();
+							}, {"editor": "thread-content", "imgur": imgur});
+						}
+
+						function openUploader() {
+							var w = window.open("", "",
+								"resizable=no, toolbar=no, scrollbars=no, menubar=no, status=no, directories=no, width=500, height=500");
+							w.document.body.innerHTML = ['<form method="post" id="ie-upload-workaround" ',
+							'action="https://www.libay.nl/upload" ',
+							'enctype="multipart/form-data" encoding="multipart/form-data">',
+							'<input name="image" type="file" id="form-uploader"/>',
+							'<input name="width" type="hidden" value="1024" />',
+							'<input name="height" type="hidden" value="1024" />',
+							'<input name="direct" type="hidden" value="direct" />',
+							'<input type="submit" value="上传" /></form>'].join('');
+							
+						}
+						
+					    window.ondragover = function(e) {e.preventDefault();}
+					    window.ondrop = function(e) {
+					    	e.preventDefault(); 
+
+					    	Animation.start("uploading-sign");
+					    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function() {
+								Animation.stop();
+							}, {"editor": "thread-content"});
+					    }
+					</script>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div id="content-container">
+	        <div contenteditable="true" id="thread-content" style="min-height: 100px; padding: 4px;">
+	        	
+	        </div>
         </div>
-		<!-- <textarea rows="10" id="thread-content"></textarea> -->
 	</div>
 
 	<div id="tr-edit-html" style="display:none" colspan="2">
@@ -383,15 +380,10 @@
 		<button onclick="editHTML()" id="html-edit" mode="wysiwyg">HTML編輯</button>
 		<button onclick="clearDraft()">清空草稿</button>
 		<span id="save-draft"></span>
-		
-		{{if .Update}}
-			
-		{{end}}
 	</div>
 	<div>
 		<ul>
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
-			<!-- <li>按下Ctrl+V可以直接粘贴图片(上传至imgur)</li> -->
 			<li>回复一篇文章时内容不是必须的，可以把回复写在标题里。一般请选择[r: 回复区]标签</li>
 			<li>
 			使用Gist请编辑HTML并粘贴:<br> 

@@ -1,46 +1,42 @@
-<script type="text/javascript">
-	{{if .IsSearch}}
-		var _end = {{.ArticlesPerPage}} * ({{.CurPage}});
-		var _start = {{.ArticlesPerPage}} * ({{.CurPage}} - 1) + 1;
-
-		document.write("<p id='breadcrumbs'>搜索 / 显示第" + _start + "~" + _end + "条结果</p>");
-		document.title = "{{.CurTag}}的搜索结果 第{{.CurPage}}页";
-	{{else}}
-		document.write('<p id="breadcrumbs">');
-		// document.title = window.__title;
-		if ("{{.CurType}}" == "") {
-			document.title = "全部文章";
-			document.write('全部文章');
-		} else if ("{{.CurType}}" == "reply") {
-			document.title = "文章回复";
-			document.write('文章 <badge>{{.CurTag}}</badge> 的回复');
-		} else if ("{{.CurType}}" == "ua") {
-			document.title = "用户文章";
-			document.write('用户 <badge>{{.CurTag}}</badge> 的文章');
-		} else if ("{{.CurType}}" == "message") {
-			document.title = "私信";
-			{{if .IsMessageViewingAll}}
-			document.write('所有私信');
-			{{else}}
-			document.write('与用户 <badge>{{.CurTag}}</badge> 的私信');
-			{{end}}
-		} else if ("{{.CurType}}" == "owa") {
-			document.title = "个人文章管理";
-			{{if .IsOWAViewingGlobal}}
-			document.write('全局文章');
-			{{else}}
-			document.write('文章管理');
-			{{end}}
-		} else {
-			document.title = "{{.CurTag}}";
-			document.write('"{{.CurTag}}"文章');
-		}
-
-		document.title += " -- " + etc.date.format({{.Nav.Range.End}}, true);
-		document.write(' | ' + etc.date.format({{.Nav.Range.Start}}, true) + 
-			' &raquo; ' + etc.date.format({{.Nav.Range.End}}, true) + '</p>');
+{{if .CurType}}
+	{{if .IsReply}}
+		<title>文章回复</title>
+		<p id="breadcrumbs">文章No.{{.CurTag}}的回复
 	{{end}}
+
+	{{if .IsUA}}
+		<title>用户文章</title>
+		<p id="breadcrumbs">"{{.UA.UserNickName}}"的文章
+	{{end}}
+
+	{{if .IsOWA}}
+		<title>个人文章管理</title>
+		<p id="breadcrumbs">
+		{{if .OWA.IsViewingGlobal}}
+			全局文章
+		{{else}}
+			{{if .OWA.IsViewingOther}}
+				"{{.OWA.ViewingOtherName}}"的文章
+			{{else}}
+				文章管理
+			{{end}}
+		{{end}}
+	{{end}}
+
+	{{if .IsTag}}
+		<title>{{.CurTag}}</title>
+		<p id="breadcrumbs">"{{.CurTag}}"文章
+	{{end}}
+{{else}}
+	<title>全部文章</title>
+	<p id="breadcrumbs">全部文章
+{{end}}
+<script type="text/javascript">
+	document.title += " -- " + etc.date.format({{.Nav.Range.End}}, true);
+	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}, true) + 
+	' &raquo; ' + etc.date.format({{.Nav.Range.End}}, true));
 </script>
+</p>
 
 {{if .IsOWA}}
 	{{range $key, $value := .Tags}}
@@ -79,55 +75,8 @@
 
 			window.location.href = "/owa/" + _new.join(':') + "/page/1";
 		}
-
-		function checkAllArticles() {
-			var elems = document.querySelectorAll("#articles input[type=checkbox]");
-			for (var i in elems)
-				elems[i].checked = true;
-		}
-
-		function uncheckAllArticles() {
-			var elems = document.querySelectorAll("#articles input[type=checkbox]");
-			for (var i in elems)
-				elems[i].checked = false;
-		}
-
-		function reverseCheckArticles() {
-			var elems = document.querySelectorAll("#articles input[type=checkbox]");
-			for (var i in elems)
-				elems[i].checked = !elems[i].checked;
-		}
-
-		function getChecked() {
-			var ret = [];
-			var elems = document.querySelectorAll("#articles input[type=checkbox]");
-			for (var i in elems) {
-				if (elems[i].getAttribute)
-				ret.push(elems[i].getAttribute("aid"));
-			}
-
-			return ret.join(',');
-		}
 	</script>
 	<button onclick="reverseTag()">反选</button>
-{{end}}
-
-{{if .IsMessage}}
-<script type="text/javascript">
-	function tryReadAll() {
-		etc.let.hide("read-all-message");
-		etc.util.ajax.post("/unread/message/0", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
-			if (text == "ok") {
-				alert("已将标记所有消息为已读");
-				window.location.reload();
-			} else {
-				alert("发生错误: " + text);
-				etc.let.show("read-all-message");
-			}
-		});
-	}
-</script>
-<button id="read-all-message" onclick="tryReadAll()">标记所有消息为已读</button>
 {{end}}
 
 {{if .AnnounceContent}}
@@ -162,8 +111,8 @@
 
 {{if .IsReply}}
 	<table class="toa"><tr>
-			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/{{.CurPage}}">回复该文章</a></td>
-			<td><a href="/article/{{.CurTag}}">返回文章#{{.CurTag}}</a></td>
+			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/1">回复该文章</a></td>
+			<td><a href="/article/{{.CurTag}}">返回文章No.{{.CurTag}}</a></td>
 	</tr></table>
 
 	<table id="articles">
@@ -192,90 +141,21 @@
 	</tr>
 	{{end}}
 	</table>
+
 	<table class="toa"><tr>
-			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/{{.CurPage}}">回复该文章</a></td>
-			<td><a href="/article/{{.CurTag}}">返回文章#{{.CurTag}}</a></td>
+			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/1">回复该文章</a></td>
+			<td><a href="/article/{{.CurTag}}">返回文章No.{{.CurTag}}</a></td>
 	</tr></table>
 {{else}}
-{{if .IsMessage}}
-	<script type="text/javascript">
-		function tryDelete(id) {
-			etc.let.hide("delete-message-" + id);
-			etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
-				if (text == "ok") {
-					alert("已经删除该消息");
-					window.location.reload();
-				} else {
-					alert("发生错误: " + text);
-					etc.let.show("delete-message-" + id);
-				}
-			});
-		}
-
-		etc.util.cookie.delete("unread");
-	</script>
-	<table id="articles">
-	<tr>
-	<th class="fit">方向</th><th></th><th style="text-align: left">标题</th><th colspan="2">操作</th>
-	<th class="fit last">回复日期</th>
-	</tr>
-	{{range .Messages}}
-	<tr class="darken">
-		<td class="fit">
-		{{if .Sentout}}
-			<em>{{.SenderName}}</em>
-		{{else}}
-			<b><a class="block" href="/user/{{.SenderID}}">{{.SenderName}}</a></b>
-		{{end}}
-		→
-		{{if .Sentout}}
-			<b><a class="block" href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a></b>
-		{{else}}
-			<em>{{.ReceiverName}}</em>
-		{{end}}
-		</td>
-		<td class="fit">:</td>
-		<td class="title">
-			{{if .Sentout}}
-			{{else}}
-				{{if .Read}}
-				{{else}}
-					<badge>未读</badge>
-				{{end}}
-			{{end}}
-			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
-			<span class="time">
-				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>
-			</span>
-		</td>
-		<td class="fit">
-		{{if .Sentout}}
-			<a href="/message/{{.ReceiverID}}/page/1">对话</a>
-		{{else}}
-			<a href="/new/message/{{.SenderID}}">回复</a>
-		{{end}}
-		</td>
-		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message-{{.ID}}">删除</a></td>
-		<td class="fit last">
-			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>]
-		</td>
-	</tr>
-	<tr>
-	<td colspan="6"><span class="preview-content">{{.Preview}}</span></td>
-	</tr>
-	{{end}}
-	</table>
-{{else}}
 <table id="articles">
-<tr>
-	<!-- <th class="fit pr0"></th> -->
-	<th class="fit center"></th><!-- <th class="fit pl0"></th>  -->
-	<th style="text-align: left">文章标题</th>
-	<th class="fit">作者</th>
-	<th class="fit">回复</th>
-	<th class="fit">查看</th>
-	<th class="fit last">最后修改</th>
-</tr>
+	<tr>
+		<th class="fit center"></th>
+		<th style="text-align: left">文章标题</th>
+		<th class="fit">作者</th>
+		<th class="fit">回复</th>
+		<th class="fit">查看</th>
+		<th class="fit last">最后修改</th>
+	</tr>
 	{{range .Articles}}
 	<tr class="darken">
 
@@ -308,7 +188,6 @@
 	{{end}}
 </table>
 {{end}}
-{{end}}
 
 <div class="pager">
 	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
@@ -329,14 +208,3 @@
 	]
 	{{end}}
 </div>
-
-<script type="text/javascript">
-	etc.id("goto-page").onkeyup = function(ev) {
-		if (ev.keyCode == 13) {
-			if ("{{.CurType}}" == "")
-				window.location.href = "/page/" + etc.id("goto-page").value;
-			else
-				window.location.href = "/{{.CurType}}/{{.CurTag}}/page/" + etc.id("goto-page").value;
-		}
-	}
-</script>

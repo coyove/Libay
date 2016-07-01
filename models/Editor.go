@@ -13,15 +13,20 @@ import (
 )
 
 type EditorStruct struct {
-	Username   string
-	Tags       map[int]conf.Tag
-	ReplyTo    int
-	Article    auth.Article
-	Update     bool
-	Message    bool
+	Username string
+	Tags     map[int]conf.Tag
+	ReplyTo  int
+	Article  auth.Article
+
+	Update bool
+
+	Message             bool
+	MessageReceiverName string
+
 	IsLoggedIn bool
-	HTMLTags   map[string]bool
-	HTMLAttrs  map[string]bool
+
+	HTMLTags  map[string]bool
+	HTMLAttrs map[string]bool
 }
 
 func (th ModelHandler) POST_preview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -84,8 +89,7 @@ func (th ModelHandler) GET_edit_article_ID(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	t, _ := strconv.Atoi(payload.Article.Tag)
-	if t >= 100000 {
+	if payload.Article.IsMessage {
 		ServePage(w, "404", nil)
 		return
 	}
@@ -98,13 +102,14 @@ func (th ModelHandler) GET_new_message_ID(w http.ResponseWriter, r *http.Request
 
 	id, err := strconv.Atoi(ps.ByName("id"))
 
-	if err != nil || u.Name == "" {
+	if err != nil || u.Name == "" || id <= 0 {
 		ServePage(w, "404", nil)
 		return
 	}
 
 	payload.ReplyTo = id
 	payload.Message = true
+	payload.MessageReceiverName = auth.GetUserByID(id).NickName
 
 	ServePage(w, "editor", payload)
 }

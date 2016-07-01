@@ -261,7 +261,8 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	cc := auth.Gcache.GetLowLevelCache()
-	caches := make([]string, 0)
+	cu := auth.Guser.GetLowLevelCache()
+	caches := []string{"Pages:"}
 
 	rindex := regexp.MustCompile(`(.+)--`)
 	rpage := regexp.MustCompile(`(.+)-(.+)-(ua|owa|reply|tag)`)
@@ -288,15 +289,29 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 			url = []string{name, ""}
 		}
 
-		sec, hits := auth.Gcache.Info(v)
+		_, sec, hits := auth.Gcache.Info(v)
 
 		if sec < 0 {
 			caches = append(caches, fmt.Sprintf("Hits: %5d, waits purging: %s %s", hits, makehref(url[0]), makehref(url[1])))
 		} else {
-			caches = append(caches, fmt.Sprintf("Hits: %5d, expires in %d: %s %s", hits, sec, makehref(url[0]), makehref(url[1])))
+			caches = append(caches, fmt.Sprintf("Hits: %5d, expire in %2ds: %s %s", hits, sec, makehref(url[0]), makehref(url[1])))
+		}
+	}
+
+	caches = append(caches, "<hr>Users:")
+
+	for _, v := range cu {
+		_v, sec, hits := auth.Gcache.Info(v)
+		user := _v.(auth.AuthUser)
+		url := fmt.Sprintf("<a href='/user/%d' target='_blank'>%s(%s)</a>", user.ID, user.Name, user.NickName)
+
+		if sec < 0 {
+			caches = append(caches, fmt.Sprintf("Hits: %5d, waits purging: %s", hits, url))
+		} else {
+			caches = append(caches, fmt.Sprintf("Hits: %5d, expire in %2ds: %s", hits, sec, url))
 		}
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	Return(w, strings.Join(caches, "<br>"))
+	Return(w, "<pre>"+strings.Join(caches, "<br>")+"</pre>")
 }

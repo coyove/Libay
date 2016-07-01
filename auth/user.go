@@ -25,7 +25,7 @@ type AuthUser struct {
 	Comment       string
 	Avatar        string
 	ImageUsage    int
-	Unread        string
+	SessionID     string
 }
 
 var DummyUsers = []AuthUser{
@@ -121,21 +121,40 @@ func GetUser(r *http.Request) (ret AuthUser) {
 	b_session_id := tmp[2]
 	b_verify := tmp[3]
 
-	if _, err := strconv.Atoi(b_id); err != nil {
+	if id, err := strconv.Atoi(b_id); err != nil {
 		invalid = true
 		return
+	} else {
+
+		if b_verify == MakeHash(b_username, b_session_id) {
+			// User has a valid cookie, now test whether it has expired
+			user := GetUserByID(id)
+			if user.SessionID == b_session_id {
+				return user
+			}
+
+			Guser.Remove(id)
+			return
+		}
 	}
 
-	if b_verify == MakeHash(b_username, b_session_id) {
-		var session_id, nickname, ip string
-		var date, signupDate time.Time
-		var _id int
-		var status, group, comment, avatar, unread string
-		var usage int
+	invalid = true
+	return
+}
 
-		if err := Gdb.QueryRow(`
+func GetUserByID(id int) (ret AuthUser) {
+	var session_id, nickname, username, ip, status, group, comment, avatar string
+	var date, signupDate time.Time
+	var _id, usage int
+
+	if v, ok := Guser.Get(id); ok {
+		return v.(AuthUser)
+	}
+
+	if err := Gdb.QueryRow(`
             SELECT
                     users.id,
+                    users.username,
                     users.session_id,
                     users.nickname,
                     users.last_last_login_date,
@@ -145,15 +164,15 @@ func GetUser(r *http.Request) (ret AuthUser) {
                 user_info.group,
                 user_info.comment,
                 user_info.avatar,
-                user_info.image_usage,
-                user_info.unread
+                user_info.image_usage
             FROM 
                 users
             INNER JOIN
                 user_info ON user_info.id = users.id
             WHERE 
-                users.id = `+b_id).
-			Scan(&_id,
+                users.id = `+strconv.Itoa(id)).
+		Scan(&_id,
+			&username,
 			&session_id,
 			&nickname,
 			&date,
@@ -163,67 +182,26 @@ func GetUser(r *http.Request) (ret AuthUser) {
 			&group,
 			&comment,
 			&avatar,
-			&usage,
-			&unread); err == nil {
+			&usage); err == nil {
 
-			if session_id != b_session_id {
-				return
-			}
+		comment = html.UnescapeString(comment)
+		ret = AuthUser{_id,
+			username,
+			nickname,
+			int(date.Unix()),
+			int(signupDate.Unix()),
+			ip,
+			strings.Trim(status, " "),
+			strings.Trim(group, " "),
+			comment,
+			avatar,
+			usage,
+			session_id}
 
-			comment = html.UnescapeString(comment)
-			ret = AuthUser{_id,
-				b_username,
-				nickname,
-				int(date.Unix()),
-				int(signupDate.Unix()),
-				ip,
-				strings.Trim(status, " "),
-				strings.Trim(group, " "),
-				comment,
-				avatar,
-				usage,
-				unread}
-		} else {
-			glog.Errorln("Database:", err)
-		}
-
-		return
-	}
-
-	invalid = true
-	return
-}
-
-func TranslateUserID(id int) (ret AuthUser) {
-	var _id int
-	var nickname, status, group string
-
-	if v, ok := Gcache.Get("user-" + strconv.Itoa(id)); ok {
-		return v.(AuthUser)
-	}
-
-	defer func() {
-		Gcache.Add("user-"+strconv.Itoa(id), ret, conf.GlobalServerConfig.CacheLifetime)
-	}()
-
-	if err := Gdb.QueryRow(`
-            SELECT
-                    users.id,
-                    users.nickname,
-                user_info.status,
-                user_info.group,
-            FROM 
-                users
-            INNER JOIN
-                user_info ON user_info.id = users.id
-            WHERE 
-                users.id = `+strconv.Itoa(id)).
-		Scan(&_id, &nickname, &status, &group); err == nil {
-
-		ret = AuthUser{ID: _id, NickName: nickname, Status: strings.Trim(status, " "), Group: strings.Trim(group, " ")}
-	} else {
-		glog.Errorln("Database:", err)
-	}
+		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)
+	} // else {
+	// 	glog.Errorln("Database:", err)
+	// }
 
 	return
 }

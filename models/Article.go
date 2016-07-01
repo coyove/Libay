@@ -27,7 +27,6 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 		Article    auth.Article
 		AuthorSelf bool
 
-		CanMakeTop    bool
 		CanMakeLocked bool
 
 		User       auth.AuthUser
@@ -39,7 +38,6 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 	payload.Article = auth.GetArticle(r, u, id, false)
 	payload.AuthorSelf = (u.ID == payload.Article.AuthorID || vtt)
 
-	payload.CanMakeTop = conf.GlobalServerConfig.GetPrivilege(u.Group, "AnnounceArticle")
 	payload.CanMakeLocked = conf.GlobalServerConfig.GetPrivilege(u.Group, "MakeLocked")
 
 	payload.User = u
@@ -52,6 +50,13 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 		}
 
 		if u.ID == 0 && !vtt {
+			ServePage(w, "404", nil)
+			return
+		}
+	}
+
+	if payload.Article.IsMessage {
+		if (payload.Article.IsOthersMessage && !vtt) || u.ID == 0 {
 			ServePage(w, "404", nil)
 			return
 		}
