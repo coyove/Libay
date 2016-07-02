@@ -801,14 +801,28 @@ var Gallery = (function() {
         "_Normal": function() {
         	etc.id("gallery").style.display = "none";
             etc.id("article-content").style.display = "block";
+
+            var doms = Gallery._Gallery.imgDOMs;
+            for (var i = 0; i < doms.length; i++) {
+                doms[i][0].src = doms[i][1];
+            }
         },
 
         "_Gallery": function() {
         	var ac = etc.id("article-content");
             var imgs = etc.get("#article-content img");
             var links = etc.get("#article-content a");
+            var div = etc.id("gallery");
+            ac.style.display = "none";
+
+            if (div.id) {
+                div.style.display = "block";
+                Gallery._Gallery_Goto(0);
+                return;
+            }
 
             Gallery._Gallery.imgList = [];
+            Gallery._Gallery.imgDOMs = [];
             Gallery._Gallery.index = 0;
 
             var ifLarger = {};
@@ -819,28 +833,21 @@ var Gallery = (function() {
 
             for (var i = 0; i < imgs.length; i++) {
                 var m = imgs[i].src.match(/thumbs\/(\S+)/);
+                Gallery._Gallery.imgDOMs.push([imgs[i], imgs[i].src]);
+
                 if (m && ifLarger[m[1]]) {
                     Gallery._Gallery.imgList.push(ifLarger[m[1]]);
                 } else {
                     Gallery._Gallery.imgList.push(imgs[i].src);
                 }
+
+                imgs[i].src = "about:blank";
             }
 
-            if (Gallery._Gallery.imgList.length == 0) return;
-
-            var div = etc.id("gallery");
-            ac.style.display = "none";
-
-            if (div.id) {
-                div.style.display = "block";
-                Gallery._Gallery_Goto(0);
-                return;
-            } else {
-                div = document.createElement("div");
-                div.id = "gallery";
-                ac.parentNode.appendChild(div);
-                div.style.display = "block";
-            }
+            div = document.createElement("div");
+            div.id = "gallery";
+            ac.parentNode.appendChild(div);
+            div.style.display = "block";
 
             var paging = [
                 "<div class='pager'>",
@@ -895,6 +902,7 @@ var Gallery = (function() {
         },
 
         "_Gallery_Goto": function(p) {
+            if (Gallery._Gallery.imgList.length == 0) return;
             if (p === true) p = Gallery._Gallery.index;
 
             if (p < 0)
@@ -934,17 +942,14 @@ var Animation = (function() {
     var __id;
     return {
         "start": function(id) {
-            if (handle) {
-                console.log("duplicated animation");
-                return;
-            }
+            if (handle) return;
 
             var __loadingSign = ["⣾","⣽","⣻","⢿","⡿","⣟","⣯","⣷"];
             var __index = 0;
             __id = id;
+
             handle = setInterval(function(){
-                etc.id(id).innerHTML = __loadingSign[__index];
-                __index++;
+                etc.id(id).innerHTML = __loadingSign[__index++];
                 if (__index > 7) __index = 0;
             }, 100);
         },
