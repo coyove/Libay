@@ -113,16 +113,6 @@ a.block, span.block {
     border-right: solid 1px;
 }
 
-table.account-info { 
-    width: 100%; 
-    max-width: 800px;
-}
-table.account-info td { 
-    vertical-align: top; 
-    padding-bottom: 2em;
-    display: table-cell;
-}
-
 .article-image {
     max-width: 250px;
     max-height: 250px;
@@ -383,9 +373,6 @@ div#editor textarea {
     #articles td.last, #articles th.last {
     	display: none;
     }
-    table.account-info td { 
-        display: block;
-    }
     #footer {
         margin-left: 2px;
         margin-right: 2px;
@@ -419,7 +406,6 @@ span.right-block {
     display: block;
     float: right;
     margin-right: 8px;
-    margin-top: -2em;
     font-size: 80%;
 }
 

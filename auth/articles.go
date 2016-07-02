@@ -78,6 +78,8 @@ var articleCounter struct {
 	articles map[int]int
 }
 
+var itoa = strconv.Itoa
+
 func incrCounter(id int) {
 	articleCounter.Lock()
 	articleCounter.articles[id]++
@@ -95,7 +97,7 @@ func ArticleCounter() {
 			articleCounter.Lock()
 			var query string = ""
 			for id, c := range articleCounter.articles {
-				query += "UPDATE articles SET hits = hits + " + strconv.Itoa(c) + " WHERE id=" + strconv.Itoa(id) + ";"
+				query += "UPDATE articles SET hits = hits + " + itoa(c) + " WHERE id=" + itoa(id) + ";"
 				delete(articleCounter.articles, id)
 			}
 
@@ -108,8 +110,6 @@ func ArticleCounter() {
 		}
 	}
 }
-
-var itoa = strconv.Itoa
 
 func HashTS(ts int) string {
 	buf := MakeHashRaw(ts)
@@ -191,6 +191,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 	onlyTag := "articles.deleted = false"
 	orderByDate := "modified_at"
 	if filterType == "reply" {
+		// Replies should be sorted by CREATION date not by MODIFICATION date
 		orderByDate = "created_at"
 	}
 	orderBy := orderByDate + " " + direction
@@ -200,23 +201,18 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		if _, err := strconv.Atoi(filter); err == nil {
 			/*
 			   filter = user's ID
-
-			   Average visitors/users trying to access someone's article-list,
-			   Show them the ICEBERG and filter out all the hidden articles.
+			   Show the ICEBERG and filter out all the hidden articles.
 			*/
 			onlyTag += " AND (articles.author = " + filter +
 				" OR articles.original_author = " + filter + ") " +
 				conf.GlobalServerConfig.GetSQL()
 		} else {
-			/*
-			   filter is not a valid number
-			*/
-			return //ret, 0
+			return
 		}
 	case "tag":
 		/*
-		   filter = tag's name
-
+		   filter = tag name
+		   Show the articles with the specific tag name
 		   GetTagIndex converts name to index, returns -1 if name is not found
 		*/
 		_index := conf.GlobalServerConfig.GetTagIndex(filter)
@@ -224,9 +220,8 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 	case "owa":
 		/*
 		   filter = user-id:tag-id-1:tag-id-2:....:tag-id-n
-
 		   "owa" means showing all articles, authentication was made in models/Page.go.
-		   Signed user can view his own articles, users with "ViewOtherTrash" privilege can
+		   Loggedin user can view his own articles, users with "ViewOtherTrash" privilege can
 		   view others' articles.
 		*/
 		_arr := strings.Split(filter, ":")
@@ -236,14 +231,14 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 			*/
 			onlyTag = "1 = 1"
 		} else {
-			// Note this overrides "articles.deleted=false"
+			// Both the original author and the current author will see it
 			onlyTag = "(articles.author = " + _arr[0] +
 				" OR articles.original_author = " + _arr[0] + ")"
 		}
 		for i := 1; i < len(_arr); i++ {
 			_id, err := strconv.Atoi(_arr[i])
 			if err != nil {
-				return //ret, 0
+				return
 			}
 
 			if _id == conf.GlobalServerConfig.MessageArea {
@@ -254,11 +249,12 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		}
 	case "reply":
 		if _, err := strconv.Atoi(filter); err == nil {
-			// Replies should be sorted by CREATION date not by MODIFICATION date
+			/*
+				filter = ID of the parent article, all replies are children of it
+			*/
 			onlyTag += " AND articles.parent = " + filter
-			// orderBy = "created_at DESC"
 		} else {
-			return //ret, 0
+			return
 		}
 	default:
 		onlyTag += conf.GlobalServerConfig.GetSQL()
@@ -342,11 +338,6 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 	}
 
 	return
-}
-
-func SearchArticles(r *http.Request, page int, filter string) []Article {
-	ret := make([]Article, 0)
-	return ret
 }
 
 func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackForth) {
@@ -577,7 +568,7 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 
 		if err == nil {
 			glog.Infoln(user.Name, user.NickName, "deleted", id)
-			Gcache.Remove(`\d+-` + strconv.Itoa(id) + `-(true|false)`)
+			Gcache.Remove(`\d+-` + itoa(id) + `-(true|false)`)
 			return "ok"
 		} else {
 			return "Err::DB::Update_Failure"
@@ -622,7 +613,7 @@ func GenerateRSS(atom bool, page int) string {
 	for _, v := range a {
 		feed.Items = append(feed.Items, &feeds.Item{
 			Title:       v.Title,
-			Link:        &feeds.Link{Href: conf.GlobalServerConfig.Host + "/article/" + strconv.Itoa(v.ID)},
+			Link:        &feeds.Link{Href: conf.GlobalServerConfig.Host + "/article/" + itoa(v.ID)},
 			Author:      &feeds.Author{Name: v.Author},
 			Created:     time.Unix(int64(v.Timestamp), 0),
 			Description: v.Content,

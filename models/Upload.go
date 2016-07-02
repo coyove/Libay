@@ -134,13 +134,6 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 	} else {
 		// Just write the original one as a thumbnail
-		// thumb, err := os.Create("./thumbs/" + fn)
-		// if err != nil {
-		// 	w.Write([]byte("{\"Error\": true}"))
-		// 	return
-		// }
-		// thumb.Write(hashBuf)
-		// thumb.Close()
 		if !writeFakeThumb() {
 			return
 		}
@@ -151,9 +144,11 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		imageSize = "0"
 	}
 
+	uid := strconv.Itoa(u.ID)
+
 	_, err = auth.Gdb.Exec(`
-		INSERT INTO images (image, uploader) VALUES ('` + fn + "', " + strconv.Itoa(u.ID) + `);
-		UPDATE user_info SET image_usage = image_usage + ` + imageSize + `WHERE id = ` + strconv.Itoa(u.ID))
+		INSERT INTO images (image, uploader) VALUES ('` + fn + "', " + uid + `);
+		UPDATE user_info SET image_usage = image_usage + ` + imageSize + ` WHERE id = ` + uid)
 
 	payload.Error = err != nil
 
@@ -162,9 +157,15 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	if ava == "true" {
-		_, err := auth.Gdb.Exec("update user_info set avatar='" + fn + "' where id=" + strconv.Itoa(u.ID))
+		var oldAvatar string
 
-		if err == nil {
+		if err := auth.Gdb.QueryRow(`
+			SELECT avatar FROM user_info WHERE id = ` + uid + `;
+			UPDATE user_info SET avatar = '` + fn + "' WHERE id = " + uid).
+			Scan(&oldAvatar); err == nil {
+
+			os.Remove("./images/" + oldAvatar)
+			os.Remove("./thumbs/" + oldAvatar)
 			payload.Avatar = "ok"
 		} else {
 			glog.Errorln("Database:", err)

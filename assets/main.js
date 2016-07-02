@@ -806,53 +806,79 @@ var Gallery = (function() {
         "_Gallery": function() {
         	var ac = etc.id("article-content");
             var imgs = etc.get("#article-content img");
+            var links = etc.get("#article-content a");
+
             Gallery._Gallery.imgList = [];
             Gallery._Gallery.index = 0;
 
+            var ifLarger = {};
+            for (var i = 0; i < links.length; i++) {
+                var m = links[i].href.match(/images\/(\S+)/);
+                if (m) ifLarger[m[1]] = links[i].href;
+            }
+
             for (var i = 0; i < imgs.length; i++) {
-                var src = (imgs[i]).src;
-                if (/thumbs\/\S+[0-9a-f]{38}\./.test(src)) {
-                    Gallery._Gallery.imgList.push(src.replace("/thumbs/", "/images/"));
+                var m = imgs[i].src.match(/thumbs\/(\S+)/);
+                if (m && ifLarger[m[1]]) {
+                    Gallery._Gallery.imgList.push(ifLarger[m[1]]);
                 } else {
-                    Gallery._Gallery.imgList.push(src);
+                    Gallery._Gallery.imgList.push(imgs[i].src);
                 }
             }
 
             if (Gallery._Gallery.imgList.length == 0) return;
 
-            var html = "[<a href='javascript:Gallery._Gallery_Prev()'>上一张</a>]" +
-                "<span class='gallery-pager'></span>" +
-                "[<a href='javascript:Gallery._Gallery_Next()'>下一张</a>] " +
-                "[<a href='javascript:Gallery._Gallery_Goto(true)'>重新载入</a>]" + 
-                '<style>.gallery-page-no{margin:0 0.33em;text-decoration:none;}.gallery-page-no:before{content:"[";}.gallery-page-no:after{content:"]";}</style>';
-
-            html = html +
-                "<div><div id='gallery-loading' style='background-image:url(" + window.__cdn + "/assets/images/loading.gif); display: none; position: absolute; z-index:99; opacity: 0.5; filter: alpha(opacity=50);'></div><img onclick='Gallery._Gallery_Next()' id='gallery-image' style='cursor: pointer; max-width:100%; display: block'/></div>" + 
-                html;
-
-            // document.getElementById("article-content").innerHTML = html;
             var div = etc.id("gallery");
-            if (div.id) {
-
-            } else {
-	            div = document.createElement("div");
-	            div.innerHTML = html;
-	            div.id = "gallery";
-	            ac.parentNode.appendChild(div);
-	        }
-
             ac.style.display = "none";
-            div.style.display = "block";
 
-            var pager = document.querySelectorAll(".gallery-pager");
+            if (div.id) {
+                div.style.display = "block";
+                Gallery._Gallery_Goto(0);
+                return;
+            } else {
+                div = document.createElement("div");
+                div.id = "gallery";
+                ac.parentNode.appendChild(div);
+                div.style.display = "block";
+            }
+
+            var paging = [
+                "<div class='pager'>",
+                    "[ <a href='javascript:Gallery._Gallery_Prev()'>上一张</a> ]",
+                    "<select class='gallery-pager'></select>",
+                    "[ <a href='javascript:Gallery._Gallery_Next()'>下一张</a> ]",
+                    "[ <a href='javascript:Gallery._Gallery_Goto(true)'>重新载入</a> ]",
+                "</div>",
+            ].join(' ');                
+
+            div.innerHTML = paging + [
+                    "<div>",
+                        "<div id='gallery-loading' style='",
+                            "background-image:url(" + window.__cdn + "/assets/images/loading.gif);",
+                            "display: none;",
+                            "position: absolute;", 
+                            "z-index: 99;",
+                            "opacity: 0.5;",
+                            "filter: alpha(opacity=50);'>",
+                        "</div>",
+                        "<img onclick='Gallery._Gallery_Next()' id='gallery-image' style='",
+                            "cursor: pointer;",
+                            "max-width:100%;",
+                            "display: block'/>",
+                    "</div>"].join('') + paging;
+
+            var pager = etc.get(".gallery-pager");
             for (var i = 0; i < pager.length; i++) {
                 var html = [];
 
                 for (var j = 0; j < Gallery._Gallery.imgList.length; j++) {
-                    html.push("<a id='gallery-page-" + i + "-" + j + "' class='gallery-page-no' href='javascript:Gallery._Gallery_Goto(" + j + ")'>" + (j + 1) + "</a>");
+                    html.push("<option value='" + j + "'>第 " + (j + 1) + " 张</option>");
                 }
 
                 pager[i].innerHTML = html.join('');
+                pager[i].onchange = function() {
+                    Gallery._Gallery_Goto(this.value);
+                }
             }
 
             Gallery._Gallery_Goto(0);
@@ -878,30 +904,25 @@ var Gallery = (function() {
 
            	Gallery._Gallery.index = p;
 
-            for (var j = 0; j < Gallery._Gallery.imgList.length; j++) {
-                var e1 = etc.id("gallery-page-1-" + j);
-                var e2 = etc.id("gallery-page-0-" + j);
-                e1.style.color = e2.style.color = "#ccc";
-                e1.style.display = e2.style.display = (Math.abs(j - p) <= 5) ? "inherit" : "none";
-            }
-
 			var img = new Image();
-            var i = etc.id("gallery-image");
+            var gi = etc.id("gallery-image");
             var loading = etc.id("gallery-loading");
 			var oldTop = document.documentElement.scrollTop;
 
-			img.onload = function(){
+			img.onload = function() {
                 etc.let.hide("gallery-loading");
-                i.src = this.src; 
-                etc.id("gallery-page-1-" + p).style.color = "black";
-                etc.id("gallery-page-0-" + p).style.color = "black";
+                gi.src = this.src; 
+
+                var pager = etc.get(".gallery-pager");
+                for (var i = 0; i < pager.length; i++) pager[i].value = p;
+
                 document.documentElement.scrollTop = oldTop;
 			};
 
 			img.src = (Gallery._Gallery.imgList[p]);
 			// i.src = window.__cdn + "/assets/images/loading.gif";
-            loading.style.width = (i.clientWidth ? i.clientWidth : 64) + "px";
-            loading.style.height = (i.clientHeight ? i.clientHeight : 64) + "px";
+            loading.style.width = (gi.clientWidth ? gi.clientWidth : 64) + "px";
+            loading.style.height = (gi.clientHeight ? gi.clientHeight : 64) + "px";
             
             if (img) etc.let.show("gallery-loading");
         }

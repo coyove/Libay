@@ -110,19 +110,18 @@ func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Req
 func (th ModelHandler) GET_account(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var payload struct {
 		auth.AuthUser
-		UserPrivilege map[string]bool
+		UserPrivilege map[string]interface{}
 		IsLoggedIn    bool
 	}
 
 	payload.AuthUser = auth.GetUser(r)
 	payload.IsLoggedIn = payload.AuthUser.Name != ""
-	payload.UserPrivilege = make(map[string]bool)
+	payload.UserPrivilege = make(map[string]interface{})
 
 	if payload.AuthUser.Group == "admin" {
 		payload.UserPrivilege["Admin"] = true
 	} else {
 		if g, e := conf.GlobalServerConfig.Privilege[payload.AuthUser.Group]; !e {
-			payload.UserPrivilege["None"] = true
 		} else {
 			for k, v := range g.(map[string]interface{}) {
 				if _v, ok := v.(bool); ok {
@@ -132,8 +131,7 @@ func (th ModelHandler) GET_account(w http.ResponseWriter, r *http.Request, ps ht
 		}
 	}
 
-	payload.UserPrivilege["Cooldown:"+
-		strconv.Itoa(conf.GlobalServerConfig.GetInt(payload.AuthUser.Group, "Cooldown"))] = true
+	payload.UserPrivilege["Cooldown"] = conf.GlobalServerConfig.GetInt(payload.AuthUser.Group, "Cooldown")
 	ServePage(w, "account", payload)
 }
 

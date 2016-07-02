@@ -257,81 +257,74 @@
 </script>
 
 {{if .IsLoggedIn}}
-<table class="toa" style="display: none" id="admin-nav">
-<tr>
-    <td><a href="/owa/0/page/1">站内所有文章</a></td>
-    <td><a href="/config/sheet">配置文件</a></td>
-    <td><a href="/database/articles/page/1">浏览数据库</a></td>
-    <td><a href="/bootstrap">配置模板</a></td>
-    <td><a href="/status" target="_blank">系统负载</a></td>
-    <td><a href="/cache" target="_blank">缓存状态</a></td>
-</tr>
+<style type="text/css">
+    .account-admin {
+        display: table !important;
+    }
+    .right-align {
+        text-align: right;
+        vertical-align: text-top;
+    }
+</style>
+
+<table class="toa account-{{.Group}}" style="display: none" id="admin-nav">
+    <tr>
+        <td><a href="/owa/0/page/1">站内所有文章</a></td>
+        <td><a href="/config/sheet">配置文件</a></td>
+        <td><a href="/database/articles/page/1">浏览数据库</a></td>
+        <td><a href="/bootstrap">配置模板</a></td>
+        <td><a href="/status" target="_blank">系统负载</a></td>
+        <td><a href="/cache" target="_blank">缓存状态</a></td>
+    </tr>
 </table>
 
-<table class="account-info">
-<tr>
-<td>
-    <h2>用户信息</h2>
-    <p>
-        ID: <b>{{.ID}}</b>, 昵称: <b>{{.NickName}}</b>, 用户名: <b>{{.Name}}</b> <br>
-        用户组: <b>{{.Group}}</b>, 状态: <b><script type="text/javascript">
-            var s = "";
-            switch("{{.Status}}") {
-                case "ok": s = "正常"; break;
-                case "locked": s = "禁用"; break;
-            }
-            document.write(s);
-            if ("{{.Group}}" == "admin") etc.let.show("admin-nav");
-        </script></b><br>权限: <br>
-        {{range $n, $av := .UserPrivilege}}
-            {{if $av}}[{{$n}}]{{else}}[<del>{{$n}}</del>]{{end}}<br>
-        {{end}}
-    </p>
-</td>
-    <td>
-    <h2>登入信息</h2>
-        <p>
-            上次登入时间: 
-            <script type="text/javascript">
-                document.write(etc.date.format({{.LastLoginDate}} * 1000, true))
-            </script><br>
-            上次登入IP: <a href="http://ipinfo.io/{{.LastLoginIP}}" target="_blank">{{.LastLoginIP}}</a><br>
-            注册时间: <script type="text/javascript">
-                        document.write(etc.date.format({{.SignUpDate}} * 1000, true))
-                    </script>
-        </p>
-    </td>
-</tr>
-<tr>
-    <td rowspan="2">
-        <h2>用户图片</h2>
-        <p>
-            <a href="/images/{{.Avatar}}" style="margin-bottom: 1em; display: block;">
-            <img id="avatar-image" style="max-width: 150px; max-height: 150px" src="/thumbs/{{.Avatar}}">
-            </a>
-            <input type="file" id="user-avatar"/>
-            <button onclick="tryUpdateAvatar()" id="update-avatar">上传图像</button>
-        </p>
-    </td>
-    <td>
-        <h2>用户备注</h2>
-        <p>
-            当前: {{.Comment}}<br>
-            修改: <input type="textbox" id="user-comment" style="width: 100%; max-width: 200px" value="{{.Comment}}"/>
+<table class="_table" style="width: 100%">
+    <tr><td class="right-align fit">用户ID:</td><td>{{.ID}}</td></tr>
+    <tr><td class="right-align fit">用户昵称:</td><td>{{.NickName}}</td></tr>
+    <tr><td class="right-align fit">登入名:</td><td>{{.Name}}</td></tr>
+    <tr><td class="right-align fit">用户组:</td><td>{{.Group}}</td></tr>
+    <tr><td class="right-align fit">用户状态:</td><td>{{.Status}}</td></tr>
+    
+    {{range $n, $av := .UserPrivilege}}
+        <tr><td class="right-align fit">{{$n}}:</td><td>{{$av}}</td></tr>
+    {{end}}
+    <tr><td class="right-align fit">上次登入:</td><td>
+        <script type="text/javascript">
+            document.write(etc.date.format({{.LastLoginDate}} * 1000, true))
+        </script> @
+        <a href="http://ipinfo.io/{{.LastLoginIP}}" target="_blank">{{.LastLoginIP}}</a>
+    </td></tr>
+    
+    <tr><td class="right-align fit">注册时间:</td><td>
+        <script type="text/javascript">
+            document.write(etc.date.format({{.SignUpDate}} * 1000, true))
+        </script>
+    </td></tr>
+
+    <tr><td class="right-align fit">上传图片:</td><td>
+    <script type="text/javascript">
+        document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} 字节)");
+    </script>
+    </td></tr>
+
+    <tr><td class="right-align fit">用户备注:</td>
+        <td>{{.Comment}}</td></tr>
+    <tr><td class="right-align fit">修改备注:</td>
+    	<td>
+    		<input type="textbox" id="user-comment" style="width: 100%; max-width: 200px" value="{{.Comment}}"/>
             <button onclick="tryUpdateComment()" id="update-comment">更新备注</button>
-        </p>
-    </td>
-</tr>
-<tr>
-    <td>
-        <h2>其它</h2>
-        <p>
-            上传图片: <script type="text/javascript">
-            document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} 字节)");
-            </script>
-        </p>
-    </td>
-</tr>
+        </td>
+    </tr>
+    <tr><td></td><td>
+    	<a href="/images/{{.Avatar}}" style="display: block;">
+        	<img id="avatar-image" style="max-width: 150px; max-height: 150px" src="/thumbs/{{.Avatar}}">
+        </a>
+    </td></tr>
+
+    <tr><td class="right-align fit">用户头像:</td><td>
+        <input type="file" id="user-avatar"/>
+        <button onclick="tryUpdateAvatar()" id="update-avatar">上传图像</button>
+    </td></tr>
 </table>
 {{else}}
 

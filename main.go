@@ -23,11 +23,9 @@ import (
 	"os/signal"
 	"reflect"
 	"regexp"
-	// "runtime"
 	"strconv"
 	"strings"
 	"syscall"
-	// "text/template"
 	"time"
 )
 
@@ -37,12 +35,6 @@ var debugMode = flag.Bool("d", false, "Debug mode")
 var debugPort = flag.Int("debug-port", 731, "Debug server port")
 
 func main() {
-	// _h := time.Now().UnixNano()
-	// for i := 0; i < 1000000; i++ {
-	// 	auth.To60(uint64(time.Now().UnixNano()))
-	// }
-	// fmt.Println((time.Now().UnixNano() - _h) / 1e6)
-
 	flag.Parse()
 	filename, _ := osext.Executable()
 	exebuf, _ := ioutil.ReadFile(filename)

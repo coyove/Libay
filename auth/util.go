@@ -43,6 +43,7 @@ type IIF map[interface{}]string
 
 var Escape = html.EscapeString
 var Unescape = html.UnescapeString
+var Ft = fmt.Sprintf
 
 var tsReg = regexp.MustCompile(`(after|before)=(.+)_(.+)`)
 
