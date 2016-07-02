@@ -182,9 +182,13 @@ func LogIP(r *http.Request) bool {
 }
 
 func LogIPnv(r *http.Request) bool {
-	host := GetIP(r)
 	mapIPTime.Lock()
 	defer mapIPTime.Unlock()
+
+	host := GetIP(r)
+	if host == "127.0.0.1" || host == "localhost" {
+		return true
+	}
 
 	if v, has := mapIPTime.ips[host]; has {
 		cur := time.Now()

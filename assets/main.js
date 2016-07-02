@@ -556,9 +556,12 @@
                     if (/\.js$/.test(_src)) {
                         s = document.createElement('script');
                         var scripts = document.querySelectorAll('script');
-                        // console.log(scripts);
+                        
                         for(var i in scripts) {
-                            if (scripts[i].src == _src) _gotoNext();
+                            if (scripts[i].src == _src) {
+                                _gotoNext();
+                                return;
+                            }
                         }
 
                         s.src = _src;
@@ -722,7 +725,7 @@
                         }
 
                         if (D.Error || D.error) {
-                            return onError("Server_Failure_" + D.R || D.error);
+                            return onError("Server_Failure_" + D.R);
                         }
 
                         var _link = (D.Link || D.link).replace("http://", "https://");
@@ -795,147 +798,6 @@
         },
     };
 })(this);
-
-var Gallery = (function() {
-    return {
-        "_Normal": function() {
-        	etc.id("gallery").style.display = "none";
-            etc.id("article-content").style.display = "block";
-
-            var doms = Gallery._Gallery.imgDOMs;
-            for (var i = 0; i < doms.length; i++) {
-                doms[i][0].src = doms[i][1];
-            }
-        },
-
-        "_Gallery": function() {
-        	var ac = etc.id("article-content");
-            var imgs = etc.get("#article-content img");
-            var links = etc.get("#article-content a");
-            var div = etc.id("gallery");
-            ac.style.display = "none";
-
-            if (div.id) {
-                div.style.display = "block";
-                Gallery._Gallery_Goto(0);
-                return;
-            }
-
-            Gallery._Gallery.imgList = [];
-            Gallery._Gallery.imgDOMs = [];
-            Gallery._Gallery.index = 0;
-
-            var ifLarger = {};
-            for (var i = 0; i < links.length; i++) {
-                var m = links[i].href.match(/images\/(\S+)/);
-                if (m) ifLarger[m[1]] = links[i].href;
-            }
-
-            for (var i = 0; i < imgs.length; i++) {
-                var m = imgs[i].src.match(/thumbs\/(\S+)/);
-                Gallery._Gallery.imgDOMs.push([imgs[i], imgs[i].src]);
-
-                if (m && ifLarger[m[1]]) {
-                    Gallery._Gallery.imgList.push(ifLarger[m[1]]);
-                } else {
-                    Gallery._Gallery.imgList.push(imgs[i].src);
-                }
-
-                imgs[i].src = "about:blank";
-            }
-
-            div = document.createElement("div");
-            div.id = "gallery";
-            ac.parentNode.appendChild(div);
-            div.style.display = "block";
-
-            var paging = [
-                "<div class='pager'>",
-                    "[ <a href='javascript:Gallery._Gallery_Prev()'>上一张</a> ]",
-                    "<select class='gallery-pager'></select>",
-                    "[ <a href='javascript:Gallery._Gallery_Next()'>下一张</a> ]",
-                    "[ <a href='javascript:Gallery._Gallery_Goto(true)'>重新载入</a> ]",
-                "</div>",
-            ].join(' ');                
-
-            div.innerHTML = paging + [
-                    "<div>",
-                        "<div id='gallery-loading' style='",
-                            "background-image:url(" + window.__cdn + "/assets/images/loading.gif);",
-                            "display: none;",
-                            "position: absolute;", 
-                            "z-index: 99;",
-                            "opacity: 0.5;",
-                            "filter: alpha(opacity=50);'>",
-                        "</div>",
-                        "<img onclick='Gallery._Gallery_Next()' id='gallery-image' style='",
-                            "cursor: pointer;",
-                            "max-width:100%;",
-                            "display: block'/>",
-                    "</div>"].join('') + paging;
-
-            var pager = etc.get(".gallery-pager");
-            for (var i = 0; i < pager.length; i++) {
-                var html = [];
-
-                for (var j = 0; j < Gallery._Gallery.imgList.length; j++) {
-                    html.push("<option value='" + j + "'>第 " + (j + 1) + " 张</option>");
-                }
-
-                pager[i].innerHTML = html.join('');
-                pager[i].onchange = function() {
-                    Gallery._Gallery_Goto(this.value);
-                }
-            }
-
-            Gallery._Gallery_Goto(0);
-        },
-
-        "_Gallery_Next": function() {
-            Gallery._Gallery.index++;
-            Gallery._Gallery_Goto(Gallery._Gallery.index);
-        },
-
-        "_Gallery_Prev": function() {
-            Gallery._Gallery.index--;
-            Gallery._Gallery_Goto(Gallery._Gallery.index);
-        },
-
-        "_Gallery_Goto": function(p) {
-            if (Gallery._Gallery.imgList.length == 0) return;
-            if (p === true) p = Gallery._Gallery.index;
-
-            if (p < 0)
-            	p = 0;
-           	else if (p >= Gallery._Gallery.imgList.length) 
-           		p = Gallery._Gallery.imgList.length - 1;
-
-           	Gallery._Gallery.index = p;
-
-			var img = new Image();
-            var gi = etc.id("gallery-image");
-            var loading = etc.id("gallery-loading");
-			var oldTop = document.documentElement.scrollTop;
-
-			img.onload = function() {
-                etc.let.hide("gallery-loading");
-                gi.src = this.src; 
-
-                var pager = etc.get(".gallery-pager");
-                for (var i = 0; i < pager.length; i++) pager[i].value = p;
-
-                document.documentElement.scrollTop = oldTop;
-			};
-
-			img.src = (Gallery._Gallery.imgList[p]);
-			// i.src = window.__cdn + "/assets/images/loading.gif";
-            loading.style.width = (gi.clientWidth ? gi.clientWidth : 64) + "px";
-            loading.style.height = (gi.clientHeight ? gi.clientHeight : 64) + "px";
-            
-            if (img) etc.let.show("gallery-loading");
-        }
-    }
-})();
 
 var Animation = (function() {
     var handle;

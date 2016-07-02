@@ -94,17 +94,19 @@ function tryUnread(id) {
 }
 
 function switchView() {
-	var el = etc.id("switch-mode");
+	etc.util.lazyLoad(["/assets/gallery.js"], function(){
+		var el = etc.id("switch-mode");
 
-	if (el.attr("mode") == "gallery") {
-		el.attr("mode", "normal");
-		el.innerHTML = "文章模式";
-		Gallery._Gallery();
-	} else {
-		el.attr("mode", "gallery");
-		el.innerHTML = "相册模式";
-		Gallery._Normal();
-	}
+		if (el.attr("mode") == "gallery") {
+			el.attr("mode", "normal");
+			el.innerHTML = "文章模式";
+			Gallery._Gallery();
+		} else {
+			el.attr("mode", "gallery");
+			el.innerHTML = "相册模式";
+			Gallery._Normal();
+		}
+	})
 }
 </script>
 

@@ -309,7 +309,11 @@ func (th ModelHandler) GET_feed_TYPE(w http.ResponseWriter, r *http.Request, ps 
 }
 
 func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title string, content string) string {
-	_tag := conf.GlobalServerConfig.GetTagIndex(auth.Escape(tag))
+	_tag, err := strconv.Atoi(tag)
+	if err != nil {
+		_tag = conf.GlobalServerConfig.GetTagIndex(tag)
+	}
+
 	_title := auth.Escape(title)
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
 	_preview := auth.Escape(_extracted1)
@@ -331,7 +335,7 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 
 	if user.ID == 0 && (_tag != conf.GlobalServerConfig.AnonymousArea && _tag != conf.GlobalServerConfig.ReplyArea) {
-		return "Err::Post::Invalid_Tag"
+		return "Err::Post::Invalid_Tag_For_Anonymous"
 	}
 
 	if _tag == conf.GlobalServerConfig.MessageArea {
@@ -349,9 +353,8 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	sql = fmt.Sprintf(sql, _title, _tag, _content, _preview, _now, _now, user.ID, id, cooldown)
 
 	var succ int
-	err := auth.Gdb.QueryRow(sql).Scan(&succ)
 
-	if err == nil {
+	if err := auth.Gdb.QueryRow(sql).Scan(&succ); err == nil {
 
 		if succ == 0 {
 			// \d+\-%s\-tag -> tag
@@ -377,7 +380,11 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 }
 
 func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content string) string {
-	_tag := conf.GlobalServerConfig.GetTagIndex(auth.Escape(tag))
+	_tag, err := strconv.Atoi(tag)
+	if err != nil {
+		_tag = conf.GlobalServerConfig.GetTagIndex(tag)
+	}
+
 	_title := auth.Escape(title)
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
 	_preview := auth.Escape(_extracted1)
@@ -437,9 +444,8 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, time.Now().UnixNano()/1e6, oldTitle, authorID, oldContent, oldTime, cooldown)
 
 	var succ int
-	err := auth.Gdb.QueryRow(sql).Scan(&succ)
 
-	if err == nil {
+	if err := auth.Gdb.QueryRow(sql).Scan(&succ); err == nil {
 		// row.Close()
 		if succ == 0 {
 			_oldTag := conf.GlobalServerConfig.GetIndexTag(oldTag)
