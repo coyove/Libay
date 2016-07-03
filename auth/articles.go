@@ -492,16 +492,11 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 
 		if !noEscape {
 			content = html.UnescapeString(content)
-		} else {
-			title = html.UnescapeString(title)
+			// No need to unescape title here
+			// title = html.UnescapeString(title)
 		}
 
 		var _tag string
-		// if tag >= 100000 {
-		// 	_tag = strconv.Itoa(tag) //
-		// } else {
-		// 	_tag = conf.GlobalServerConfig.GetTags()[tag]
-		// }
 		_tag = conf.GlobalServerConfig.GetIndexTag(tag)
 
 		ret = Article{
