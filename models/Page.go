@@ -49,8 +49,11 @@ type PageStruct struct {
 		UserNickName string
 	}
 
-	AnnounceContent string
-	AnnounceID      int
+	Announce struct {
+		Content string
+		ID      int
+		Author  string
+	}
 
 	CurTag  string
 	CurType string
@@ -115,6 +118,10 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 			ServePage(w, "404", nil)
 			return
 		}
+
+		if strconv.Itoa(_tag) == filter {
+			payload.CurTag = conf.GlobalServerConfig.GetIndexTag(_tag)
+		}
 	}
 
 	if payload.IsOWA {
@@ -168,8 +175,10 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 			id = conf.GlobalServerConfig.GetComplexTags()[0].AnnounceID
 		}
 
-		payload.AnnounceContent = auth.GetArticle(r, auth.AuthUser{Group: "admin"}, id, false).Content
-		payload.AnnounceID = id
+		an := auth.GetArticle(r, auth.AuthUser{Group: "admin"}, id, false)
+		payload.Announce.Content = an.Content
+		payload.Announce.ID = id
+		payload.Announce.Author = an.Author
 	}
 
 	if len(payload.Articles) == 0 && page != "1" {

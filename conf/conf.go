@@ -211,16 +211,14 @@ func (sc *ServerConfig) GetTagIndex(t string) int {
 	sc.RLock()
 	defer sc.RUnlock()
 
-	_t, _ := strconv.Atoi(t)
-	if _t >= 100000 {
+	if _t, err := strconv.Atoi(t); _t >= 100000 && err == nil {
 		return _t
+	} else if err == nil && _t > 0 && _t <= 65536 {
+		if _, ok := sc.sortedTags[_t]; ok {
+			return _t
+		}
 	}
 
-	// for k, v := range sc.sortedTags2 {
-	// 	if v.Name == t {
-	// 		return k
-	// 	}
-	// }
 	if v, ok := sc.sortedTagsReverse[t]; ok {
 		return v
 	}

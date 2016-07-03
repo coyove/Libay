@@ -72,6 +72,11 @@ td.fit, th.fit{
     font-size: 80%;
 }
 
+#article-content {
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
 #article-history {
     display: none;
     position: absolute;

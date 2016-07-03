@@ -396,7 +396,7 @@
         },
 
         "date": {
-            "format": function(timestamp) {
+            "format": function(timestamp, seconds) {
                 var d = new Date(timestamp);
                 var today = new Date();
                 var yyyy = d.getFullYear();
@@ -406,7 +406,7 @@
                 var min = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes();
                 var ss = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds();
 
-                ret = yyyy + "/" + mm + "/" + dd + " " + hh + ":" + min;
+                ret = yyyy + "/" + mm + "/" + dd + " " + hh + ":" + min + (seconds ? ":" + ss : "");
                 return ret;
             },
 

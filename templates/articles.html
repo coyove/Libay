@@ -32,9 +32,9 @@
 	<p id="breadcrumbs">全部文章
 {{end}}
 <script type="text/javascript">
-	document.title += " -- " + etc.date.format({{.Nav.Range.End}}, true);
-	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}, true) + 
-	' &raquo; ' + etc.date.format({{.Nav.Range.End}}, true));
+	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
+	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}) + 
+	' &raquo; ' + etc.date.format({{.Nav.Range.End}}));
 </script>
 </p>
 
@@ -79,11 +79,13 @@
 	<button onclick="reverseTag()">反选</button>
 {{end}}
 
-{{if .AnnounceContent}}
+{{if .Announce.Content}}
 <div style="border-bottom: dotted 1px grey;">
-	{{.AnnounceContent}}
-	{{if .AnnounceID}}
-	<span class="right-block"><a href="/article/{{.AnnounceID}}">{{.AnnounceID}}</a></span>
+	{{.Announce.Content}}
+	{{if .Announce.ID}}
+		<span style="font-size: 75%; border: dotted 1px #666; padding: 1px 5px; background: steelblue; border-bottom: solid 2px #3c72a0;">
+			<a href="/article/{{.Announce.ID}}" style="color: white">#{{.Announce.Author}}</a>
+		</span>
 	{{end}}
 </div>
 {{end}}
@@ -130,11 +132,11 @@
 				{{if .Content}}•{{end}}
 			</a><br>
 			<span class="time">
-			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>
 		</td>
 		<td class="fit last">
-		[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>]
+		[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>]
 		</td>
 	</tr>
 	<tr><td colspan="4"><span class="preview-content">{{.Content}}</span></td>
@@ -172,14 +174,14 @@
 			{{end}}
 			</a><br>
 			<span class="time">
-			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>
 		</td>
 		<td class="fit center"><a href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="fit center"><a href="/reply/{{.ID}}/page/1"><em>{{.Children}}</em></a></td>
 		<td class="fit center"><em>{{.Hits}}</em></td>
 		<td class="fit last">
-			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}, true));</script>]
+			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>]
 		</td>
 	</tr>
 	<tr>

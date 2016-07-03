@@ -7,9 +7,9 @@
 		document.write('与用户"{{.Message.ViewingOtherName}}"的私信');
 	{{end}}
 
-	document.title += " -- " + etc.date.format({{.Nav.Range.End}}, true);
-	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}, true) + 
-		' &raquo; ' + etc.date.format({{.Nav.Range.End}}, true));
+	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
+	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}) + 
+		' &raquo; ' + etc.date.format({{.Nav.Range.End}}));
 </script>
 </p>
 
@@ -99,7 +99,7 @@
 			{{end}}
 			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
 			<span class="time">
-				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>
+				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}));</script>
 			</span>
 		</td>
 		<td class="fit">
@@ -111,7 +111,7 @@
 		</td>
 		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message-{{.ID}}">删除</a></td>
 		<td class="fit last">
-			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}, true));</script>]
+			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}));</script>]
 		</td>
 	</tr>
 	<tr>

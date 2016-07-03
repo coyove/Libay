@@ -78,9 +78,9 @@ var Gallery = (function() {
                     "<select class='gallery-pager'></select>",
                     "[ <a href='javascript:Gallery._Gallery_Next()'>下一张</a> ]",
                     "[ <a href='javascript:Gallery._Gallery_Goto(true)'>刷新</a> |",
-                    "<a href='javascript:Gallery._Gallery_Rotate(90)'>90</a> |",
-                    "<a href='javascript:Gallery._Gallery_Rotate(180)'>180</a> |",
-                    "<a href='javascript:Gallery._Gallery_Rotate(270)'>270</a> ]",
+                    "<a href='javascript:Gallery._Gallery_Rotate(90)'>90<sup>o</sup></a> |",
+                    "<a href='javascript:Gallery._Gallery_Rotate(180)'>180<sup>o</sup></a> |",
+                    "<a href='javascript:Gallery._Gallery_Rotate(270)'>270<sup>o</sup></a> ]",
                 "</div>",
             ].join(' ');                
 
@@ -142,6 +142,10 @@ var Gallery = (function() {
             var gi = etc.id("gallery-image");
             var loading = etc.id("gallery-loading");
 			var oldTop = document.documentElement.scrollTop;
+
+            var gc = etc.id("gallery-container");
+            gc.style.width = "";
+            gc.style.height = "";
 
 			img.onload = function() {
                 etc.let.hide("gallery-loading");
