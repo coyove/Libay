@@ -318,6 +318,11 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
 	_preview := auth.Escape(_extracted1)
 
+	if regexp.MustCompile(`^https?:\/\/\S+$`).MatchString(_extracted1) {
+		_title = auth.GetURLTitle(_extracted1)
+		_preview = auth.Escape("<a href='" + _extracted1 + "' target='_blank'>" + _extracted1 + "</a>")
+	}
+
 	if user.ID == 0 {
 		ip := strings.Split(auth.GetIP(r), ".")
 
@@ -361,7 +366,7 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 			// \d+\-%d\-ua -> user
 			// \d+\-(%d|0).+\-owa -> owa
 			// \d+\-%d\-reply -> reply
-			auth.Gcache.Remove(fmt.Sprintf(`(.+-%s-tag|.+-%d-ua|.+-(%d|0).?-owa|.+-%d-reply|.+--|.+-%d-(true|false))`,
+			auth.Gcache.Remove(fmt.Sprintf(`(.+-%s-tag|.+-%d-ua|.+-(%d|0).*-owa|.+-%d-reply|.+--|.+-%d-(true|false))`,
 				regexp.QuoteMeta(tag),
 				user.ID,
 				user.ID,
@@ -449,7 +454,7 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 		// row.Close()
 		if succ == 0 {
 			_oldTag := conf.GlobalServerConfig.GetIndexTag(oldTag)
-			auth.Gcache.Remove(fmt.Sprintf(`(.+-(%s|%s)-tag|.+-(%d|%d)-ua|.+-((%d|0).?|(%d|0).?)-owa|.+--|.+-%d-(true|false)|.+-%d-reply)`,
+			auth.Gcache.Remove(fmt.Sprintf(`(.+-(%s|%s)-tag|.+-(%d|%d)-ua|.+-((%d|0).*|(%d|0).*)-owa|.+--|.+-%d-(true|false)|.+-%d-reply)`,
 				regexp.QuoteMeta(tag), regexp.QuoteMeta(_oldTag),
 				user.ID, oauthor,
 				user.ID, oauthor,

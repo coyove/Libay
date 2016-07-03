@@ -30,6 +30,8 @@
 <span id="article-raw-content" style="display: none">
 	{{.Article.Content}}
 </span>
+
+<pre id="article-raw-title" style="display: none">{{.Article.Title}}</pre>
 {{end}}
 
 <script type="text/javascript">
@@ -74,7 +76,7 @@
 		{{end}}
 
         {{if .Update}}
-			etc.id("thread-title").value = "{{.Article.Title}}";
+			etc.id("thread-title").value = etc.id("article-raw-title").innerHTML;
 			etc.id("thread-content").innerHTML = (etc.string.unescape(etc.id("article-raw-content").innerHTML));
 			var e = etc.id("thread-tag");
 			for (var i = 0; i < e.options.length; i++) {

@@ -10,7 +10,9 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"html"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"reflect"
 	"regexp"
@@ -46,6 +48,7 @@ var Unescape = html.UnescapeString
 var Ft = fmt.Sprintf
 
 var tsReg = regexp.MustCompile(`(after|before)=(.+)_(.+)`)
+var titleReg = regexp.MustCompile(`<title.*>([\s\S]+)<\/title>`)
 
 type _time struct {
 }
@@ -194,6 +197,33 @@ func CleanString(s string) (ret string) {
 	}
 
 	return
+}
+
+func GetURLTitle(url string) string {
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	res, err := client.Get(url)
+	if err != nil {
+		return url
+	}
+
+	defer res.Body.Close()
+
+	buf, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return url
+	}
+
+	m := titleReg.FindStringSubmatch(string(buf))
+
+	if len(m) == 2 {
+		return strings.TrimSpace(m[1])
+	} else {
+		return url
+	}
+
 }
 
 func MakeHash(pass ...interface{}) string {

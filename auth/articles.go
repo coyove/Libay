@@ -315,7 +315,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 			Tag:          _tag,
 			Author:       author,
 			AuthorID:     authorID,
-			Content:      preview,
+			Content:      Unescape(preview),
 			Timestamp:    createdAt,
 			ModTimestamp: modifiedAt,
 			Deleted:      deleted,
@@ -580,7 +580,7 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 	_, err = Gdb.Exec(fmt.Sprintf(`UPDATE articles SET %s = NOT %s WHERE id = %d;`, state, state, id))
 
 	if err == nil {
-		pattern := fmt.Sprintf(`(\d+-(%s)-tag|\d+-(%d|%d)-ua|\d+-(%d|0).?-owa|\d+-(%d|0).?-owa|\d+--|\d+-%d-(true|false))`,
+		pattern := fmt.Sprintf(`(\d+-(%s)-tag|\d+-(%d|%d)-ua|\d+-(%d|0).*-owa|\d+-(%d|0).*-owa|\d+--|\d+-%d-(true|false))`,
 			regexp.QuoteMeta(tag),
 			author, oauthor,
 			author, oauthor,
@@ -615,7 +615,7 @@ func GenerateRSS(atom bool, page int) string {
 			Title:       v.Title,
 			Link:        &feeds.Link{Href: conf.GlobalServerConfig.Host + "/article/" + itoa(v.ID)},
 			Author:      &feeds.Author{Name: v.Author},
-			Created:     time.Unix(int64(v.Timestamp), 0),
+			Created:     time.Unix(int64(v.Timestamp)/1000, 0),
 			Description: v.Content,
 		})
 	}
