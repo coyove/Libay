@@ -86,18 +86,18 @@
 
 			etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
 				var j = JSON.parse(d);
-				var _html = ["历史版本:&nbsp;<select onchange='getHistory(this.value)'>"];
-				for(var k in j) {
-					_html.push("<option value='"+k+"'>历史版本: " + 
-						etc.date.format(j[k].Date, true) + "(" + j[k].User +
-						")</option>");
-				}
-				_html.push("<option value='-1' selected>当前版本: " +
-					etc.date.format({{.Article.ModTimestamp}}, true) + 
-					"({{.Article.Author}})</option></select>");
 
-				etc.id("article-history-list").innerHTML = _html.join('');
-				etc.let.show("article-history-list");
+				var _html = ["</ul>"];
+				for(var k in j) {
+					has = true;
+					_html.push("<li onclick='getHistoryVersion(" + k + ")'>" + j[k].User + " - " + 
+						etc.date.format(j[k].Date, true) + "</li>");
+				}
+				_html.push("<li onclick='getHistoryVersion(-1)'><b>{{.Article.Author}} - 当前版本</b></li>");
+				_html.push("<ul style='cursor: pointer'>");
+
+				etc.id("article-history").innerHTML = _html.reverse().join('');
+				etc.id("article-history-button").style.display = "inline";
 				setupScroll();
 			});
 		{{else}}
@@ -176,7 +176,19 @@
 			window.location.href = (url[1]);
 	}
 
-	function getHistory(id) {
+	function toggleHistoryList() {
+		var ah = etc.id("article-history");
+		
+		if (ah.style.display == "none") {
+			etc.let.show("article-history");
+			etc.let.show("article-history-underlay");
+		} else {
+			etc.let.hide("article-history");
+			etc.let.hide("article-history-underlay");
+		}
+	}
+
+	function getHistoryVersion(id) {
 		if (id == -1)
 			window.location.reload();
 		else
@@ -184,6 +196,8 @@
 				var j = JSON.parse(d);
 				etc.id("thread-title").value = (etc.string.unescape(j.Title));
 				etc.id("thread-content").innerHTML = (etc.string.unescape(j.Content));
+				
+				toggleHistoryList();
 			});
 	}
 
@@ -200,7 +214,6 @@
 	}
 
 	function saveDraft() {
-
 		{{if .Message}}
 			var d = "draft-message-{{.ReplyTo}}";
 		{{else}}
@@ -244,14 +257,18 @@
 </script>
 
 <div id="editor">
-<div>
-	标题:
-	<span id="title-length"></span><br>
-	<textarea id="thread-title" rows="2"></textarea>
-</div>
-<div id="article-history-list" style="display: none"></div>
-	<div id="tr-edit">
+	<div>
+		标题:
+		<span id="title-length"></span><br>
+		<textarea id="thread-title" rows="2"></textarea>
+	</div>
+	<div>
 		内容:
+		<a id="article-history-button" style="display: none" href="javascript:toggleHistoryList()">回滚历史编辑</a>	
+		<div id="article-history-underlay" onclick="toggleHistoryList()"></div>
+		<div id="article-history" style="margin-top: 0; display: none"></div>
+	</div>
+	<div id="tr-edit">
 		<div id="editor-container" unselectable="on">
 			<div id="editor-outter-panel" unselectable="on">
 				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em">

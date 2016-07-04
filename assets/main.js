@@ -372,6 +372,9 @@
                 case "table":
                     e.style.display = "table";
                     break;
+                case "li":
+                    e.style.display = "list-item";
+                    break;
                 case "a":
                 case "span":
                     e.style.display = "inherit";

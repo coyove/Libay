@@ -19,22 +19,24 @@ import (
 )
 
 type Article struct {
-	ID           int
-	Title        string
-	Tag          string
-	Author       string
-	AuthorID     int
-	Content      string
-	Timestamp    int
-	ModTimestamp int
-	Deleted      bool
-	Locked       bool
-	Read         bool
-	Hits         int
-	ParentID     int
-	ParentTitle  string
-	Children     int
-	Revision     int
+	ID               int
+	Title            string
+	Tag              string
+	Author           string
+	AuthorID         int
+	OriginalAuthorID int
+	OriginalAuthor   string
+	Content          string
+	Timestamp        int
+	ModTimestamp     int
+	Deleted          bool
+	Locked           bool
+	Read             bool
+	Hits             int
+	ParentID         int
+	ParentTitle      string
+	Children         int
+	Revision         int
 
 	IsRestricted     bool
 	IsOthersMessage  bool
@@ -315,7 +317,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 			Tag:          _tag,
 			Author:       author,
 			AuthorID:     authorID,
-			Content:      Unescape(preview),
+			Content:      preview,
 			Timestamp:    createdAt,
 			ModTimestamp: modifiedAt,
 			Deleted:      deleted,
@@ -451,6 +453,8 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
             articles.content, 
             articles.author, 
                users.nickname, 
+            articles.original_author,
+                  ou.nickname,
             articles.created_at,
             articles.modified_at,
             articles.deleted,
@@ -469,6 +473,8 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
             articles 
         INNER JOIN 
             users ON users.id = articles.author
+        INNER JOIN 
+            users as ou ON ou.id = articles.original_author
         WHERE 
             articles.id = ` + itoa(id))
 
@@ -480,13 +486,14 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	defer rows.Close()
 
 	if rows.Next() {
-		var id, tag, authorID, hits, parentID, childrenCount, revision int
-		var title, content, author, parentTitle string
+		var id, tag, authorID, originalAuthorID, hits, parentID, childrenCount, revision int
+		var title, content, author, originalAuthor, parentTitle string
 		var createdAt, modifiedAt int
 		var deleted, locked bool
 
-		rows.Scan(&id, &title, &tag, &content, &authorID,
-			&author, &createdAt, &modifiedAt, &deleted, &locked,
+		rows.Scan(&id, &title, &tag, &content, &authorID, &author,
+			&originalAuthorID, &originalAuthor,
+			&createdAt, &modifiedAt, &deleted, &locked,
 			&hits, &parentID, &childrenCount, &revision,
 			&parentTitle)
 
@@ -500,21 +507,23 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 		_tag = conf.GlobalServerConfig.GetIndexTag(tag)
 
 		ret = Article{
-			ID:           id,
-			Title:        title,
-			Tag:          _tag,
-			Author:       author,
-			AuthorID:     authorID,
-			Content:      content,
-			Timestamp:    createdAt,
-			ModTimestamp: modifiedAt,
-			Deleted:      deleted,
-			Locked:       locked,
-			Hits:         hits,
-			ParentID:     parentID,
-			ParentTitle:  parentTitle,
-			Children:     childrenCount,
-			Revision:     revision,
+			ID:               id,
+			Title:            title,
+			Tag:              _tag,
+			Author:           author,
+			AuthorID:         authorID,
+			OriginalAuthor:   originalAuthor,
+			OriginalAuthorID: originalAuthorID,
+			Content:          content,
+			Timestamp:        createdAt,
+			ModTimestamp:     modifiedAt,
+			Deleted:          deleted,
+			Locked:           locked,
+			Hits:             hits,
+			ParentID:         parentID,
+			ParentTitle:      parentTitle,
+			Children:         childrenCount,
+			Revision:         revision,
 		}
 
 		if !user.CanView(tag) {

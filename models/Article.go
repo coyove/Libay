@@ -24,8 +24,9 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	var payload struct {
-		Article    auth.Article
-		AuthorSelf bool
+		Article          auth.Article
+		IsAuthorSelf     bool
+		IsEditedByOthers bool
 
 		CanMakeLocked bool
 
@@ -36,20 +37,21 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 	vtt := conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOtherTrash")
 
 	payload.Article = auth.GetArticle(r, u, id, false)
-	payload.AuthorSelf = (u.ID == payload.Article.AuthorID || vtt)
+	payload.IsAuthorSelf = (u.ID == payload.Article.AuthorID || vtt || u.ID == payload.Article.OriginalAuthorID)
+	payload.IsEditedByOthers = (payload.Article.AuthorID != payload.Article.OriginalAuthorID)
 
 	payload.CanMakeLocked = conf.GlobalServerConfig.GetPrivilege(u.Group, "MakeLocked")
 
 	payload.User = u
 	payload.IsLoggedIn = u.Name != ""
 
-	if payload.Article.Deleted {
-		if u.ID != payload.Article.AuthorID && !vtt {
+	if payload.Article.Deleted && !vtt {
+		if u.ID == 0 {
 			ServePage(w, "404", nil)
 			return
 		}
 
-		if u.ID == 0 && !vtt {
+		if u.ID != payload.Article.AuthorID && u.ID != payload.Article.OriginalAuthorID {
 			ServePage(w, "404", nil)
 			return
 		}
@@ -123,7 +125,7 @@ func (th ModelHandler) GET_article_ID_history_HID(w http.ResponseWriter, r *http
 
 	u := auth.GetUser(r)
 
-	cur, err := auth.Select1("articles", aid, "deleted", "author")
+	cur, err := auth.Select1("articles", aid, "deleted", "author", "original_author")
 	if err != nil {
 		Return(w, 503)
 		return
@@ -131,18 +133,23 @@ func (th ModelHandler) GET_article_ID_history_HID(w http.ResponseWriter, r *http
 
 	if cur["deleted"].(bool) {
 		if cur["author"].(int) != u.ID || !conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") {
-			Return(w, 503)
-			return
+			if cur["original_author"].(int) != u.ID {
+				Return(w, 503)
+				return
+			}
 		}
 	}
 
 	if his, err := auth.Select1("history", hid, "title", "content"); err != nil {
 		Return(w, 503)
 	} else {
-		Return(w, `{
-            "Title": "`+his["title"].(string)+`", 
-            "Content": "`+his["content"].(string)+`"
-        }`)
+		var payload struct {
+			Title   string
+			Content string
+		}
+		payload.Title = his["title"].(string)
+		payload.Content = his["content"].(string)
+		Return(w, payload)
 	}
 }
 
@@ -169,7 +176,7 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 		return
 	}
 
-	cur, err := auth.Select1("articles", id, "author", "tag", "locked")
+	cur, err := auth.Select1("articles", id, "author", "original_author", "tag", "locked")
 	if err != nil {
 		Return(w, "Err::DB::Select_Failure")
 		return
@@ -182,8 +189,11 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 			if u.ID == cur["tag"].(int)-100000 {
 				// Both the receiver and the sender can delete the message
 			} else {
-				Return(w, "Err::Privil::Delete_Restore_Action_Denied")
-				return
+				if cur["original_author"].(int) != u.ID {
+					// Original author also can delete it
+					Return(w, "Err::Privil::Delete_Restore_Action_Denied")
+					return
+				}
 			}
 		}
 	}
@@ -318,11 +328,6 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
 	_preview := auth.Escape(_extracted1)
 
-	if regexp.MustCompile(`^https?:\/\/\S+$`).MatchString(_extracted1) {
-		_title = auth.GetURLTitle(_extracted1)
-		_preview = auth.Escape("<a href='" + _extracted1 + "' target='_blank'>" + _extracted1 + "</a>")
-	}
-
 	if user.ID == 0 {
 		ip := strings.Split(auth.GetIP(r), ".")
 
@@ -399,7 +404,7 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 		return "Err::Post::Invalid_Tag"
 	}
 
-	var authorID, revision, oldTag, oauthor, oldParent int
+	var authorID, revision, oldTag, oauthorID, oldParent int
 	var oldContent, oldTitle string
 	var oldTime int
 	var locked bool
@@ -419,7 +424,7 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
             articles 
         WHERE 
             id = `+strconv.Itoa(id)).
-		Scan(&authorID, &oauthor, &oldTag, &oldTitle, &oldContent, &oldTime, &locked, &oldParent, &revision) != nil {
+		Scan(&authorID, &oauthorID, &oldTag, &oldTitle, &oldContent, &oldTime, &locked, &oldParent, &revision) != nil {
 		return "Err::DB::Select_Failure"
 	}
 
@@ -429,7 +434,9 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 	}
 
 	if authorID != user.ID && !conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") {
-		return "Err::Privil::Edit_Action_Denied"
+		if user.ID != oauthorID {
+			return "Err::Privil::Edit_Action_Denied"
+		}
 	}
 
 	if 0 == user.ID {
@@ -456,8 +463,8 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 			_oldTag := conf.GlobalServerConfig.GetIndexTag(oldTag)
 			auth.Gcache.Remove(fmt.Sprintf(`(.+-(%s|%s)-tag|.+-(%d|%d)-ua|.+-((%d|0).*|(%d|0).*)-owa|.+--|.+-%d-(true|false)|.+-%d-reply)`,
 				regexp.QuoteMeta(tag), regexp.QuoteMeta(_oldTag),
-				user.ID, oauthor,
-				user.ID, oauthor,
+				user.ID, oauthorID,
+				user.ID, oauthorID,
 				id, oldParent,
 			))
 			return "ok"

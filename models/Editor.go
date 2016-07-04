@@ -85,8 +85,10 @@ func (th ModelHandler) GET_edit_article_ID(w http.ResponseWriter, r *http.Reques
 	payload.Update = true
 
 	if payload.Article.AuthorID != u.ID && !conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") {
-		ServePage(w, "404", nil)
-		return
+		if payload.Article.OriginalAuthorID != u.ID {
+			ServePage(w, "404", nil)
+			return
+		}
 	}
 
 	if payload.Article.IsMessage {

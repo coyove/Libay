@@ -18,7 +18,9 @@
 
 	{{.Article.Hits}}次查看
 </p>
-<div id="article-history" style="display:none; margin-left: 3em"></div>
+
+<div id="article-history-underlay" onclick="getHistory()"></div>
+<div id="article-history"></div>
 
 <script type="text/javascript">
 function goEdit() {
@@ -44,6 +46,7 @@ function getHistory() {
 	var ah = etc.id("article-history");
 	if (ah.style.display == "block") {
 		ah.style.display = "none";
+		etc.let.hide("article-history-underlay");
 		return
 	}
 	
@@ -53,17 +56,34 @@ function getHistory() {
 			return
 		}
 
-		var j = JSON.parse(d);
+		getHistory.history = JSON.parse(d);
 		var has = false;
 		var _html = ["</ul>"];
-		for(var k in j) {
+		for(var k in getHistory.history) {
 			has = true;
-			_html.push("<li onclick='getHistory()'>" + j[k].User + " - " + etc.date.format(j[k].Date, true) + "</li>");
+			_html.push("<li onclick='getHistoryVersion(" + k + ")'>" + getHistory.history[k].User + " - " + 
+				etc.date.format(getHistory.history[k].Date, true) + "</li>");
 		}
 		if (!has) _html.push("<li>无历史版本</li>");
-		_html.push("<ul style='cursor: default'>")
+		_html.push("<ul style='cursor: pointer'>");
 
 		etc.let.show("article-history").$.html(_html.reverse().join(''));
+		etc.let.show("article-history-underlay");
+	});
+}
+
+function getHistoryVersion(rev) {
+	etc.util.ajax.get("/article/{{.Article.ID}}/history/" + rev).then(function(e, d, x){
+		var j = JSON.parse(d);
+		etc.let.show("article-revision").$.html("<em>历史版本: " + 
+			etc.date.format(getHistory.history[rev].Date, true) + "</em>");
+
+		etc.id("article-title").html(j.Title);
+		etc.id("article-content").html(etc.string.unescape(j.Content));
+		var g = etc.id("gallery");
+		if (g && g.parentNode) g.parentNode.removeChild(g);
+
+		getHistory();
 	});
 }
 
@@ -111,7 +131,7 @@ function switchView() {
 </script>
 
 <div>
-	<h1>
+	<h1 id="article-title">
 	{{.Article.Title}}
 	</h1>
 
@@ -132,7 +152,7 @@ function switchView() {
 			{{end}}
 		{{end}}
 		{{if .IsLoggedIn}}
-			{{if .AuthorSelf}}
+			{{if .IsAuthorSelf}}
 				{{if .Article.IsMessage}}{{else}}
 					<td><a href='javascript:goEdit()'>编辑</a></td>
 				{{end}}
@@ -159,6 +179,10 @@ function switchView() {
 	</tr></table>
 
 	<ul>
+		{{if .IsEditedByOthers}}
+		<li><em>文章原作者: <a href="/user/{{.Article.OriginalAuthorID}}">{{.Article.OriginalAuthor}}</a></em></li>
+		{{end}}
+
 		{{if .Article.ParentID}}
 		<li>父文章: <a href="/article/{{.Article.ParentID}}">{{.Article.ParentTitle}}</a></li>
 		{{end}}
@@ -168,7 +192,7 @@ function switchView() {
 		{{end}}
 
 		{{if .Article.Locked}}
-		<li><em>文章已被管理员锁定</em></li>
+		<li><em>文章已被锁定</em></li>
 		{{end}}
 
 		{{if .Article.IsRestricted}}
@@ -178,6 +202,8 @@ function switchView() {
 		{{if .Article.IsOthersMessage}}
 		<li><em>这是他人私信文章</em></li>
 		{{end}}
+
+		<li id="article-revision" style="display: none"></li>
 	</ul>
 </div>
 

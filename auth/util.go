@@ -100,7 +100,7 @@ func ExtractContent(h string, u AuthUser) (string, string, bool) {
 			break
 		}
 		_tag, _ := tok.TagName()
-		_text := strings.TrimSpace(string(tok.Text()))
+		_text := string(tok.Text())
 		_ = tok.Token()
 
 		_raw := tok.Raw()
@@ -108,9 +108,11 @@ func ExtractContent(h string, u AuthUser) (string, string, bool) {
 		// log.Println(tt.String(), tk, string(_raw))
 
 		if tt == _html.TextToken {
-			ret2.WriteString(_text)
+			// Here golang will automatically unescape the text, re-escaping is necessary
+			ret2.WriteString(Escape(_text))
 
 			if !flag {
+				// Preview content doesn't need to be escaped, this is done in models/Article.go
 				ret1.WriteString(_text)
 			}
 
