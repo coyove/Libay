@@ -28,12 +28,18 @@
 	}
 
 	function tryDelete(id) {
+		if (etc.id("ask-before-delete").checked) {
+			if (!confirm("是否删除该私信\n\n" + 
+					"(* 删除后对方仍可以看到该私信，但发件人变为匿名)\n" +
+					"(** 您在管理面板的“全部文章”内仍可以看到该私信)")) {
+				return;
+			}
+		}
+
 		etc.let.hide("delete-message-" + id);
 		etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
 			if (text == "ok") {
-				alert("已经删除该私信\n\n" + 
-					"(* 对方仍可以看到该私信，但发件人变为匿名)\n" +
-					"(** 在管理面板的“全部文章”内仍可以看到该私信)\n");
+				alert("已经删除该私信");
 				window.location.reload();
 			} else {
 				alert("发生错误: " + text);
@@ -137,4 +143,5 @@
 	<a href="{{.LastPage}}" >尾页</a>
 	]
 	{{end}}
+	<input type="checkbox" id="ask-before-delete" checked="true"/><label for="ask-before-delete">删除前询问</label>
 </div>

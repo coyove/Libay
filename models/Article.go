@@ -86,10 +86,10 @@ func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Req
 	    SELECT
 	        history.id,
 	        history.date,
-	          users.nickname
+	 COALESCE(users.nickname, 'user' || history.user_id::TEXT)
 	    FROM
 	        history
-	    INNER JOIN
+	    LEFT JOIN
 	        users ON users.id = history.user_id
 	    WHERE
 	        article_id = ` + strconv.Itoa(id))

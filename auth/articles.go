@@ -268,7 +268,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
             articles.title, 
             articles.tag as tag, 
             articles.author, 
-               users.nickname, 
+      COALESCE(users.nickname, 'user' || articles.author::TEXT),
             articles.preview,
             articles.created_at,
             articles.modified_at,
@@ -277,7 +277,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
             articles.children
         FROM
             articles 
-        INNER JOIN 
+        LEFT JOIN 
             users ON users.id = articles.author
         WHERE
             ` + orderByDate + compare + itoa(ts) + ` AND
@@ -368,15 +368,15 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
             articles.preview,
             articles.read,
             articles.tag as tag, 
-                  u2.nickname, 
+         COALESCE(u2.nickname, 'user' || (articles.tag - 100000)::TEXT), 
             articles.author, 
-               users.nickname, 
+      COALESCE(users.nickname, 'user' || articles.author::TEXT),
             articles.created_at
         FROM
             articles 
-        INNER JOIN
+        LEFT JOIN
             users ON users.id = articles.author
-        INNER JOIN 
+        LEFT JOIN 
             users AS u2 ON u2.id = articles.tag - 100000
         WHERE 
             created_at ` + compare + itoa(ts) + ` AND
@@ -452,9 +452,9 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
             articles.tag, 
             articles.content, 
             articles.author, 
-               users.nickname, 
+      COALESCE(users.nickname, 'user' || articles.author::TEXT),
             articles.original_author,
-                  ou.nickname,
+         COALESCE(ou.nickname, 'user' || articles.original_author::TEXT),
             articles.created_at,
             articles.modified_at,
             articles.deleted,
@@ -471,9 +471,9 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
                 sub.id = articles.parent) AS parent_title
         FROM 
             articles 
-        INNER JOIN 
+        LEFT JOIN 
             users ON users.id = articles.author
-        INNER JOIN 
+        LEFT JOIN 
             users as ou ON ou.id = articles.original_author
         WHERE 
             articles.id = ` + itoa(id))

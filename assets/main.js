@@ -535,6 +535,16 @@
         "util": {
             "ajax": promise,
 
+            "guid": function() {
+                function s4() {
+                    return Math.floor((1 + Math.random()) * 0x10000)
+                        .toString(16)
+                        .substring(1);
+                }
+                return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                    s4() + '-' + s4() + s4() + s4();
+            },
+
             "isNumber": function(id) {
                 return !isNaN(parseFloat(id)) && isFinite(id) && parseInt(id) > 0;
             },
@@ -788,13 +798,14 @@
             },
 
             "insertTable": function() {
-                var _size = prompt("Cols x Rows:", "3x2");
+                var _size = prompt("行 x 列:", "3x2");
                 var size = _size.split("x");
                 if (size.length < 2) return;
 
                 var cols = parseInt(size[0]), rows = parseInt(size[1]);
-                var row = "<tr>" + (new Array(cols + 1).join("<td>@</td>")) + "</tr>";
-                var table = "<table border=1>" + new Array(rows + 1).join(row) + "</table>";
+                var width = parseInt(100 / (cols));
+                var row = "<tr>" + (new Array(cols + 1).join("<td width=" + width + "%>@</td>")) + "</tr>";
+                var table = "<table border=1 class=_table>" + new Array(rows + 1).join(row) + "</table>";
 
                 _insertHTML(table);
             },

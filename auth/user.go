@@ -155,11 +155,11 @@ func GetUserByID(id int) (ret AuthUser) {
             SELECT
                     users.id,
                     users.username,
-                    users.session_id,
+           	        users.session_id, 
                     users.nickname,
                     users.last_last_login_date,
                     users.last_last_login_ip,
-                    users.signup_date,
+                    users.signup_date, 
                 user_info.status,
                 user_info.group,
                 user_info.comment,
@@ -172,17 +172,17 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-			&username,
-			&session_id,
-			&nickname,
-			&date,
-			&ip,
-			&signupDate,
-			&status,
-			&group,
-			&comment,
-			&avatar,
-			&usage); err == nil {
+		&username,
+		&session_id,
+		&nickname,
+		&date,
+		&ip,
+		&signupDate,
+		&status,
+		&group,
+		&comment,
+		&avatar,
+		&usage); err == nil {
 
 		comment = html.UnescapeString(comment)
 		ret = AuthUser{_id,
@@ -199,9 +199,9 @@ func GetUserByID(id int) (ret AuthUser) {
 			session_id}
 
 		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)
-	} // else {
-	// 	glog.Errorln("Database:", err)
-	// }
+	} else {
+		glog.Errorln("Database:", err)
+	}
 
 	return
 }

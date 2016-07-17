@@ -243,16 +243,16 @@ CREATE TABLE users (
     id integer NOT NULL,
     username text,
     password text,
-    signup_date timestamp with time zone,
-    last_login_date timestamp with time zone,
-    last_last_login_date timestamp with time zone,
-    session_id text,
-    retry integer,
-    lock_date timestamp with time zone,
+    signup_date timestamp with time zone DEFAULT now(),
+    last_login_date timestamp with time zone DEFAULT now(),
+    last_last_login_date timestamp with time zone DEFAULT now(),
+    session_id text DEFAULT ''::text,
+    retry integer DEFAULT 0,
+    lock_date timestamp with time zone DEFAULT (now() - '00:30:00'::interval),
     nickname text,
     public_key_file text,
-    last_login_ip text,
-    last_last_login_ip text
+    last_login_ip text DEFAULT ''::text,
+    last_last_login_ip text DEFAULT ''::text
 );
 
 
