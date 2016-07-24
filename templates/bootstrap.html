@@ -1,6 +1,6 @@
 {{if .List}}
-<title>Bootstrap</title>
-<p id="breadcrumbs">bootstrap</p>
+<title>模板列表</title>
+<p id="breadcrumbs">模板列表</p>
 <ul>
 	{{range .Templates}}
 	<li>
@@ -21,8 +21,8 @@
 <script src="/assets/codemirror/mode/css/css.js"></script>
 <script src="/assets/codemirror/mode/htmlmixed/htmlmixed.js"></script>
 
-<title>Bootstrap: {{.File}}</title>
-<p id="breadcrumbs">bootstrap / {{.File}}</p>
+<title>模板 -- {{.File}}</title>
+<p id="breadcrumbs">模板 | {{.File}}</p>
 <a href="/bootstrap">返回</a>
 
 <div id="code-main" style="width: 100%">

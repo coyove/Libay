@@ -1,42 +1,39 @@
 <p id="breadcrumbs">
-    {{.User.NickName}} |
+    "{{.User.NickName}}"的信息 |
     <a href="/ua/{{.User.ID}}/page/1">查看该用户文章</a> | 
     <a href="/new/message/{{.User.ID}}">发送私信</a>
 </p>
-<title>{{.User.NickName}}</title>
-
-<table class="_table">
+<title>用户 -- {{.User.NickName}}</title>
+<style type="text/css">
+    .right-align {
+        text-align: right;
+        vertical-align: text-top;
+    }
+</style>
+<table class="_table" >
     <tr>
         <td colspan="2">
             <a href="/images/{{.User.Avatar}}"><img src="/thumbs/{{.User.Avatar}}"></a>
         </td>
     </tr>
-    <tr><td>用户:</td><td>{{.User.NickName}} ({{.User.ID}})</td></tr>
-    <tr><td>用户状态:</td><td>
-        <script type="text/javascript">
-            var s = "";
-            switch("{{.User.Status}}") {
-                case "ok": s = "正常"; break;
-                case "locked": s = "禁用"; break;
-            }
-            document.write(s + "({{.User.Group}})");
-        </script>
-    </td></tr>
-    <tr><td>注册时间:</td><td>
+    <tr><td class="right-align fit">用户:</td><td>{{.User.NickName}} (No.{{.User.ID}})</td></tr>
+    <tr><td class="right-align fit">用户状态:</td><td>{{.User.Status}}</td></tr>
+    <tr><td class="right-align fit">用户组:</td><td>{{.User.Group}}</td></tr>
+    <tr><td class="right-align fit">注册时间:</td><td>
         <script type="text/javascript">
         document.write(etc.date.format({{.User.SignUpDate}} * 1000, true))
         </script>
     </td></tr>
-    <tr><td>上次登入时间:</td><td>
+    <tr><td class="right-align fit">上次登入:</td><td>
         <script type="text/javascript">
         document.write(etc.date.format({{.User.LastLoginDate}} * 1000,  true))
         </script>
     </td></tr>
-    <tr><td>上传图片:</td><td>
+    <tr><td class="right-align fit">上传图片:</td><td>
     <script type="text/javascript">
     document.write(({{.User.ImageUsage}} / 1024 / 1024).toFixed(2) + " MiB ({{.User.ImageUsage}} 字节)");
     </script>
     </td></tr>
-    <tr><td>用户备注:</td><td>{{.User.Comment}}</td></tr>
+    <tr><td class="right-align fit">用户备注:</td><td>{{.User.Comment}}</td></tr>
 </table>
 

@@ -309,7 +309,7 @@ ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('user_id_seq'::regcla
 --
 
 ALTER TABLE ONLY articles
-    ADD CONSTRAINT articles_pkey PRIMARY KEY (id, modified_at, created_at);
+    ADD CONSTRAINT articles_pkey PRIMARY KEY (id);
 
 
 --
@@ -350,6 +350,27 @@ ALTER TABLE ONLY user_info
 
 ALTER TABLE ONLY users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: articles_created_at_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
+--
+
+CREATE INDEX articles_created_at_index ON articles USING btree (created_at);
+
+
+--
+-- Name: articles_modified_at_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
+--
+
+CREATE INDEX articles_modified_at_index ON articles USING btree (modified_at);
+
+
+--
+-- Name: articles_tag_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
+--
+
+CREATE INDEX articles_tag_index ON articles USING btree (tag);
 
 
 --

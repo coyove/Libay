@@ -10,7 +10,7 @@
 	{{end}}
 
 	{{if .IsOWA}}
-		<title>个人文章管理</title>
+		<title>文章管理</title>
 		<p id="breadcrumbs">
 		{{if .OWA.IsViewingGlobal}}
 			全局文章
@@ -18,7 +18,7 @@
 			{{if .OWA.IsViewingOther}}
 				"{{.OWA.ViewingOtherName}}"的文章
 			{{else}}
-				文章管理
+				个人文章管理
 			{{end}}
 		{{end}}
 	{{end}}
