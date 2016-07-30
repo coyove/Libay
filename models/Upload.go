@@ -108,7 +108,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 	if needThumb {
 		if _, err := os.Stat("./thumbs/" + fn); os.IsNotExist(err) {
-			cmd := exec.Command("vipsthumbnail", "./images/"+fn, "-s", "250", "-o", "../../../thumbs/"+fn)
+			cmd := exec.Command("convert", "./images/"+fn, "-thumbnail '250x250>'", "./thumbs/"+fn)
 			err = cmd.Start()
 			if err != nil {
 				glog.Errorln("Resizing image failed:", fn, err)

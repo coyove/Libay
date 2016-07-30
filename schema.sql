@@ -374,6 +374,13 @@ CREATE INDEX articles_tag_index ON articles USING btree (tag);
 
 
 --
+-- Name: users_username_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX users_username_index ON users USING btree (username);
+
+
+--
 -- Name: new_user_registered; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
