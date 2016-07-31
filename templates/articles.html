@@ -155,7 +155,7 @@
 		<th style="text-align: left">文章标题</th>
 		<th class="fit">作者</th>
 		<th class="fit">回复</th>
-		<th class="fit">查看</th>
+		<th class="fit last">查看</th>
 		<th class="fit last">最后修改</th>
 	</tr>
 	{{range .Articles}}
@@ -179,7 +179,7 @@
 		</td>
 		<td class="fit center"><a href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="fit center"><a href="/reply/{{.ID}}/page/1"><em>{{.Children}}</em></a></td>
-		<td class="fit center"><em>{{.Hits}}</em></td>
+		<td class="fit center last"><em>{{.Hits}}</em></td>
 		<td class="fit last">
 			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>]
 		</td>

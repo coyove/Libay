@@ -307,14 +307,9 @@ table.database td {
     border-radius: 3px;
 }
 
-.monospace-code {
-    color: #800080;
-    font-family: "Courier New", Courier, monospace;
-}
-
-.monospace-code-lucida {
-    font-family: "Lucida Console", Monaco, monospace
-}
+.font-courier { font-family: "Courier New", Courier, monospace; }
+.font-lucida { font-family: "Lucida Console", Monaco, monospace; }
+.font-purple { color: #800080 !important; }
 
 div#editor {
     /*max-width:500px;*/

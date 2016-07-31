@@ -714,53 +714,37 @@
                         return
                     }
                 }
+ 
+                etc.util.ajax.$post(options["imgur"] ? "https://api.imgur.com/3/image" : "/upload",
+                {
+                    "image": file,
+                }, {
+                    'Authorization': 'Client-ID c37fc05199a05b7'
+                }).then(function(e, rt, x) {
+                    if (e) {
+                        onError("AJAX");
+                        return;
+                    }
+                    try {
+                        var D = options["imgur"] ? JSON.parse(rt).data : JSON.parse(rt);
+                    } catch (E) {
+                        return onError("JSON");
+                    }
 
-                var _URL = window.URL || window.webkitURL;
-                var img = new Image();
+                    if (D.Error || D.error) {
+                        return onError("Server_Failure_" + D.R);
+                    }
 
-                var onLoad = function(w, h) {
-                    etc.util.ajax.$post(options["imgur"] ? "https://api.imgur.com/3/image" : "/upload",
-                    {
-                        "image": file,
-                        "width": w,
-                        "height": h,
-                    }, {
-                        'Authorization': 'Client-ID c37fc05199a05b7'
-                    }).then(function(e, rt, x) {
-                        if (e) {
-                            onError("AJAX");
-                            return;
-                        }
-                        try {
-                            var D = options["imgur"] ? JSON.parse(rt).data : JSON.parse(rt);
-                        } catch (E) {
-                            return onError("JSON");
-                        }
+                    var _link = (D.Link || D.link).replace("http://", "https://");
+                    var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
 
-                        if (D.Error || D.error) {
-                            return onError("Server_Failure_" + D.R);
-                        }
-
-                        var _link = (D.Link || D.link).replace("http://", "https://");
-                        var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
-
-                        if (options["editor"]) {
-                            _id(options["editor"]).focus();
-                            _insertHTML("<a href='" + _link +
-                                "' target='_blank'><img src='" + _thumb + "' class='article-image'></a>");
-                        }
-                        etc.editor.uploadImage(files, callback, options);
-                    });
-                }
-
-                img.onload = function() {
-                    onLoad(this.width, this.height);
-                };
-
-                if (_URL && _URL.createObjectURL)
-                    img.src = _URL.createObjectURL(file);
-                else
-                    onLoad(1024, 1024);
+                    if (options["editor"]) {
+                        _id(options["editor"]).focus();
+                        _insertHTML("<a href='" + _link +
+                            "' target='_blank'><img src='" + _thumb + "' class='article-image'></a>");
+                    }
+                    etc.editor.uploadImage(files, callback, options);
+                });
             },
 
             "insertLink": function() {
@@ -778,6 +762,38 @@
 
             "insertFontsize": function(size) {
                 _insertHTML("<span class='" + size + "'>" + etc.editor.getSelected() + "</span>");
+            },
+
+            "switchMonospace": function() {
+                var e = _id(_editorId);
+                var items = e.getElementsByTagName("*");
+                var m = e.attr("data-mono");
+
+                for (var i = 0; i < e.childNodes.length; i++) {
+                    var n = e.childNodes[i];
+
+                    if (n.nodeName == "#text") {
+                        var span = document.createElement("span");
+                        span.innerHTML = n.nodeValue;
+                        e.insertBefore(span, n);
+                        e.removeChild(n);
+                    }
+                }
+
+                if (m === "courier") {
+                    for (var i = items.length; i--;)
+                        items[i].className = items[i].className.replace(/font\-courier/g, "font-lucida");
+
+                    e.attr("data-mono", "lucida");
+                } else if (m === "lucida") {
+                    for (var i = items.length; i--;)
+                        items[i].className = items[i].className.replace(/font\-(courier|lucida)/g, "");
+
+                    e.attr("data-mono", "normal");
+                } else {
+                    for (var i = items.length; i--;) items[i].className += " font-courier";
+                    e.attr("data-mono", "courier");
+                }
             },
 
             "insertList": function(elem) {
