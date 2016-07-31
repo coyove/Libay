@@ -52,50 +52,6 @@ func (th ModelHandler) GET_tags(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (th ModelHandler) GET_playground(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// type Image struct {
-	// 	Name string
-	// 	Date int
-	// }
-
-	// var payload struct {
-	// 	MaxSize              int
-	// 	AllowAnonymousUpload bool
-	// 	HistoryImages        []Image
-	// }
-	// payload.MaxSize = conf.GlobalServerConfig.MaxImageSize
-	// payload.AllowAnonymousUpload = (&auth.AuthUser{}).CanPostImages()
-	// // payload.HistoryImages = auth.GetImages()
-	// rows, err := auth.Gdb.Query(`
-	//        SELECT
-	//            MAX(id) AS id,
-	//            image,
-	//            MAX(date) AS date
-	//        FROM
-	//            images
-	//        WHERE
-	//            uploader = 0
-	//        GROUP BY
-	//            image
-	//        ORDER BY
-	//            id DESC
-	//        LIMIT ` + strconv.Itoa(conf.GlobalServerConfig.PlaygroundMaxImages))
-
-	// payload.HistoryImages = make([]Image, 0)
-
-	// if err == nil {
-	// 	defer rows.Close()
-
-	// 	for rows.Next() {
-	// 		var img string
-	// 		var id int
-	// 		var t time.Time
-	// 		rows.Scan(&id, &img, &t)
-
-	// 		payload.HistoryImages = append(payload.HistoryImages, Image{img, int(t.Unix())})
-	// 	}
-	// }
-
-	// ServePage(w, "playground", payload)
 	ServePage(w, "404", nil)
 }
 
@@ -119,10 +75,6 @@ func (th ModelHandler) GET_about(w http.ResponseWriter, r *http.Request, ps http
 		Scan(&payload.TotalUsers, &payload.TotalArticles)
 
 	ServePage(w, "about", payload)
-}
-
-func (th ModelHandler) GET_status(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	http.ServeFile(w, r, "./assets/test.png")
 }
 
 func (th ModelHandler) GET_dyncaptcha(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

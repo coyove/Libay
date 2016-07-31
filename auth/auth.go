@@ -46,6 +46,9 @@ var Hostname string
 var Gdb *sql.DB
 var Gcache *Cache
 var Guser *Cache
+var GarticleTimer *FixedQueue
+var GmessageTimer *FixedQueue
+var GuserTimer *FixedQueue
 
 func AESEncrypt(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
@@ -309,8 +312,8 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 			username='`+u+"'").
 		Scan(&id, &pass, &lastLoginIP, &lastLogin, &retry, &lockDate); err == nil {
 
-		// Gdb.QueryRow("select last_login_ip, last_login_date, retry, lock_date from users where username='"+u+"'").
-		// 	Scan()
+		iid := strconv.Itoa(id)
+
 		mins := int(time.Now().Sub(lockDate).Minutes())
 		if mins < cooldownTime {
 			return "Err::Login::Cooldown_" + strconv.Itoa(cooldownTime-mins) + "min"
@@ -329,6 +332,7 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 			var unread int
 			unreadLimit := int(time.Now().UnixNano()/1e6 - 365*3600000*24)
 
+			_start := time.Now()
 			err := Gdb.QueryRow(`
 				UPDATE 
                     users 
@@ -340,7 +344,7 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
                     session_id           = '` + new_session_id + `', 
                     retry                = 0 
                 WHERE 
-                    id = ` + strconv.Itoa(id) + `;
+                    id = ` + iid + `;
 
                 SELECT 
                 	COUNT(id) 
@@ -353,18 +357,22 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 
 			if err != nil {
 				glog.Errorln("Database:", err)
+				return "Err::DB::General_Failure"
 			}
 
-			return "ok " + strconv.Itoa(id) + " " + strconv.Itoa(unread)
+			GuserTimer.Push(time.Now().Sub(_start).Nanoseconds())
+
+			return "ok " + iid + " " + strconv.Itoa(unread)
 			// finish a successful login procedure
 		}
 
 		if retry > maxRetryOpportunities {
-			Gdb.Exec("UPDATE users SET retry = 0, lock_date = '" + Time.Now() + "' WHERE id = " + strconv.Itoa(id))
-			glog.Errorln("Account locked by", GetIP(r))
+			Gdb.Exec("UPDATE users SET retry = 0, lock_date = '" + Time.Now() + "' WHERE id = " + iid)
+			glog.Errorln("Account locked on", GetIP(r))
+
 			return "Err::Login::Account_Locked"
 		} else {
-			Gdb.Exec("UPDATE users SET retry = retry + 1 WHERE id = " + strconv.Itoa(id))
+			Gdb.Exec("UPDATE users SET retry = retry + 1 WHERE id = " + iid)
 			return "Err::Login::Retry_" + strconv.Itoa(retry)
 		}
 
@@ -519,6 +527,9 @@ func ConnectDatabase(t string, conn string) error {
 		Gcache.Start()
 		Guser.Start()
 
+		GarticleTimer = NewFixedQueue(20)
+		GmessageTimer = NewFixedQueue(20)
+		GuserTimer = NewFixedQueue(20)
 		return nil
 	}
 }

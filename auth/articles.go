@@ -262,6 +262,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		onlyTag += conf.GlobalServerConfig.GetSQL()
 	}
 
+	_start := time.Now()
 	rows, err := Gdb.Query(`
         SELECT
             articles.id, 
@@ -290,6 +291,8 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		glog.Errorln("Database:", err)
 		return
 	}
+
+	GarticleTimer.Push(time.Now().Sub(_start).Nanoseconds())
 
 	defer rows.Close()
 
@@ -361,6 +364,7 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 
 	messageLimit := int(time.Now().UnixNano()/1e6 - 3600000*24*365)
 
+	_start := time.Now()
 	rows, err := Gdb.Query(`
         SELECT
             articles.id, 
@@ -390,6 +394,8 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 		glog.Errorln("Database:", err)
 		return
 	}
+
+	GmessageTimer.Push(time.Now().Sub(_start).Nanoseconds())
 
 	defer rows.Close()
 

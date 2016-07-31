@@ -199,3 +199,51 @@ func (c *Cache) removeElement(e *list.Element) {
 		c.OnEvicted(kv.key, kv.value)
 	}
 }
+
+type FixedQueue struct {
+	ll     *list.List
+	length int
+
+	sync.RWMutex
+}
+
+func NewFixedQueue(l int) *FixedQueue {
+	return &FixedQueue{
+		ll:     list.New(),
+		length: l,
+	}
+}
+
+func (q *FixedQueue) Push(v interface{}) {
+	q.Lock()
+
+	if q.ll == nil {
+		q.ll = list.New()
+	}
+
+	q.ll.PushFront(v)
+	if q.ll.Len() > q.length {
+		q.ll.Remove(q.ll.Back())
+	}
+
+	q.Unlock()
+}
+
+func (q *FixedQueue) Get() []interface{} {
+	q.RLock()
+	defer q.RUnlock()
+
+	if q.ll == nil || q.ll.Len() == 0 {
+		return nil
+	}
+
+	f := q.ll.Front()
+	ret := []interface{}{f.Value}
+
+	for f.Next() != nil {
+		f = f.Next()
+		ret = append(ret, f.Value)
+	}
+
+	return ret
+}

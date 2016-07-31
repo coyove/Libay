@@ -262,7 +262,36 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 
 	cc := auth.Gcache.GetLowLevelCache()
 	cu := auth.Guser.GetLowLevelCache()
-	caches := []string{"Pages:"}
+
+	timer := func(arr []interface{}) string {
+		ret, div := "", "<div class=gd>"
+		max := int64(0)
+		for _, ut := range arr {
+			ret += fmt.Sprintf("%.3f, ", float64(ut.(int64))/1e6)
+			if ut.(int64) > max {
+				max = ut.(int64)
+			}
+		}
+
+		for _, ut := range arr {
+			div += fmt.Sprintf("<span class=g style='height: %.0fpx'></span>", float64(ut.(int64))/float64(max)*12)
+		}
+
+		return ret + div + "</div>"
+	}
+
+	caches := []string{
+		`<style>
+			span.g { display: inline-block; background-color: black; width: 5px; margin-bottom: -1px; }
+			div.gd { display: inline-block; line-height: 12px; }
+    	</style>`,
+		"<img src='./assets/test.png'>",
+		"<hr>Recent SQL execution time:",
+		"U: " + timer(auth.GuserTimer.Get()),
+		"A: " + timer(auth.GarticleTimer.Get()),
+		"M: " + timer(auth.GmessageTimer.Get()),
+		"<hr>Pages:",
+	}
 
 	rindex := regexp.MustCompile(`(.+)--`)
 	rpage := regexp.MustCompile(`(.+)-(.+)-(ua|owa|reply|tag)`)
