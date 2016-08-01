@@ -1,7 +1,7 @@
 {{if .IsLoggedIn}}
 <title>管理面板</title>
 <p id="breadcrumbs">
-    管理面板 | <a href="javascript:tryLogout()" id="logout-button">登出</a> |
+    管理面板 | <a href="javascript:void(0)" data-onclick="tryLogout()">登出</a> |
     <a href="/ua/{{.ID}}/page/1">冰山(可见文章)</a> |
     <a href="/owa/{{.ID}}/page/1">全部文章</a> |
     <a href="/message/{{.ID}}/page/1">站内信箱</a>
@@ -20,7 +20,6 @@
     var returnURL = "/";
     var privateKeyContent = "";
     var encryptedContent = "";
-    var waitingPhase2 = false;
 
     var decryptMessage = function (privkey, passphrase, encoded_message, callback) {
         var openpgp = window.openpgp;
@@ -28,27 +27,20 @@
         var privKey = privKeys.keys[0];
         
         if (privkey) {
-            var success = privKey.decrypt(passphrase);
+            privKey.decrypt(passphrase);
         } else {
             callback("error");
             return;
         }
 
-        function _base64ToArrayBuffer(str) {
-            var binary_string = etc.string.base64Decode(str);
-            var len = binary_string.length;
-            var bytes = new Uint8Array( len );
-            for (var i = 0; i < len; i++)        {
-                bytes[i] = binary_string.charCodeAt(i);
-            }
-            return bytes;
-        }
-
         if (openpgp) {
-            
+            var binary_string = etc.string.base64Decode(encoded_message);
+            var len = binary_string.length;
+            var bytes = new Uint8Array(len);
+            for (var i = 0; i < len; i++) bytes[i] = binary_string.charCodeAt(i);
+
             var decrypted = openpgp.decrypt({
-                message: openpgp.message.read(_base64ToArrayBuffer(encoded_message)),
-                // publicKeys: publicKeys.keys,     // for verification (optional)
+                message: openpgp.message.read(bytes),
                 privateKey: privKey,
                 format: 'binary'
             });
@@ -63,52 +55,46 @@
 
     var tryLoginPhase1 = function(){
         etc.let.hide("login-result");
-        if (waitingPhase2) {
-            etc.let.show("login-result").$.html("正在获取交换密钥");
-            return;
-        }
-        waitingPhase2 = true;
 
-        var u = etc.id("uname").value;
-        etc.id("waiting-phase1-response").html("<img src='" + window.__loadingImg + "' width='16'/>");
-
-        etc.util.ajax.post("/login/phase1", {"username" : u, "csrf": etc.util.CSRF()}).then(function (e, data, x) {
-            waitingPhase2 = false;
+        etc.util.ajax.post("/login/phase1", {
+            "username": etc.id("uname").value, "csrf": etc.util.CSRF()
+        }).then(function (e, data, x) {
+            etc.wait.on(this).done();
 
             if (data.indexOf("Err:") < 0) {
                 var j = JSON.parse(data);
                 etc.let.hide("login-result");
 
                 encryptedContent = j.Key2;
-                // etc.id("encrypted").innerHTML = "..." + j.Key2.substring(20, 36) + "...";
+                
                 etc.id("waiting-phase1-response").html("<img src='" + window.__tickImg + "'/>");
                 etc.let.enable('login-phase2');
             } else {
                 encryptedContent = "";
-                // etc.id("encrypted").innerHTML = "(请重试)";
+                
                 etc.id("waiting-phase1-response").innerHTML = "<img src='" + window.__crossImg + "'/>";
                 etc.let.disable('login-phase2');
-                etc.let.show("login-result").$.html("交换密钥错误: " + data);
+                etc.let.show("login-result").$.html("交换密文错误: " + data);
             }
         });
+
+        return etc.wait.on(this);
     }
 
     var tryLoginPhase2 = function(){
-        etc.let.disable('login-phase2');
-        setTimeout(function() {
-            etc.let.enable('login-phase2');
-        }, 5000);
-
         privateKeyContent = etc.id("private-key-content").value;
+
+        setTimeout(function() {
+            etc.wait.on(this).done();
+        }, 5000);
 
         decryptMessage(privateKeyContent, etc.id("pp").value, encryptedContent, function(p) {
             var u = etc.id("uname").value;
             var e = etc.id("expire").value;
 
             if (p == "" || p == "error") {
-                etc.id("login-result").innerHTML = "私钥错误";
-                etc.let.enable('login-phase2');
-                return;
+                etc.let.show("login-result").$.innerHTML = "私钥错误";
+                return etc.wait.on(this).done();
             }
 
             etc.util.write("private_key", etc.id("allow-local-storage").checked ? privateKeyContent : "");
@@ -119,38 +105,40 @@
                 "expire" : e,
                 "csrf": etc.util.CSRF()
             }).then(function (e, data, x) {
+                etc.wait.on(this).done();
+
                 if (data.indexOf("ok") == 0) {
                     var rs = data.split(" ");
                     etc.util.cookie.write("unread", rs[2], 3600 * 24 * 1000);
                     window.location.href = returnURL;
                 } else {
                     etc.let.show("login-result").$.innerHTML = "登入失败: " + data;
-                    etc.let.enable('login-phase2');
                 }
             });
         });
+
+        return etc.wait.on(this);
     }
 
     var tryLogin = function(){
-        etc.let.hide("login-result").disable('simple-login');
-
-        var u = etc.id("simple-username").value;
-        var e = etc.id("simple-expire").value;
-        var p = etc.id("simple-password").value;
+        etc.let.hide("login-result");
 
         etc.util.ajax.post("/login/phase2", {
-            "username" : u, 
-            "password" : p, 
-            "expire" : e,
+            "username" : etc.id("simple-username").value, 
+            "password" : etc.id("simple-password").value, 
+            "expire" : etc.id("simple-expire").value,
             "csrf": etc.util.CSRF()
         }).then(function (e, data, x) {
+            etc.wait.on(this).done();
+
             if (data.indexOf("ok") == 0) {
                 window.location.href = returnURL;
             } else {
                 etc.let.show("login-result").$.html("登入失败: " + data);
-                etc.let.enable('simple-login');
             }
         });
+
+        return etc.wait.on(this);
     }
 
     var switchLoginPanel = function() {
@@ -168,39 +156,41 @@
 
     {{if .IsLoggedIn}}
         var tryLogout = function(){
-            etc.let.disable("logout-button");
             etc.util.ajax.post("/logout").then(function (e, data, x) {
+                etc.wait.on(this).done();
                 etc.util.cookie.delete("unread");
                 window.location.reload();
             });
+
+            return etc.wait.on(this);
         }
 
         var tryUpdateComment = function(){
-            etc.let.disable("update-comment");
 
             etc.util.ajax.post("/user/update/comment", {
                 "comment": etc.id("user-comment").value,
                 "csrf": etc.util.CSRF()
             }).then(function(e, d, x){
+                etc.wait.on(this).done();
+
                 if (d == "ok") {
                     alert("更新备注成功");
                     window.location.reload();
                 } else {
                     alert("更新失败: " + d);
-                    etc.let.enable("update-comment");
                 }
             });
+
+            return etc.wait.on(this);
         }
 
         var tryUpdateAvatar = function(){
-            etc.let.disable("update-avatar");
-
             etc.util.ajax.$post("/upload", {
                 "image": etc.file("user-avatar")[0],
                 "avatar": "true",
                 "csrf": etc.util.CSRF()
             }).then(function(e, d, x){
-                etc.let.enable("update-avatar");
+                etc.wait.on(this).done();
 
                 var j = JSON.parse(d);
 
@@ -211,6 +201,8 @@
                     alert("发生错误");
                 }
             });
+
+            return etc.wait.on(this);
         }
 
         if (window.__unread > 0) 
@@ -222,10 +214,8 @@
             var q = (window.location.href).split("?");
             if (q.length > 1) returnURL = q[1];
 
-            etc.id("uname").on("blur", tryLoginPhase1);
-            etc.id("pp").on("focus", function(ev) { if (ev && encryptedContent == "") tryLoginPhase1(); })
-            .on("keydown", function(ev) { if (ev.keyCode == 13) tryLoginPhase2(); });
-            etc.id("simple-password").on("keydown", function(ev) { if (ev.keyCode == 13) tryLogin(); });
+            etc.id("pp").on("keydown", function(ev) { if (ev.keyCode == 13) etc.id("login-phase2").click(); });
+            etc.id("simple-password").on("keydown", function(ev) { if (ev.keyCode == 13) etc.id("simple-login").click(); });
 
             etc.id('private-key').on('change', function (evt) {
                 var f = evt.target.files[0]; 
@@ -242,7 +232,7 @@
                 }
             }, false);
 
-            etc.id("encrypted").on("click", tryLoginPhase1);
+            // etc.id("encrypted").on("click", tryLoginPhase1);
             etc.id("private-key-content").on("click", function(ev) { etc.id("private-key").click(); });
 
             privateKeyContent = etc.util.read("private_key");
@@ -311,7 +301,7 @@
     <tr><td class="right-align fit">修改备注:</td>
     	<td>
     		<input type="textbox" id="user-comment" style="width: 100%; max-width: 200px" value="{{.Comment}}"/>
-            <button onclick="tryUpdateComment()" id="update-comment">更新备注</button>
+            <button data-onclick="tryUpdateComment()">更新备注</button>
         </td>
     </tr>
     <tr><td></td><td>
@@ -322,35 +312,32 @@
 
     <tr><td class="right-align fit">用户头像:</td><td>
         <input type="file" id="user-avatar"/>
-        <button onclick="tryUpdateAvatar()" id="update-avatar">上传图像</button>
+        <button data-onclick="tryUpdateAvatar()">上传图像</button>
     </td></tr>
 </table>
 {{else}}
 
 <table class="_table" id="login-panel">
     <tr>
-        <td>用户名:</td>
+        <td>1. 用户名:</td>
         <td><input type="textbox" id="uname" class="_f" /></td>
         <td><div id="waiting-phase1-response" style="display: block; width:16px"></div></td>
     </tr>
+    <tr><td></td><td>
+        <button data-onclick="tryLoginPhase1()">2. 获取交换密文</button>
+    </td></tr>
     <tr>
-        <td>密码:</td><td >
+        <td>3. 私钥密码:</td><td >
         <input type="password" id="pp" class="_f" placeholder="私钥密码" />
         <input type="textbox" id="password" style="display: none" />
         </td><td></td>
     </tr>
     <tr>
-        <td>私钥:<input type="file" id="private-key" style="display:none" /></td><td>
+        <td>4. 私钥:<input type="file" id="private-key" style="display:none" /></td><td>
            <textarea id="private-key-content" class="_f" cols="37" rows="2" style="cursor: pointer;"></textarea>
         </td>
-        <td>
-            <span id="encrypted" style="display: none"><a href="javascript:tryLoginPhase1()">刷新</a></span>
-        </td>
-    </tr>
-    <!-- <tr>
-        <td>交换密钥: </td>
         <td></td>
-    </tr> -->
+    </tr>
     <tr><td></td>
         <td>
 <input type="checkbox" id="allow-local-storage"/><label for="allow-local-storage">记住私钥内容: localStorage</label>
@@ -368,7 +355,7 @@
         </td><td></td>
     </tr>
     <tr><td></td><td>
-        <button onclick="tryLoginPhase2()" class="wp-btn" id="login-phase2">登入</button>
+        <button data-onclick="tryLoginPhase2()" id="login-phase2">5. 登入</button>
     </td></tr>
 </table>
 
@@ -393,7 +380,7 @@
         </td>
     </tr>
     <tr><td></td><td>
-        <button onclick="tryLogin()" id="simple-login">登入</button>
+        <button data-onclick="tryLogin()" id="simple-login">登入</button>
     </td></tr>
 </table>
 

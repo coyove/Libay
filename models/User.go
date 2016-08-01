@@ -62,6 +62,7 @@ func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.R
 	_, err := auth.Gdb.Exec(`UPDATE user_info SET comment = '` + comment + `' WHERE id = ` + strconv.Itoa(u.ID))
 	if err == nil {
 		w.Write([]byte("ok"))
+		auth.Guser.Remove(u.ID)
 	} else {
 		glog.Errorln("Database:", err)
 		Return(w, "Err::DB::General_Failure")

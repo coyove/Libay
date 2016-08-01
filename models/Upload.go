@@ -122,6 +122,8 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 			os.Remove("./thumbs/" + oldAvatar)
 
 			payload.Avatar = "ok"
+			auth.Guser.Remove(u.ID)
+
 		} else {
 			glog.Errorln("Database:", err)
 			payload.Avatar = "error"

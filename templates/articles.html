@@ -33,7 +33,7 @@
 {{end}}
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}) + 
+	document.write(' | 时间: ' + etc.date.format({{.Nav.Range.Start}}) + 
 	' &raquo; ' + etc.date.format({{.Nav.Range.End}}));
 </script>
 </p>
@@ -84,7 +84,7 @@
 	{{.Announce.Content}}
 	{{if .Announce.ID}}
 		<span style="font-size: 75%; border: dotted 1px #666; padding: 1px 5px; background: steelblue; border-bottom: solid 2px #3c72a0;">
-			<a href="/article/{{.Announce.ID}}" style="color: white">#{{.Announce.Author}}</a>
+			<a href="/article/{{.Announce.ID}}" style="color: white">{{.Announce.Author}}</a>
 		</span>
 	{{end}}
 </div>

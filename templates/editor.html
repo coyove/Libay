@@ -90,8 +90,8 @@
 				var _html = ["</ul>"];
 				for(var k in j) {
 					has = true;
-					_html.push("<li onclick='getHistoryVersion(" + k + ")'>" + j[k].User + " - " + 
-						etc.date.format(j[k].Date, true) + "</li>");
+					_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
+						j[k].User + " - " + etc.date.format(j[k].Date, true) + "</li>");
 				}
 				_html.push("<li onclick='getHistoryVersion(-1)'><b>{{.Article.Author}} - 当前版本</b></li>");
 				_html.push("<ul style='cursor: pointer'>");
@@ -132,7 +132,6 @@
 	}
 
 	function tryPost(){
-		etc.let.disable("post-article");
 		var title = etc.id("thread-title").value;
 
 		etc.util.ajax.post("/post/{{.ReplyTo}}", {
@@ -142,30 +141,34 @@
 			"update": "{{.Update}}",
 			"csrf": etc.util.CSRF()
 		}).then(function(error, text, xhr) {
+			etc.wait.on(this).done();
+
 			if (text == "ok") {
 				alert("发布成功");
 				clearDraft(true);
 				goBack();
 			} else {
 				alert("发生错误: " + text);
-				etc.let.enable("post-article");
 			}
 		});
+
+		return etc.wait.on(this);
 	}
 
 	function tryPreview(){
-		etc.let.disable("preview-article");
-
 		etc.util.ajax.post("/preview", {
 			"content": etc.id("thread-content").innerHTML
 		}).then(function(error, text, xhr) {
-			etc.let.enable("preview-article");
+			etc.wait.on(this).done();
+
 			if (text.indexOf("Err::") == 0) {
 				alert("发生错误: " + text);
 			} else {
 				etc.id("thread-content").innerHTML = text;
 			}
 		});
+
+		return etc.wait.on(this);
 	}
 
 	function goBack() {
@@ -243,16 +246,19 @@
 			"/assets/html_beautify/beautify.js",
 			"/assets/html_beautify/beautify-css.js",
 			"/assets/html_beautify/beautify-html.js"
-			], function() {
-				var source = etc.id("thread-content-html").value;
-                opts = {};
+		], function() {
+			var source = etc.id("thread-content-html").value;
+            opts = {};
 
-	            opts.indent_size = 4;
-	            opts.indent_char = ' ';
-	            opts.max_preserve_newlines = 5;
+            opts.indent_size = 4;
+            opts.indent_char = ' ';
+            opts.max_preserve_newlines = 5;
 
-                etc.id("thread-content-html").value = html_beautify(source, opts);
-			});
+            etc.id("thread-content-html").value = html_beautify(source, opts);
+            etc.wait.on(this).done();
+		});
+
+		return etc.wait.on(this);
 	}
 </script>
 
@@ -271,33 +277,34 @@
 	<div id="tr-edit">
 		<div id="editor-container" unselectable="on">
 			<div id="editor-outter-panel" unselectable="on">
-				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em">
+				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
 					<span><span id="uploading-sign"></span>
 					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xf093;</a>
 					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xf03e;</a>
-					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xf14c;</a>
+					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xf14c;</a> <b>|</b>
 					<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xf0c1;</a>
 					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xf0cb;</a>
 					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xf0ca;</a>
-					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xf0ce;</a>
+					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xf0ce;</a> <b>|</b>
 					<a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
 					<a href="javascript:etc.editor.insertNode('Bold')" title="粗体">&#xf032;</a>
 					<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
 					<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
-					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a>
+					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a> <b>|</b>
 					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xf121;</a>
+					<a href="javascript:clearContent()" title="清空内容">&#xf057;</a>
 					
 					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
 					<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
 
 					<script type="text/javascript">
-						etc.id("file-uploader").onchange = function(e) {
-							tryUploadImage('', e);
+						function clearContent() {
+							if (confirm("是否清空内容")) etc.id("thread-content").innerHTML = "";
 						}
 
-						etc.id("file-uploader-imgur").onchange = function(e) {
-							tryUploadImage('-imgur', e);
-						}
+						etc.id("file-uploader").onchange = function(e) { tryUploadImage('', e); }
+
+						etc.id("file-uploader-imgur").onchange = function(e) { tryUploadImage('-imgur', e); }
 
 						function tryUploadImage(imgur, e) {
 							Animation.start("uploading-sign");
@@ -344,7 +351,7 @@
 	<div id="tr-edit-html" style="display:none" colspan="2">
 		HTML: <br>
 		<textarea rows="20" id="thread-content-html"></textarea>
-		<button onclick="formatHTML()">HTML排版 (jsbeautifier)</button>
+		<button data-onclick="formatHTML()">HTML排版 (jsbeautifier)</button>
 		<p style="font-size: 80%">
 		允许HTML标签:
 		{{range $key, $value := .HTMLTags}}
@@ -388,10 +395,8 @@
 				{{end}}
 			</select>
 		</p>
-		<button onclick="tryPost()" id="post-article" {{if .IsLoggedIn}}{{else}}{{if .Message}}disabled{{end}}{{end}}>
-			{{if .Update}}修改{{else}}发布{{end}}
-		</button>
-		<button onclick="tryPreview()" id="preview-article">预览</button>
+		<button data-onclick="tryPost()">{{if .Update}}修改{{else}}发布{{end}}</button>
+		<button data-onclick="tryPreview()">预览</button>
 		<button onclick="editHTML()" id="html-edit" mode="wysiwyg">HTML編輯</button>
 		<button onclick="clearDraft()">清空草稿</button>
 		<span id="save-draft"></span>

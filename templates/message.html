@@ -8,23 +8,26 @@
 	{{end}}
 
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | ' + etc.date.format({{.Nav.Range.Start}}) + 
+	document.write(' | 时间: ' + etc.date.format({{.Nav.Range.Start}}) + 
 		' &raquo; ' + etc.date.format({{.Nav.Range.End}}));
 </script>
 </p>
 
 <script type="text/javascript">
 	function tryReadAll() {
-		etc.let.hide("read-all-message");
+		
 		etc.util.ajax.post("/unread/message/0", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			etc.wait.on(this).done();
+
 			if (text == "ok") {
 				alert("已将标记所有消息为已读");
 				window.location.reload();
 			} else {
 				alert("发生错误: " + text);
-				etc.let.show("read-all-message");
 			}
 		});
+
+		return etc.wait.on(this);
 	}
 
 	function tryDelete(id) {
@@ -32,20 +35,22 @@
 			if (!confirm("是否删除该私信\n\n" + 
 					"(* 删除后对方仍可以看到该私信，但发件人变为匿名)\n" +
 					"(** 您在管理面板的“全部文章”内仍可以看到该私信)")) {
-				return;
+				return etc.wait.on(this);
 			}
 		}
 
-		etc.let.hide("delete-message-" + id);
 		etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			etc.wait.on(this).done();
+
 			if (text == "ok") {
 				alert("已经删除该私信");
 				window.location.reload();
 			} else {
 				alert("发生错误: " + text);
-				etc.let.show("delete-message-" + id);
 			}
 		});
+
+		return etc.wait.on(this);
 	}
 
 	etc.util.cookie.delete("unread");
@@ -70,7 +75,7 @@
 	]
 	{{end}}
 
-	[ <a id="read-all-message" href="javascript:tryReadAll()">标记所有为已读</a> ]
+	[ <a href="javascript:void(0)" data-onclick="tryReadAll()">标记所有为已读</a> ]
 </div>
 
 
@@ -115,7 +120,7 @@
 			<a href="/new/message/{{.SenderID}}">回复</a>
 		{{end}}
 		</td>
-		<td class="fit"><a href="javascript:tryDelete({{.ID}})" id="delete-message-{{.ID}}">删除</a></td>
+		<td class="fit"><a href="javascript:void(0)" data-onclick="tryDelete({{.ID}})">删除</a></td>
 		<td class="fit last">
 			[<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}));</script>]
 		</td>

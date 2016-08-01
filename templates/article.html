@@ -28,22 +28,24 @@ function goEdit() {
 }
 
 function goLock() {
-	etc.let.hide("make-locked");
-
 	etc.util.ajax.post("/lock/article/{{.Article.ID}}", {"csrf":etc.util.CSRF()}).then(function(e, d, x){
+		etc.wait.on(this).done();
+
 		if (d == "ok") {
 			alert("操作成功");
 			window.location.reload();
 		}
 		else {
 			alert("发生错误: " + d);
-			etc.let.show("make-locked");
 		}
 	});
+
+	return etc.wait.on(this);
 }
 
 function getHistory() {
 	var ah = etc.id("article-history");
+	
 	if (ah.style.display == "block") {
 		ah.style.display = "none";
 		etc.let.hide("article-history-underlay");
@@ -61,7 +63,8 @@ function getHistory() {
 		var _html = ["</ul>"];
 		for(var k in getHistory.history) {
 			has = true;
-			_html.push("<li onclick='getHistoryVersion(" + k + ")'>" + getHistory.history[k].User + " - " + 
+			_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
+				getHistory.history[k].User + " - " + 
 				etc.date.format(getHistory.history[k].Date, true) + "</li>");
 		}
 		if (!has) _html.push("<li>无历史版本</li>");
@@ -88,29 +91,36 @@ function getHistoryVersion(rev) {
 }
 
 function tryDeleteRestore(del){
-	etc.let.hide("delete-restore-article");
-	etc.util.ajax.post("/delete/article/{{.Article.ID}}/" + del, {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+	etc.util.ajax.post("/delete/article/{{.Article.ID}}/" + del, {
+		"csrf": etc.util.CSRF()
+	}).then(function(error, text, xhr) {
+		etc.wait.on(this).done();
+
 		if (text == "ok") {
 			alert("已经" + (del ? "删除" : "恢复") + "该文章");
 			window.location.reload();
 		} else {
-			alert("发生错误: " + text);
-			etc.let.show("delete-restore-article");
+			alert("发生错误: " + text);			
 		}
 	});
+
+	return etc.wait.on(this);
 }
 
-function tryUnread(id) {
-	etc.let.hide("unread-message");
-	etc.util.ajax.post("/unread/message/" + id, {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+function tryUnread() {
+
+	etc.util.ajax.post("/unread/message/{{.Article.ID}}", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+		etc.wait.on(this).done();
+
 		if (text == "ok") {
 			alert("已将该消息标记为未读");
 			window.history.back();
 		} else {
 			alert("发生错误: " + text);
-			etc.let.show("unread-message");
 		}
 	});
+
+	return etc.wait.on(this);
 }
 
 function switchView() {
@@ -142,7 +152,7 @@ function switchView() {
 				{{if .Article.IsMessageSentout}}
 				{{else}}
 				<td><a href="/new/message/{{.Article.AuthorID}}"><b>回复私信</b></a></td>
-				<td><a id="unread-message" href="javascript:tryUnread({{.Article.ID}})">标记为未读</a></td>
+				<td><a href="javascript:void(0)" data-onclick="tryUnread()">标记为未读</a></td>
 				{{end}}
 			{{else}}
 				{{if .Article.Children}}
@@ -157,22 +167,20 @@ function switchView() {
 					<td><a href='javascript:goEdit()'>编辑</a></td>
 				{{end}}
 				{{if .Article.Deleted}}
-					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(false)">恢复</a></td>
+					<td><a href='javascript:void(0)' data-onclick="tryDeleteRestore(false)">恢复</a></td>
 				{{else}}
-					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(true)">删除</a></td>
+					<td><a href='javascript:void(0)' data-onclick="tryDeleteRestore(true)">删除</a></td>
 				{{end}}
 			{{else}}
 				{{if .Article.IsMessage}}
-					<td><a id="delete-restore-article" href="javascript:tryDeleteRestore(true)">删除</a></td>
+					<td><a href='javascript:void(0)' data-onclick="tryDeleteRestore(true)">删除</a></td>
 				{{end}}
 			{{end}}
 
 			{{if .CanMakeLocked}}
-				{{if .Article.Locked}}
-					<td><a id="make-locked" href='javascript:goLock()'>解锁</a></td>
-				{{else}}
-					<td><a id="make-locked" href='javascript:goLock()'>锁</a></td>
-				{{end}}
+				<td><a href='javascript:void(0)' data-onclick="goLock()">
+					{{if .Article.Locked}}解锁{{else}}锁{{end}}
+				</a></td>
 			{{end}}	
 		{{end}}
 		<td><a href="javascript:switchView()" id="switch-mode" mode="gallery">相册模式</a></td>

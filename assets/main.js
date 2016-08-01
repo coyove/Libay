@@ -330,8 +330,41 @@
         }
     };
 
+    function _WaitObject() { this.isDone = false; }
+    _WaitObject.prototype._call = function() { this.callback(); this.isDone = false; this.callback = null; }
+    _WaitObject.prototype.done = function() { this.isDone = true; if (this.callback) this._call(); return this; };
+    _WaitObject.prototype.wait = function(callback) { this.callback = callback; if (this.isDone) this._call(); return this; };
+
     g.etc = {
         "id": _id,
+
+        "wait": {
+            "on": function(n) { 
+                if (typeof n === "String" && n.test(/(on|onclick)/)) throw "Invalid name";
+
+                g.etc.wait[n] = g.etc.wait[n] || new _WaitObject; 
+                return g.etc.wait[n]; 
+            },
+
+            "onclick": function(e) {
+                e.disabled = true;
+                var __oldCursor = e.style.cursor;
+                e.style.cursor = "wait";
+
+                var __func = e.getAttribute("data-onclick");
+                var __html = e.innerHTML;
+                var __index = 0;
+                var __handle = setInterval(function(){ e.innerHTML = "⠇⠋⠙⠸⠴⠦"[__index++ % 6]; }, 100);
+
+                eval(__func).wait(function() {
+                    clearInterval(__handle);
+                    e.innerHTML = __html;
+                    e.disabled = false;
+
+                    e.style.cursor = __oldCursor;
+                });
+            },
+        },
 
         "file": function(id, ev) {
             if (id[0] && id[0].type && id.length) {
@@ -820,13 +853,23 @@
 
                 var cols = parseInt(size[0]), rows = parseInt(size[1]);
                 var width = parseInt(100 / (cols));
-                var row = "<tr>" + (new Array(cols + 1).join("<td width=" + width + "%>@</td>")) + "</tr>";
+                var row = "<tr>" + (new Array(cols + 1).join("<td width=" + width + "%>&nbsp;</td>")) + "</tr>";
                 var table = "<table border=1 class=_table>" + new Array(rows + 1).join(row) + "</table>";
 
                 _insertHTML(table);
             },
         },
     };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var elems = document.querySelectorAll("*[data-onclick]");
+        
+        for (var i = 0; i < elems.length; i++) {
+            elems[i].onclick = (function(idx){
+                return function() { g.etc.wait.onclick(elems[idx]); };
+            })(i);
+        }
+    }, false);
 })(this);
 
 var Animation = (function() {
@@ -836,14 +879,10 @@ var Animation = (function() {
         "start": function(id) {
             if (handle) return;
 
-            var __loadingSign = ["⣾","⣽","⣻","⢿","⡿","⣟","⣯","⣷"];
             var __index = 0;
             __id = id;
 
-            handle = setInterval(function(){
-                etc.id(id).innerHTML = __loadingSign[__index++];
-                if (__index > 7) __index = 0;
-            }, 100);
+            handle = setInterval(function(){ etc.id(id).innerHTML = "⠇⠋⠙⠸⠴⠦"[__index++ % 6]; }, 100);
         },
 
         "stop": function() {
