@@ -274,7 +274,7 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 		}
 
 		for _, ut := range arr {
-			div += fmt.Sprintf("<span class=g style='height: %.0fpx'></span>", float64(ut.(int64))/float64(max)*12)
+			div += fmt.Sprintf("<span class=g style='height: %.0fpx'></span>", float64(ut.(int64))/float64(max)*14+1)
 		}
 
 		return ret + div + "</div>"
@@ -283,7 +283,7 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 	caches := []string{
 		`<style>
 			span.g { display: inline-block; background-color: black; width: 5px; margin-bottom: -1px; }
-			div.gd { display: inline-block; line-height: 12px; }
+			div.gd { display: inline-block; line-height: 15px; }
     	</style>`,
 		"<img src='./assets/test.png'>",
 		"<hr>Recent SQL execution time:",

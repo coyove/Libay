@@ -70,6 +70,7 @@ td.fit, th.fit{
 .preview-content {
     color: #888;
     font-size: 80%;
+    word-break: break-all;
 }
 
 #article-content {
@@ -170,6 +171,14 @@ badge {
     border: solid 1px #568e8f;
     border-bottom: solid 2px #4b8686;
     font-weight: bold;
+}
+
+span.badge {
+    font-size: 75%; 
+    border: dotted 1px #666; 
+    padding: 1px 5px; 
+    background: steelblue; 
+    border-bottom: solid 2px #3c72a0;
 }
 
 #header {

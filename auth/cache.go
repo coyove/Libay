@@ -201,44 +201,78 @@ func (c *Cache) removeElement(e *list.Element) {
 }
 
 type FixedQueue struct {
-	ll     *list.List
-	length int
+	fastRing *list.List
+	slowRing *list.List
+	length   int
+
+	startAt  int64
+	ticks    int64
+	interval int64
 
 	sync.RWMutex
 }
 
-func NewFixedQueue(l int) *FixedQueue {
+func NewFixedQueue(l, tickInterval int) *FixedQueue {
 	return &FixedQueue{
-		ll:     list.New(),
-		length: l,
+		fastRing: list.New(),
+		slowRing: list.New(),
+		length:   l,
+		startAt:  time.Now().Unix(),
+		interval: int64(tickInterval),
 	}
 }
 
 func (q *FixedQueue) Push(v interface{}) {
 	q.Lock()
 
-	if q.ll == nil {
-		q.ll = list.New()
+	if q.slowRing == nil {
+		q.slowRing = list.New()
 	}
 
-	q.ll.PushFront(v)
-	if q.ll.Len() > q.length {
-		q.ll.Remove(q.ll.Back())
+	if q.fastRing == nil {
+		q.fastRing = list.New()
+	}
+
+	q.fastRing.PushFront(v)
+
+	tick := (time.Now().Unix() - q.startAt) / q.interval
+	if tick > q.ticks {
+		q.ticks = tick
+
+		q.slowRing.PushFront(q.calcFast())
+		if q.slowRing.Len() > q.length {
+			q.slowRing.Remove(q.slowRing.Back())
+		}
+
+		q.fastRing = list.New()
 	}
 
 	q.Unlock()
+}
+
+func (q *FixedQueue) calcFast() int64 {
+	total := int64(0)
+	for e := q.fastRing.Front(); e != nil; e = e.Next() {
+		total += e.Value.(int64)
+	}
+
+	if q.fastRing.Len() == 0 {
+		return 0
+	}
+
+	return int64(float64(total) / float64(q.fastRing.Len()))
 }
 
 func (q *FixedQueue) Get() []interface{} {
 	q.RLock()
 	defer q.RUnlock()
 
-	if q.ll == nil || q.ll.Len() == 0 {
+	if q.slowRing == nil || q.slowRing.Len() == 0 {
 		return nil
 	}
 
-	f := q.ll.Front()
-	ret := []interface{}{f.Value}
+	f := q.slowRing.Front()
+	ret := []interface{}{q.calcFast(), f.Value}
 
 	for f.Next() != nil {
 		f = f.Next()

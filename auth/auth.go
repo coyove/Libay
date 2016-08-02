@@ -527,9 +527,9 @@ func ConnectDatabase(t string, conn string) error {
 		Gcache.Start()
 		Guser.Start()
 
-		GarticleTimer = NewFixedQueue(20)
-		GmessageTimer = NewFixedQueue(20)
-		GuserTimer = NewFixedQueue(20)
+		GarticleTimer = NewFixedQueue(20, 60)
+		GmessageTimer = NewFixedQueue(20, 120)
+		GuserTimer = NewFixedQueue(20, 60)
 		return nil
 	}
 }

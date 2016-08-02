@@ -321,8 +321,6 @@
 							'action="https://www.libay.nl/upload" ',
 							'enctype="multipart/form-data" encoding="multipart/form-data">',
 							'<input name="image" type="file" id="form-uploader"/>',
-							'<input name="width" type="hidden" value="1024" />',
-							'<input name="height" type="hidden" value="1024" />',
 							'<input name="direct" type="hidden" value="direct" />',
 							'<input type="submit" value="上传" /></form>'].join('');
 							
@@ -349,17 +347,16 @@
 	</div>
 
 	<div id="tr-edit-html" style="display:none" colspan="2">
-		HTML: <br>
 		<textarea rows="20" id="thread-content-html"></textarea>
 		<button data-onclick="formatHTML()">HTML排版 (jsbeautifier)</button>
 		<p style="font-size: 80%">
 		允许HTML标签:
 		{{range $key, $value := .HTMLTags}}
-		&lt;{{$key}}&gt;
+		{{if $value}}&lt;{{$key}}&gt;{{end}}
 		{{end}}<br>
 		允许标签属性:
 		{{range $key, $value := .HTMLAttrs}}
-		:{{$key}}
+		{{if $value}}:{{$key}}{{end}}
 		{{end}}
 		</p>
 	</div>
