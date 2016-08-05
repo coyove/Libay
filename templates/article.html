@@ -57,10 +57,6 @@ function getHistory() {
 
 	etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
 		etc.wait.on(this).done();
-		if (e && x.status == 503) {
-			alert("您没有查看权限");
-			return;
-		}
 
 		getHistory.history = JSON.parse(d);
 		var has = false;
@@ -84,10 +80,15 @@ function getHistory() {
 function getHistoryVersion(rev) {
 	etc.util.ajax.get("/article/{{.Article.ID}}/history/" + rev).then(function(e, d, x){
 		etc.wait.on(this).done();
+
+		if (x.status == 503) {
+			alert("您没有查看权限");
+			return;
+		}
 		
 		var j = JSON.parse(d);
 		etc.let.show("article-revision").$.html("<em>历史版本: " + 
-			etc.date.format(getHistory.history[rev].Date, true) + "</em>");
+			etc.date.format(getHistory.history[rev].Date, true) + " (#" + rev + ")</em>");
 
 		etc.id("article-title").html(j.Title);
 		etc.id("article-content").html(etc.string.unescape(j.Content));
@@ -95,6 +96,13 @@ function getHistoryVersion(rev) {
 		if (g && g.parentNode) g.parentNode.removeChild(g);
 
 		hideHistory();
+		var el = etc.id("switch-mode");
+
+		if (el.attr("data-mode") == "gallery") {
+			el.attr("data-mode", "normal");
+			el.innerHTML = "相册模式";
+			etc.let.show("article-content");
+		}
 	});
 	return etc.wait.on(this);
 }
@@ -136,12 +144,12 @@ function switchView() {
 	etc.util.lazyLoad(["/assets/gallery.js"], function(){
 		var el = etc.id("switch-mode");
 
-		if (el.attr("mode") == "gallery") {
-			el.attr("mode", "normal");
+		if (el.attr("data-mode") == "normal") {
+			el.attr("data-mode", "gallery");
 			el.innerHTML = "文章模式";
 			Gallery._Gallery();
 		} else {
-			el.attr("mode", "gallery");
+			el.attr("data-mode", "normal");
 			el.innerHTML = "相册模式";
 			Gallery._Normal();
 		}
@@ -192,7 +200,7 @@ function switchView() {
 				</a></td>
 			{{end}}	
 		{{end}}
-		<td><a href="javascript:switchView()" id="switch-mode" mode="gallery">相册模式</a></td>
+		<td><a href="javascript:switchView()" id="switch-mode" data-mode="normal">相册模式</a></td>
 	</tr></table>
 
 	<ul>

@@ -188,6 +188,10 @@ Disallow: /tag/`))
 	// glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
 
 	if *debugMode {
+
+		conf.GlobalServerConfig.MainCSS = "main.css"
+		conf.GlobalServerConfig.MainJS = "main.js"
+
 		glog.Infoln("Start debug server on", *debugPort)
 		glog.Fatalln(http.ListenAndServe(":"+strconv.Itoa(*debugPort), mux))
 	} else {

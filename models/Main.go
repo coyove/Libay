@@ -84,11 +84,15 @@ func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
 		Title      string
 		URL        string
 		CDN        string
+		MainJS     string
+		MainCSS    string
 		CurrentNav string
 	}
 	title.Title = conf.GlobalServerConfig.Title
 	title.URL = conf.GlobalServerConfig.Host
 	title.CDN = conf.GlobalServerConfig.CDNPrefix
+	title.MainCSS = conf.GlobalServerConfig.MainCSS
+	title.MainJS = conf.GlobalServerConfig.MainJS
 
 	switch fp {
 	case "404":

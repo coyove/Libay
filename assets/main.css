@@ -23,6 +23,12 @@ div.article:hover {
     background-color: #f0f0f4;
 }
 
+#announcement {
+    border-bottom: dotted 1px grey; 
+    word-break: break-word;
+    padding-bottom: 5px;
+}
+
 #articles {
     width: 100%;
     border-spacing: 0;

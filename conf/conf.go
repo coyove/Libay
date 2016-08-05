@@ -26,6 +26,9 @@ type ServerConfig struct {
 	Author      string
 	Email       string
 
+	MainJS  string
+	MainCSS string
+
 	AnonymousArea int
 	ReplyArea     int
 	MessageArea   int
