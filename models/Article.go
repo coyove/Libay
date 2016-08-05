@@ -125,7 +125,7 @@ func (th ModelHandler) GET_article_ID_history_HID(w http.ResponseWriter, r *http
 
 	u := auth.GetUser(r)
 
-	cur, err := auth.Select1("articles", aid, "deleted", "author", "original_author")
+	cur, err := auth.Select1("articles", aid, "deleted", "author", "original_author", "tag")
 	if err != nil {
 		Return(w, 503)
 		return
@@ -138,6 +138,11 @@ func (th ModelHandler) GET_article_ID_history_HID(w http.ResponseWriter, r *http
 				return
 			}
 		}
+	}
+
+	if !u.CanView(cur["tag"].(int)) {
+		Return(w, 503)
+		return
 	}
 
 	if his, err := auth.Select1("history", hid, "title", "content"); err != nil {

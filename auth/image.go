@@ -8,6 +8,7 @@ import (
 
 	"bytes"
 	"errors"
+	// "fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -28,6 +29,8 @@ func ResizeImage(imageBuf []byte, fn string, nwidth, nheight int, quality riLeve
 	if ext == ".gif" {
 		return ioutil.WriteFile(fn, imageBuf, 0777)
 	}
+
+	// fmt.Println(imageBuf[:4], imageBuf[len(imageBuf)-4:])
 
 	img, _, err := image.Decode(bytes.NewReader(imageBuf))
 	if err != nil {

@@ -3,7 +3,7 @@
 	文章 |
 
 	{{if .Article.Revision}}
-		<a href="javascript:getHistory()">rev.{{.Article.Revision}}</a> |
+		<a href="javascript:void(0)" data-onclick="getHistory()">rev.{{.Article.Revision}}</a> |
 	{{else}}
 		无修订 |
 	{{end}}
@@ -19,7 +19,7 @@
 	{{.Article.Hits}}次查看
 </p>
 
-<div id="article-history-underlay" onclick="getHistory()"></div>
+<div id="article-history-underlay" onclick="hideHistory()"></div>
 <div id="article-history"></div>
 
 <script type="text/javascript">
@@ -43,19 +43,23 @@ function goLock() {
 	return etc.wait.on(this);
 }
 
+function hideHistory() {
+	etc.let.hide("article-history-underlay");
+	etc.let.hide("article-history");
+}
+
 function getHistory() {
-	var ah = etc.id("article-history");
-	
-	if (ah.style.display == "block") {
-		ah.style.display = "none";
-		etc.let.hide("article-history-underlay");
-		return
+	if (etc.id("article-history").innerHTML != "") {
+		etc.let.show("article-history");
+		etc.let.show("article-history-underlay");
+		return etc.wait.on(this).done();
 	}
-	
+
 	etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
+		etc.wait.on(this).done();
 		if (e && x.status == 503) {
-			setTimeout(getHistory, 1000);
-			return
+			alert("您没有查看权限");
+			return;
 		}
 
 		getHistory.history = JSON.parse(d);
@@ -73,10 +77,14 @@ function getHistory() {
 		etc.let.show("article-history").$.html(_html.reverse().join(''));
 		etc.let.show("article-history-underlay");
 	});
+
+	return etc.wait.on(this);
 }
 
 function getHistoryVersion(rev) {
 	etc.util.ajax.get("/article/{{.Article.ID}}/history/" + rev).then(function(e, d, x){
+		etc.wait.on(this).done();
+		
 		var j = JSON.parse(d);
 		etc.let.show("article-revision").$.html("<em>历史版本: " + 
 			etc.date.format(getHistory.history[rev].Date, true) + "</em>");
@@ -86,8 +94,9 @@ function getHistoryVersion(rev) {
 		var g = etc.id("gallery");
 		if (g && g.parentNode) g.parentNode.removeChild(g);
 
-		getHistory();
+		hideHistory();
 	});
+	return etc.wait.on(this);
 }
 
 function tryDeleteRestore(del){

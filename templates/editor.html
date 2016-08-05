@@ -9,10 +9,10 @@
 		发送私信至"{{.MessageReceiverName}}" | <a href='/user/{{.ReplyTo}}'>查看用户</a>
 	{{else}}
 		{{if .Update}}
-			修改文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>查看文章</a>
+			修改文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>转到该文章</a>
 		{{else}}
 			{{if .ReplyTo}}
-				回复文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>查看文章</a>
+				回复文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>转到该文章</a>
 			{{else}}
 				发布新文章
 			{{end}}
@@ -192,16 +192,21 @@
 	}
 
 	function getHistoryVersion(id) {
-		if (id == -1)
+		if (id == -1) {
+			etc.wait.on(this).done();
 			window.location.reload();
+		}
 		else
 			etc.util.ajax.get("/article/{{.Article.ID}}/history/" + id).then(function(e,d,x){
+				etc.wait.on(this).done();
 				var j = JSON.parse(d);
 				etc.id("thread-title").value = (etc.string.unescape(j.Title));
 				etc.id("thread-content").innerHTML = (etc.string.unescape(j.Content));
 				
 				toggleHistoryList();
 			});
+
+		return etc.wait.on(this);
 	}
 
 	function editHTML() {
@@ -247,14 +252,12 @@
 			"/assets/html_beautify/beautify-css.js",
 			"/assets/html_beautify/beautify-html.js"
 		], function() {
-			var source = etc.id("thread-content-html").value;
-            opts = {};
-
-            opts.indent_size = 4;
-            opts.indent_char = ' ';
-            opts.max_preserve_newlines = 5;
-
-            etc.id("thread-content-html").value = html_beautify(source, opts);
+            etc.id("thread-content-html").value = 
+            html_beautify(etc.id("thread-content-html").value, {
+            	indent_size: 4,
+            	indent_char: ' ',
+            	max_preserve_newlines: 5,
+            });
             etc.wait.on(this).done();
 		});
 

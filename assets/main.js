@@ -347,7 +347,10 @@
             },
 
             "onclick": function(e) {
+                if (e.getAttribute("data-disabled") === "true") return;
+
                 e.disabled = true;
+                e.setAttribute("data-disabled", "true");
                 var __oldCursor = e.style.cursor;
                 e.style.cursor = "wait";
 
@@ -360,6 +363,7 @@
                     clearInterval(__handle);
                     e.innerHTML = __html;
                     e.disabled = false;
+                    e.setAttribute("data-disabled", "false");
 
                     e.style.cursor = __oldCursor;
                 });
