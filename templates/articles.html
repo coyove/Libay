@@ -118,14 +118,9 @@
 	</tr></table>
 
 	<table id="articles">
-	<tr>
-	<th class="fit">回复者</th><th></th><th style="text-align: left">回复标题</th>
-	<th class="fit last">回复日期</th>
-	</tr>
 	{{range .Articles}}
 	<tr class="darken">
 		<td class="fit"><a class="block" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
-		<td class="fit">:</td>
 		<td class="title">
 			<a class="title" href="/article/{{.ID}}">
 				{{.Title}}
@@ -136,7 +131,7 @@
 			</span>
 		</td>
 		<td class="fit last">
-		[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>]
+		<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 		</td>
 	</tr>
 	<tr><td colspan="4"><span class="preview-content">{{.Content}}</span></td>
@@ -178,10 +173,14 @@
 			</span>
 		</td>
 		<td class="fit center"><a href="/user/{{.AuthorID}}">{{.Author}}</a></td>
-		<td class="fit center"><a href="/reply/{{.ID}}/page/1"><em>{{.Children}}</em></a></td>
-		<td class="fit center last"><em>{{.Hits}}</em></td>
+		{{if .Children}}
+			<td class="fit center reply" onclick="window.open('/reply/{{.ID}}/page/1')">{{.Children}}</td>
+		{{else}}
+			<td class="fit center"><b style="color: gray">-</b></td>
+		{{end}}
+		<td class="fit center last">{{.Hits}}</td>
 		<td class="fit last">
-			[<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>]
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 		</td>
 	</tr>
 	<tr>
