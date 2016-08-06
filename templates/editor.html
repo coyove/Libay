@@ -51,6 +51,21 @@
 			}
 		}
 
+		etc.id("thread-content").onkeydown = (function (ev) {
+		  	var key;
+		  	var isShift, isCtrl;
+		  	if (window.event) {
+		    	key = window.event.keyCode;
+		    	isShift = !!window.event.shiftKey;
+		    	isCtrl = !!window.event.ctrlKey;
+		  	} else {
+		    	key = ev.which;
+		    	isShift = !!ev.shiftKey;
+		    	isCtrl = !!ev.ctrlKey;
+		  	}
+			if (isShift && isCtrl && key == 88) etc.editor.clearFormat();
+		});
+
 		{{if .Message}}
 			var sel = etc.get('#thread-tag option');
 			for(var i in sel) {
@@ -74,8 +89,15 @@
 		{{end}}
 
         {{if .Update}}
+        	setInterval(saveDraft, 20000);
+			var d = etc.util.read("draft-edit-{{.ReplyTo}}");
+			if (d && d.length > 1) 
+				etc.id("thread-content").html(d);
+			else
+				etc.id("thread-content").html(etc.string.unescape(etc.id("article-raw-content").innerHTML));
+
 			etc.id("thread-title").value = etc.string.unescape("{{.Article.Title}}");
-			etc.id("thread-content").innerHTML = (etc.string.unescape(etc.id("article-raw-content").innerHTML));
+
 			var e = etc.id("thread-tag");
 			for (var i = 0; i < e.options.length; i++) {
 				if(e.options[i].value === "{{.Article.Tag}}") {
@@ -98,13 +120,13 @@
 
 				etc.id("article-history").innerHTML = _html.reverse().join('');
 				etc.id("article-history-button").style.display = "inline";
+
 				setupScroll();
 			});
 		{{else}}
 			setInterval(saveDraft, 20000);
 			var d = etc.util.read({{if .Message}}"draft-message-{{.ReplyTo}}"{{else}}"draft-{{.ReplyTo}}"{{end}});		
-			if (d && d.length > 1) 
-				etc.id("thread-content").html(d);
+			if (d && d.length > 1) etc.id("thread-content").html(d);
 
 			setupScroll();
 		{{end}}
@@ -222,22 +244,31 @@
 	}
 
 	function saveDraft() {
+		{{if .Update}}
+			var d = "draft-edit-{{.ReplyTo}}";
+		{{else}}
 		{{if .Message}}
 			var d = "draft-message-{{.ReplyTo}}";
 		{{else}}
 			var d = "draft-{{.ReplyTo}}";
 		{{end}}
+		{{end}}
+
 		etc.util.write(d, etc.id("thread-content").innerHTML);
 		etc.id("save-draft").innerHTML = "草稿保存于 " + etc.date.now() + " " + d;
 	}
 
 	function clearDraft(p) {
-		
+		{{if .Update}}
+			var d = "draft-edit-{{.ReplyTo}}";
+		{{else}}
 		{{if .Message}}
 			var d = "draft-message-{{.ReplyTo}}";
 		{{else}}
 			var d = "draft-{{.ReplyTo}}";
 		{{end}}
+		{{end}}
+
 		etc.util.storage.remove(d);
 
 		if (p) return;
@@ -295,6 +326,7 @@
 					<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
 					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a> <b>|</b>
 					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xf121;</a>
+					<a href="javascript:etc.editor.clearFormat()" title="清空格式 (Ctrl+Shift+X)">&#xf12d;</a>
 					<a href="javascript:clearContent()" title="清空内容">&#xf057;</a>
 					
 					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
@@ -321,7 +353,7 @@
 							var w = window.open("", "",
 								"resizable=no, toolbar=no, scrollbars=no, menubar=no, status=no, directories=no, width=500, height=500");
 							w.document.body.innerHTML = ['<form method="post" id="ie-upload-workaround" ',
-							'action="https://www.libay.nl/upload" ',
+							'action="https://2ax.org/upload" ',
 							'enctype="multipart/form-data" encoding="multipart/form-data">',
 							'<input name="image" type="file" id="form-uploader"/>',
 							'<input name="direct" type="hidden" value="direct" />',

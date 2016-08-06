@@ -148,7 +148,7 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 
 		payload.OWA.IsViewingOther = userID != user.ID
 		if payload.OWA.IsViewingOther {
-			vu := auth.GetUserByID(user.ID)
+			vu := auth.GetUserByID(userID)
 			payload.OWA.ViewingOtherName = vu.Name + "(" + vu.NickName + ")"
 		}
 		payload.Tags = conf.GlobalServerConfig.GetTags()

@@ -246,40 +246,41 @@
 
     var _editorId = null;
 
-    var _insideEditor = function() {
-        var __getSelected = function(isStart) {
-            var range, sel, container;
-            if (document.selection) {
-                range = document.selection.createRange();
-                range.collapse(isStart);
-                return range.parentElement();
+    var _getSelected = function(isStart) {
+        var range, sel, container;
+        if (document.selection) {
+            range = document.selection.createRange();
+            range.collapse(isStart);
+            return range.parentElement();
+        } else {
+            sel = window.getSelection();
+            if (sel.getRangeAt) {
+                if (sel.rangeCount > 0) {
+                    range = sel.getRangeAt(0);
+                }
             } else {
-                sel = window.getSelection();
-                if (sel.getRangeAt) {
-                    if (sel.rangeCount > 0) {
-                        range = sel.getRangeAt(0);
-                    }
-                } else {
-                    // Old WebKit
-                    range = document.createRange();
-                    range.setStart(sel.anchorNode, sel.anchorOffset);
-                    range.setEnd(sel.focusNode, sel.focusOffset);
+                // Old WebKit
+                range = document.createRange();
+                range.setStart(sel.anchorNode, sel.anchorOffset);
+                range.setEnd(sel.focusNode, sel.focusOffset);
 
-                    // Handle the case when the selection was selected backwards (from the end to the start in the document)
-                    if (range.collapsed !== sel.isCollapsed) {
-                        range.setStart(sel.focusNode, sel.focusOffset);
-                        range.setEnd(sel.anchorNode, sel.anchorOffset);
-                    }
-               }
+                // Handle the case when the selection was selected backwards (from the end to the start in the document)
+                if (range.collapsed !== sel.isCollapsed) {
+                    range.setStart(sel.focusNode, sel.focusOffset);
+                    range.setEnd(sel.anchorNode, sel.anchorOffset);
+                }
+           }
 
-                if (range) {
-                   container = range[isStart ? "startContainer" : "endContainer"];
+            if (range) {
+               container = range[isStart ? "startContainer" : "endContainer"];
 
-                   // Check if the container is a text node and return its parent if so
-                   return container.nodeType === 3 ? container.parentNode : container;
-                }   
-            }
-        };
+               // Check if the container is a text node and return its parent if so
+               return container.nodeType === 3 ? container.parentNode : container;
+            }   
+        }
+    };
+
+    var _insideEditor = function() {
 
         var __iter = function (elem) {
             if(elem && elem.getAttribute){
@@ -291,7 +292,7 @@
             return false;
         }
 
-        return __iter(__getSelected());
+        return __iter(_getSelected());
     };
 
     var _insertHTML = function(html) {
@@ -731,6 +732,8 @@
                 return (window.getSelection) ? window.getSelection() : document.selection;
             },
 
+            "getSelectedElement": _getSelected,
+
             "getSelectedElements": function() {
                 var nextNode = function(node) {
                     if (node.hasChildNodes()) {
@@ -845,13 +848,21 @@
                 if (!_insideEditor()) return;
 
                 var A = prompt("URL:", "http://");
-                var B = (window.getSelection) ? window.getSelection() : document.selection;
+                if (A === "http://" || A === "") return;
 
-                if (A == "http://" || A == "") return;
+                var B = (window.getSelection) ? window.getSelection() : document.selection;
                 if (B == "" || B == null) B = prompt("显示文字:", A);
 
                 _id(_editorId).focus();
                 _insertHTML("<a href='" + A + "' target='_blank'>" + B + "</a>");
+            },
+
+            "clearFormat": function() {
+                var s = g.etc.editor.getSelectedElement();
+                var tn = document.createTextNode(s.innerText);
+                
+                s.parentNode.insertBefore(tn, s);
+                s.parentNode.removeChild(s);
             },
 
             "switchMonospace": function() {
@@ -918,7 +929,7 @@
         },
     };
 
-    document.addEventListener("DOMContentLoaded", function() {
+    var findTags = function() {
         var elems = document.querySelectorAll("*[data-onclick]");
         
         for (var i = 0; i < elems.length; i++) {
@@ -928,7 +939,12 @@
                 return function() { g.etc.wait.onclick(elems[idx]); };
             })(i);
         }
-    }, false);
+    }
+
+    if (document.addEventListener) 
+    	document.addEventListener("DOMContentLoaded", findTags, false);
+    else
+    	window.attachEvent("onload", findTags);
 })(this);
 
 var Animation = (function() {

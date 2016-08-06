@@ -330,6 +330,8 @@ table._table {
 }
 
 table._table td { padding: 2px 5px; }
+table._table._wide td { padding: 8px; }
+
 table._table td ._f { width: 100%; }
 
 table.database { 
