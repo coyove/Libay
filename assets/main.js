@@ -351,8 +351,16 @@
 
                 e.disabled = true;
                 e.setAttribute("data-disabled", "true");
-                var __oldCursor = e.style.cursor;
-                e.style.cursor = "wait";
+
+                var __overlay = document.createElement("div");
+                __overlay.style.position = "fixed";
+                __overlay.style.width = __overlay.style.height = "100%";
+                __overlay.style.left = __overlay.style.top = "0px";
+                __overlay.style.zIndex = "65535";
+                __overlay.style.cursor = "wait";
+
+                var __body = document.getElementsByTagName("body")[0];
+                __body.appendChild(__overlay);
 
                 var __func = e.getAttribute("data-onclick");
                 var __html = e.innerHTML;
@@ -365,7 +373,7 @@
                     e.disabled = false;
                     e.setAttribute("data-disabled", "false");
 
-                    e.style.cursor = __oldCursor;
+                    __body.removeChild(__overlay);
                 });
             },
         },
@@ -723,6 +731,55 @@
                 return (window.getSelection) ? window.getSelection() : document.selection;
             },
 
+            "getSelectedElements": function() {
+                var nextNode = function(node) {
+                    if (node.hasChildNodes()) {
+                        return node.firstChild;
+                    } else {
+                        while (node && !node.nextSibling) {
+                            node = node.parentNode;
+                        }
+                        if (!node) {
+                            return null;
+                        }
+                        return node.nextSibling;
+                    }
+                }
+
+                var getRangeSelectedNodes = function(range) {
+                    var node = range.startContainer;
+                    var endNode = range.endContainer;
+
+                    // Special case for a range that is contained within a single node
+                    if (node == endNode) {
+                        return [node];
+                    }
+
+                    // Iterate nodes until we hit the end container
+                    var rangeNodes = [];
+                    while (node && node != endNode) {
+                        rangeNodes.push( node = nextNode(node) );
+                    }
+
+                    // Add partially selected nodes at the start of the range
+                    node = range.startContainer;
+                    while (node && node != range.commonAncestorContainer) {
+                        rangeNodes.unshift(node);
+                        node = node.parentNode;
+                    }
+
+                    return rangeNodes;
+                }
+
+                if (window.getSelection) {
+                    var sel = window.getSelection();
+                    if (!sel.isCollapsed) {
+                        return getRangeSelectedNodes(sel.getRangeAt(0));
+                    }
+                }
+                return [];
+            },
+
             "uploadImage": function(files, callback, options) {
                 options = options || {};
 
@@ -797,10 +854,6 @@
                 _insertHTML("<a href='" + A + "' target='_blank'>" + B + "</a>");
             },
 
-            "insertFontsize": function(size) {
-                _insertHTML("<span class='" + size + "'>" + etc.editor.getSelected() + "</span>");
-            },
-
             "switchMonospace": function() {
                 var e = _id(_editorId);
                 var items = e.getElementsByTagName("*");
@@ -869,6 +922,8 @@
         var elems = document.querySelectorAll("*[data-onclick]");
         
         for (var i = 0; i < elems.length; i++) {
+            if (elems[i].tagName === "A") elems[i].href = "javascript:void(0)";
+            
             elems[i].onclick = (function(idx){
                 return function() { g.etc.wait.onclick(elems[idx]); };
             })(i);

@@ -27,6 +27,7 @@ div.article:hover {
     border-bottom: dotted 1px grey; 
     word-break: break-word;
     padding-bottom: 5px;
+    line-height: 1em;
 }
 
 #articles {
@@ -82,6 +83,7 @@ td.fit, th.fit{
 #article-content {
     word-wrap: break-word;
     word-break: break-all;
+    line-height: 1em;
 }
 
 #article-history {
@@ -118,6 +120,12 @@ td.fit, th.fit{
     width: 100%; 
     height: 100%; 
     z-index: 98;
+}
+
+#thread-content {
+	min-height: 100px;
+	padding: 4px;
+	line-height: 1em;
 }
 
 a {
@@ -323,7 +331,7 @@ table.database td {
 }
 
 .font-courier { font-family: "Courier New", Courier, monospace; }
-.font-lucida { font-family: "Lucida Console", Monaco, monospace; }
+.font-lucida { font-family: "Lucida Console", Monaco, monospace; line-height: 1.2em;}
 .font-purple { color: #800080 !important; }
 
 div#editor {
