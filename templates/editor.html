@@ -402,23 +402,18 @@
 				<optgroup label="通用标签">
 				{{range .Tags}}
 					{{if .Visible}}
-					<option value="{{.Name}}">{{.Short}}: {{.Name}} {{range .PermittedTo}}:{{.}} {{end}}</option>
+					<option value="{{.Name}}">
+						{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
+					</option>
 					{{end}}
 				{{end}}
 				</optgroup>
 				{{if .IsLoggedIn}}
-					<optgroup label="隐藏标签">
+					<optgroup label="隐藏/限制标签">
 					{{range .Tags}}
-						{{if .Visible}}{{else}}{{if .Restricted}}{{else}}
-						<option value="{{.Name}}">{{.Short}}: {{.Name}} {{range .PermittedTo}}:{{.}} {{end}}</option>
-						{{end}}{{end}}
-					{{end}}
-					</optgroup>
-					<optgroup label="限制标签">
-					{{range .Tags}}
-						{{if .Restricted}}
+						{{if .Visible}}{{else}}
 						<option value="{{.Name}}">
-							{{.Short}}: {{.Name}} {{range .PermittedTo}}:{{.}} {{end}}
+							{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
 						</option>
 						{{end}}
 					{{end}}

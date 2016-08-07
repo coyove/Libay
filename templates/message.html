@@ -53,7 +53,7 @@
 		return etc.wait.on(this);
 	}
 
-	etc.util.cookie.delete("unread");
+	etc.util.cookie.remove("unread");
 </script>
 
 <div class="pager">
@@ -86,15 +86,15 @@
 	</tr>
 	{{range .Messages}}
 	<tr class="darken">
-		<td class="fit">
+		<td class="fit smaller">
 		{{if .Sentout}}
 			<em>你</em>
 		{{else}}
-			<b><a class="block" href="/user/{{.SenderID}}">{{.SenderName}}</a></b>
+			<b><a href="/user/{{.SenderID}}">{{.SenderName}}</a></b>
 		{{end}}
 		→
 		{{if .Sentout}}
-			<b><a class="block" href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a></b>
+			<b><a href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a></b>
 		{{else}}
 			<em>你</em>
 		{{end}}

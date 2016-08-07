@@ -716,6 +716,10 @@
                 },
 
                 "delete": function(cname) {
+                    g.etc.cookie.remove(cname);
+                },
+
+                "remove": function(cname) {
                     document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 }
             },

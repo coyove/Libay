@@ -120,7 +120,7 @@
 	<table id="articles">
 	{{range .Articles}}
 	<tr class="darken">
-		<td class="fit"><a class="block" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
+		<td class="fit"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="title">
 			<a class="title" href="/article/{{.ID}}">
 				{{.Title}}
@@ -134,7 +134,7 @@
 		<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 		</td>
 	</tr>
-	<tr><td colspan="4"><span class="preview-content">{{.Content}}</span></td>
+	<tr><td colspan="3"><span class="preview-content">{{.Content}}</span></td>
 	</tr>
 	{{end}}
 	</table>
@@ -157,7 +157,7 @@
 	<tr class="darken">
 
 		<td class="fit center">
-			<a class="block" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
+			<a class="smaller" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
 		</td>
 
 		<td class="title">
@@ -184,7 +184,7 @@
 		</td>
 	</tr>
 	<tr>
-	<td colspan="8"><span class="preview-content">{{.Content}}</span></td>
+	<td colspan="7"><span class="preview-content">{{.Content}}</span></td>
 	</tr>
 	{{end}}
 </table>

@@ -155,6 +155,7 @@ a:hover { color: #00207a; text-decoration: underline; }
 a:active { color: #c2c3c7; }
 a.title { text-decoration: none; }
 a.title:hover { text-decoration: underline; }
+
 a.block, span.block {
 	text-decoration: none;
 	background-color: #f8f8f8;
@@ -162,6 +163,21 @@ a.block, span.block {
     border-bottom: solid 1px;
     padding: 2px 5px;
     border-right: solid 1px;
+}
+
+a.inline-block {
+    display: inline-block;
+    border-bottom: solid 2px;
+}
+
+a.inline-block:active {
+    border-bottom: solid 1px;
+    margin-top: 1px;
+}
+
+a.block.flatten {
+    border: dotted 1px;
+    background-color: white;
 }
 
 .article-image {
@@ -329,10 +345,17 @@ table._table {
     margin: 5px 0;
 }
 
-table._table td { padding: 2px 5px; }
-table._table._wide td { padding: 8px; }
+table._table td { 
+    padding: 4px; 
+}
 
-table._table td ._f { width: 100%; }
+table._table._wide td { 
+    padding: 8px; 
+}
+
+table._table td ._f { 
+    width: 100%; 
+}
 
 table.database { 
     width: 100%; 
@@ -340,6 +363,7 @@ table.database {
     margin-top: 10px;
     font-size: 80%;
 }
+
 table.database td {
     border: solid 1px #ccc;
 }
@@ -390,7 +414,7 @@ div#editor textarea {
 
 .tags li { 
     float: left; 
-    margin: 0 20px;
+    margin: 10px 20px;
     border-bottom: dotted 1px #888;
 }
 

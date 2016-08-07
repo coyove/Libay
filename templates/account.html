@@ -158,7 +158,7 @@
         var tryLogout = function(){
             etc.util.ajax.post("/logout").then(function (e, data, x) {
                 etc.wait.on(this).done();
-                etc.util.cookie.delete("unread");
+                etc.util.cookie.remove("unread");
                 window.location.reload();
             });
 
