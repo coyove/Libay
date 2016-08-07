@@ -31,9 +31,10 @@
 		{{if .Visible}}
 			<li><b>{{.Short}}</b>:
 				<a href="/tag/{{.Name}}/page/1" class="title">{{.Name}}</a><br>
-			<div class="tag-description">
-				{{.Description}}
-			</div>
+				{{if .Restricted}}<div>限制为{{range .PermittedTo}} :{{.}}{{end}}</div>{{end}}
+				<div class="tag-description">
+					{{.Description}}
+				</div>
 			</li>
 		{{else}}
 			{{if $.IsLoggedIn}}

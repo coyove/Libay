@@ -167,21 +167,7 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 
 		rows.Scan(&id, &name, &description, &restricted, &hidden, &short, &announceID)
 
-		if hidden || id == sc.AnonymousArea || id == sc.ReplyArea {
-			sc.presetSqlQuery += (" AND tag != " + strconv.Itoa(id))
-		}
-
-		ret[id] = name
-		retReverse[name] = id
-
 		t := Tag{}
-		t.Name = name
-		t.Description = html.UnescapeString(description) // _v["description"].(string)
-		t.Visible = !hidden                              // !_v["hidden"].(bool)
-		t.Short = short                                  // _v["short"].(string)
-		t.AnnounceID = announceID
-
-		// ra := _v["restricted"].([]interface{})
 		var arr interface{}
 		t.PermittedTo = make([]string, 0)
 		json.Unmarshal([]byte(restricted), &arr)
@@ -200,6 +186,19 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 				}
 			}
 		}
+
+		if hidden || id == sc.AnonymousArea || id == sc.ReplyArea || t.Restricted {
+			sc.presetSqlQuery += (" AND tag != " + strconv.Itoa(id))
+		}
+
+		ret[id] = name
+		retReverse[name] = id
+
+		t.Name = name
+		t.Description = html.UnescapeString(description)
+		t.Visible = !hidden
+		t.Short = short
+		t.AnnounceID = announceID
 
 		ret2[id] = t
 	}
