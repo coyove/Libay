@@ -49,11 +49,7 @@ type PageStruct struct {
 		UserNickName string
 	}
 
-	Announce struct {
-		Content string
-		ID      int
-		Author  string
-	}
+	Announce auth.Article
 
 	CurTag  string
 	CurType string
@@ -175,10 +171,7 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 			id = conf.GlobalServerConfig.GetComplexTags()[0].AnnounceID
 		}
 
-		an := auth.GetArticle(r, auth.AuthUser{Group: "admin"}, id, false)
-		payload.Announce.Content = an.Content
-		payload.Announce.ID = id
-		payload.Announce.Author = an.Author
+		payload.Announce = auth.GetArticle(r, auth.AuthUser{Group: "admin"}, id, false)
 	}
 
 	if len(payload.Articles) == 0 && page != "1" {

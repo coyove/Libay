@@ -236,7 +236,11 @@ func (sc *ServerConfig) GetIndexTag(t int) string {
 		return sc.sortedTags[sc.MessageArea]
 	}
 
-	return sc.sortedTags[t]
+	if tag, e := sc.sortedTags[t]; e {
+		return tag
+	} else {
+		return "tag" + strconv.Itoa(t)
+	}
 }
 
 func (sc *ServerConfig) GetImagesAllowedGroups() []string {

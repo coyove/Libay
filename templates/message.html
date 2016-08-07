@@ -86,18 +86,10 @@
 	</tr>
 	{{range .Messages}}
 	<tr class="darken">
-		<td class="fit smaller">
-		{{if .Sentout}}
-			<em>你</em>
-		{{else}}
-			<b><a href="/user/{{.SenderID}}">{{.SenderName}}</a></b>
-		{{end}}
+		<td class="fit smaller header">
+		{{if .Sentout}}你{{else}}<a href="/user/{{.SenderID}}">{{.SenderName}}</a>{{end}}
 		→
-		{{if .Sentout}}
-			<b><a href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a></b>
-		{{else}}
-			<em>你</em>
-		{{end}}
+		{{if .Sentout}}<a href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a>{{else}}你{{end}}
 		</td>
 		<td class="title">
 			{{if .Sentout}}

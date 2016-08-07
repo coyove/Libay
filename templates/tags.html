@@ -40,7 +40,7 @@
 			{{if $.IsLoggedIn}}
 			<li type="circle"><b>{{.Short}}</b>:
 				<a href="/tag/{{.Name}}/page/1" class="title block inline-block flatten">{{.Name}}</a><br>
-				<div><em class="smaller">隐藏标签</em></div>
+				
 				{{if .Restricted}}<div>限制为{{range .PermittedTo}} [{{.}}]{{end}} 浏览</div>{{end}}
 				<div class="tag-description">
 					{{.Description}}

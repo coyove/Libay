@@ -66,27 +66,24 @@
 			if (isShift && isCtrl && key == 88) etc.editor.clearFormat();
 		});
 
-		{{if .Message}}
-			var sel = etc.get('#thread-tag option');
-			for(var i in sel) {
-				if (sel[i].innerHTML && sel[i].innerHTML[0] == "m") {
-					sel[i].selected = true;
-					etc.let.disable("thread-tag");
-					break;
-				}
+		var selT = etc.get('#thread-tag option');
+		for(var i = 0; i < selT.length; i++) {
+			var h = selT[i].innerHTML.trim();
+			if (h[0] == 
+				{{if .Message}}"m"{{else}}
+					{{if .ReplyTo}}
+						{{if .Update}}""{{else}}"r"{{end}}
+					{{else}}
+						""
+					{{end}}
+				{{end}}
+			) {
+				selT[i].selected = true;
+				selT[i].innerHTML = h + " (默认标签)";
+				etc.let.disable("thread-tag");
+				break;
 			}
-		{{else}}
-			{{if .ReplyTo}}{{if .Update}}{{else}}
-				var sel = etc.get('#thread-tag option');
-				for(var i in sel) {
-					if (sel[i].innerHTML && sel[i].innerHTML[0] == "r") {
-						sel[i].selected = true;
-						etc.let.disable("thread-tag");
-						break;
-					}
-				}
-			{{end}}{{end}}
-		{{end}}
+		}
 
         {{if .Update}}
         	setInterval(saveDraft, 20000);
@@ -421,7 +418,7 @@
 				{{end}}
 			</select>
 		</p>
-		<button data-onclick="tryPost()">{{if .Update}}修改{{else}}发布{{end}}</button>
+		<button id="post-article" data-onclick="tryPost()">{{if .Update}}修改{{else}}发布{{end}}</button>
 		<button data-onclick="tryPreview()">预览</button>
 		<button onclick="editHTML()" id="html-edit" mode="wysiwyg">HTML編輯</button>
 		<button onclick="clearDraft()">清空草稿</button>

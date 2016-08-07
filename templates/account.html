@@ -132,6 +132,8 @@
             etc.wait.on(this).done();
 
             if (data.indexOf("ok") == 0) {
+                var rs = data.split(" ");
+                etc.util.cookie.write("unread", rs[2], 3600 * 24 * 1000);
                 window.location.href = returnURL;
             } else {
                 etc.let.show("login-result").$.html("登入失败: " + data);

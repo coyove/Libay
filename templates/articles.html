@@ -83,11 +83,33 @@
 <div id="announcement">
 	{{.Announce.Content}}
 	{{if .Announce.ID}}
-		<span class="badge">
-			<a href="/article/{{.Announce.ID}}" style="color: white">{{.Announce.Author}}</a>
-		</span>
+	<div style="margin-top: 5px">
+		<a href="/article/{{.Announce.ID}}" class="badge">
+			&sect;{{.Announce.AuthorID}}-{{.Announce.ID}}-{{.Announce.Revision}}
+		</a>
+		<a href="/user/{{.Announce.AuthorID}}" class="badge">{{.Announce.Author}}</a>
+		<a href="javascript:foldAnnouncement()" class="badge">折叠公告</a>
+	</div>
 	{{end}}
 </div>
+
+<script type="text/javascript">
+	function foldAnnouncement() {
+		etc.util.cookie.write("fold-{{.Announce.AuthorID}}", "ok", 3600 * 24 * 1000 * 30);
+		hideAnnouncement();
+	}
+
+	function unfoldAnnouncement() {
+		etc.util.cookie.remove("fold-{{.Announce.AuthorID}}");
+		window.location.reload();
+	}
+
+	function hideAnnouncement() {
+		etc.id("announcement").html('<a href="javascript:unfoldAnnouncement()" class="badge">展开公告</a>');
+	}
+
+	if (etc.util.cookie.read("fold-{{.Announce.AuthorID}}") == "ok") hideAnnouncement();
+</script>
 {{end}}
 
 <div class="pager">
@@ -120,7 +142,7 @@
 	<table id="articles">
 	{{range .Articles}}
 	<tr class="darken">
-		<td class="fit"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
+		<td class="fit header"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="title">
 			<a class="title" href="/article/{{.ID}}">
 				{{.Title}}
@@ -156,7 +178,7 @@
 	{{range .Articles}}
 	<tr class="darken">
 
-		<td class="fit center">
+		<td class="fit center header">
 			<a class="smaller" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
 		</td>
 
