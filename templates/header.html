@@ -59,6 +59,37 @@
 
             window.open("https://www.google.com/search?q=site%3A{{.URL}}+" + etc.id('search-word').value);
         }
+
+        function traditionalization(force) {
+            var lang = window.navigator.userLanguage || window.navigator.language;
+
+            if (force === false) {
+                etc.util.cookie.remove("trad");
+                window.location.reload();
+                return;
+            }
+
+            if (lang.toLowerCase() == "zh-tw" || etc.util.cookie.read("trad") == "1" || force === true) {
+                etc.util.cookie.write("trad", "1", 3600 * 24 * 1000);
+
+                etc.util.lazyLoad([
+                    "/assets/tongwen/tongwen_core.js",
+                    "/assets/tongwen/tongwen_table_ps2t.js",
+                    "/assets/tongwen/tongwen_table_s2t.js",
+                    "/assets/tongwen/tongwen_table_ss2t.js",
+                ], function() {
+                    if (TongWen) TongWen.trans2Trad(document);
+
+                    var e = etc.id("use-trad");
+                    if (e) {
+                        e.innerHTML = "使用简体显示";
+                        e.href = "javascript:traditionalization(false)";
+                    }
+                });
+            }
+        }
+
+        etc.onload(traditionalization);
     </script>
 </div>
 

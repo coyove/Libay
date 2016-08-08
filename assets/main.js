@@ -337,6 +337,13 @@
     _WaitObject.prototype.wait = function(callback) { this.callback = callback; if (this.isDone) this._call(); return this; };
 
     g.etc = {
+        "onload": function(func) {
+            if (document.addEventListener) 
+                document.addEventListener("DOMContentLoaded", func, false);
+            else
+                window.attachEvent("onload", func);
+        },
+
         "id": _id,
 
         "wait": {
@@ -933,7 +940,7 @@
         },
     };
 
-    var findTags = function() {
+    g.etc.onload(function() {
         var elems = document.querySelectorAll("*[data-onclick]");
         
         for (var i = 0; i < elems.length; i++) {
@@ -943,12 +950,8 @@
                 return function() { g.etc.wait.onclick(elems[idx]); };
             })(i);
         }
-    }
-
-    if (document.addEventListener) 
-    	document.addEventListener("DOMContentLoaded", findTags, false);
-    else
-    	window.attachEvent("onload", findTags);
+    });
+    
 })(this);
 
 var Animation = (function() {

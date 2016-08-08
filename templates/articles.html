@@ -81,34 +81,37 @@
 
 {{if .Announce.Content}}
 <div id="announcement">
-	{{.Announce.Content}}
-	{{if .Announce.ID}}
-	<div style="margin-top: 5px">
+	<div id="announcement-content">
+		{{.Announce.Content}}
+	</div>
+	<div style="margin-top: 5px" id="fold-announcement">
 		<a href="/article/{{.Announce.ID}}" class="badge">
 			&sect;{{.Announce.AuthorID}}-{{.Announce.ID}}-{{.Announce.Revision}}
 		</a>
 		<a href="/user/{{.Announce.AuthorID}}" class="badge">{{.Announce.Author}}</a>
 		<a href="javascript:foldAnnouncement()" class="badge">折叠公告</a>
 	</div>
-	{{end}}
+	<div style="margin-top: 5px; display: none" id="unfold-announcement">
+		<a href="javascript:unfoldAnnouncement()" class="badge">展开公告</a>
+	</div>
 </div>
 
 <script type="text/javascript">
 	function foldAnnouncement() {
-		etc.util.cookie.write("fold-{{.Announce.AuthorID}}", "ok", 3600 * 24 * 1000 * 30);
+		etc.util.cookie.write("fold-{{.Announce.AuthorID}}", "1", 3600 * 24 * 1000 * 30);
 		hideAnnouncement();
 	}
 
 	function unfoldAnnouncement() {
 		etc.util.cookie.remove("fold-{{.Announce.AuthorID}}");
-		window.location.reload();
+		etc.let.show("announcement-content").show("fold-announcement").hide("unfold-announcement");
 	}
 
 	function hideAnnouncement() {
-		etc.id("announcement").html('<a href="javascript:unfoldAnnouncement()" class="badge">展开公告</a>');
+		etc.let.hide("announcement-content").hide("fold-announcement").show("unfold-announcement");
 	}
 
-	if (etc.util.cookie.read("fold-{{.Announce.AuthorID}}") == "ok") hideAnnouncement();
+	if (etc.util.cookie.read("fold-{{.Announce.AuthorID}}") == "1") hideAnnouncement();
 </script>
 {{end}}
 
