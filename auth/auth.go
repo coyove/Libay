@@ -11,10 +11,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha1"
+	// "crypto/sha1"
 	"database/sql"
 	"encoding/base64"
-	"encoding/json"
+	// "encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -22,7 +22,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
+	// "path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -30,9 +30,7 @@ import (
 )
 
 const (
-	stdTimeFormat         = "2006-01-02 15:04:05"
-	maxRetryOpportunities = 2
-	cooldownTime          = 30
+	stdTimeFormat = "2006-01-02 15:04:05"
 )
 
 var connString string
@@ -206,67 +204,7 @@ func LogIPnv(r *http.Request) bool {
 	}
 }
 
-func ServeLoginPhase1(w http.ResponseWriter, r *http.Request) string {
-	if !LogIP(r) {
-		return "Err::Router::Frequent_Access"
-	}
-
-	if !CheckCSRF(r) {
-		return "Err::CSRF::CSRF_Failure"
-	}
-
-	u := CleanString(r.FormValue("username"))
-
-	if u == "" {
-		return "Err::Login::Empty_Username"
-	}
-
-	var pk string
-	var pass string
-	var id int
-
-	if Gdb.QueryRow("SELECT id, password, public_key_file FROM users WHERE username = '"+u+"'").
-		Scan(&id, &pass, &pk) == nil {
-
-		_start := time.Now()
-		var payload struct {
-			Key1 string
-			Key2 string
-		}
-
-		password := MakeHash(u, Salt, time.Now().UnixNano())[:16]
-		// fmt.Sprintf("%x", sha1.Sum([]byte(Salt+u+strconv.Itoa(int(time.Now().UnixNano()))+Salt)))[:16]
-
-		if pk != "" {
-			_, err := Gdb.Exec("UPDATE users SET password = '" + password + "' WHERE id = " + strconv.Itoa(id))
-			if err != nil {
-				return "Err::DB::Update_Failure"
-			}
-
-			_password, err := gpgEncrypt(password, "./public_keys/"+pk)
-			_wrapped := `-----BEGIN PGP MESSAGE-----
-Version: GnuPG v2` + "\n" + _password + "\n" + `-----END PGP MESSAGE-----`
-			glog.Infoln("Finish encrypting in", int(time.Now().Sub(_start).Nanoseconds()/1e6), "ms")
-
-			payload.Key1 = _wrapped
-			payload.Key2 = _password
-
-			if err == nil {
-				buf, _ := json.Marshal(&payload)
-				return string(buf)
-			}
-
-			return "Err::IO::File_IO_Failure"
-		} else {
-			return "Err::Login::No_Public_Key"
-		}
-	}
-
-	return "Err::DB::Select_Failure"
-
-}
-
-func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
+func ServeLogin(w http.ResponseWriter, r *http.Request) string {
 	if !LogIP(r) {
 		return "Err::Router::Frequent_Access"
 	}
@@ -314,15 +252,14 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 
 		iid := strconv.Itoa(id)
 
+		cooldownTime := conf.GlobalServerConfig.CooldownTime
 		mins := int(time.Now().Sub(lockDate).Minutes())
 		if mins < cooldownTime {
 			return "Err::Login::Cooldown_" + strconv.Itoa(cooldownTime-mins) + "min"
 		}
 
-		if pass == p {
+		if pass == MakeHash(p) {
 			new_session_id := MakeHash()
-			// fmt.Sprintf("%x", sha1.Sum([]byte(u+strconv.Itoa(int(time.Now().UnixNano()))+Salt)))
-
 			userToken := fmt.Sprintf("%d:%s:%s:%s", id, u, new_session_id, MakeHash(u, new_session_id))
 			http.SetCookie(w, &http.Cookie{
 				Name:    "uid",
@@ -353,7 +290,7 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
             	WHERE
             		created_at > ` + strconv.Itoa(unreadLimit) + ` AND
             		(tag = ` + strconv.Itoa(id+100000) + ` AND read = false AND deleted = false)
-            	LIMIT 20`).Scan(&unread)
+            	LIMIT 99`).Scan(&unread)
 
 			if err != nil {
 				glog.Errorln("Database:", err)
@@ -362,18 +299,33 @@ func ServeLoginPhase2(w http.ResponseWriter, r *http.Request) string {
 
 			GuserTimer.Push(time.Now().Sub(_start).Nanoseconds())
 
-			return "ok " + iid + " " + strconv.Itoa(unread)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "unread",
+				Value:    strconv.Itoa(unread),
+				Expires:  time.Now().Add(1 * time.Minute),
+				HttpOnly: false,
+			})
+
+			return "ok " + iid
 			// finish a successful login procedure
 		}
 
-		if retry > maxRetryOpportunities {
+		maxRetryOpportunities := conf.GlobalServerConfig.MaxRetryOpportunities
+
+		if retry >= maxRetryOpportunities {
 			Gdb.Exec("UPDATE users SET retry = 0, lock_date = '" + Time.Now() + "' WHERE id = " + iid)
 			glog.Errorln("Account locked on", GetIP(r))
 
 			return "Err::Login::Account_Locked"
 		} else {
-			Gdb.Exec("UPDATE users SET retry = retry + 1 WHERE id = " + iid)
-			return "Err::Login::Retry_" + strconv.Itoa(retry)
+			var hint string
+			Gdb.QueryRow(`
+				UPDATE users SET retry = retry + 1 WHERE id = ` + iid + `;
+				SELECT password_hint FROM users WHERE id = ` + iid).Scan(&hint)
+
+			return "Err::Login::Retry_Opportunities_" +
+				strconv.Itoa(maxRetryOpportunities-retry-1) +
+				"_Hint_" + hint
 		}
 
 	} else {
@@ -397,8 +349,10 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) string {
 	}
 
 	r.ParseMultipartForm(1024)
+
 	u := CleanString(r.FormValue("username"))
 	nk := CleanString(r.FormValue("nickname"))
+	hint := CleanString(r.FormValue("hint"))
 
 	if !captcha.VerifyString(r.FormValue("captcha-challenge"), r.FormValue("captcha-answer")) {
 		glog.Errorln("Challenge failed by", GetIP(r))
@@ -417,76 +371,21 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) string {
 	Gdb.QueryRow("SELECT id FROM users WHERE username = '" + u + "' OR nickname = '" + nk + "'").Scan(&_id)
 
 	if _id != 0 {
-		return "Err::Regr::Username_Nickname_Existed"
+		return "Err::Regr::Username_Or_Nickname_Existed"
 	}
 
-	if r.FormValue("use-simple-password") == "true" {
-		sp := CleanString(r.FormValue("simple-password"))
-		if len(sp) < 4 {
-			return "Err::Regr::Password_Too_Short"
-		}
+	sp := CleanString(r.FormValue("simple-password"))
+	if len(sp) < 4 {
+		return "Err::Regr::Password_Too_Short"
+	}
 
-		_, err := Gdb.Exec(`
-            INSERT INTO users 
-                (username, nickname, signup_date, password, public_key_file, retry) 
-            VALUES (
-                '` + u + `', 
-                '` + nk + `', 
-                '` + Time.Now() + `', 
-                '` + sp + `', 
-                '', 
-                0)`)
+	_, err := Gdb.Exec(`
+        INSERT INTO users (username, nickname, password, password_hint) 
+        VALUES ('` + u + `', '` + nk + `', '` + MakeHash(sp) + `', '` + hint + `')`)
 
-		if err != nil {
-			glog.Errorln("Database:", err)
-			return "Err::DB::Insert_Failure"
-		}
-	} else {
-
-		in, header, err := r.FormFile("public_key")
-		if err != nil {
-			return "Err::IO::File_IO_Failure"
-		}
-		defer in.Close()
-
-		ext := filepath.Ext(header.Filename)
-
-		hashBuf, _ := ioutil.ReadAll(in)
-		fn := fmt.Sprintf("%x", sha1.Sum(hashBuf)) + ext
-
-		if _, err := os.Stat("./public_keys/" + fn); err == nil {
-			return "Err::Regr::Public_Key_Existed"
-		}
-
-		out, err := os.Create("./public_keys/" + fn)
-		if err != nil {
-			return "Err::IO::File_IO_Failure"
-		}
-		// io.Copy(out, in)
-		out.Write(hashBuf)
-		defer out.Close()
-
-		_, err = openpgp.ReadKeyRing(out)
-
-		if err != nil {
-			glog.Errorln("PK:", err)
-			return "Err::Regr::Invalid_Public_Key"
-		}
-		_, err = Gdb.Exec(`
-            INSERT INTO users 
-                (username, nickname, signup_date, password, public_key_file, retry) 
-            VALUES (
-                '` + u + `', 
-                '` + nk + `', 
-                '` + Time.Now() + `', 
-                '', 
-                '` + fn + `', 
-                0)`)
-
-		if err != nil {
-			glog.Errorln("Database:", err)
-			return "Err::DB::Insert_Failure"
-		}
+	if err != nil {
+		glog.Errorln("Database:", err)
+		return "Err::DB::Insert_Failure"
 	}
 
 	return "ok"

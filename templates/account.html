@@ -10,120 +10,16 @@
 
 {{else}}
 <title>用户登入</title>
-<p id="breadcrumbs">
-    用户登入 | 
-    <a href="javascript:switchLoginPanel()" login="z" id="login-method">使用密码登入</a>
-</p>
+<p id="breadcrumbs">用户登入 | <a href="/account/register">创建账号</a></p>
 {{end}}
 
 <script type="text/javascript">
     var returnURL = "/";
-    var privateKeyContent = "";
-    var encryptedContent = "";
-
-    var decryptMessage = function (privkey, passphrase, encoded_message, callback) {
-        var openpgp = window.openpgp;
-        var privKeys = openpgp.key.readArmored(privkey);
-        var privKey = privKeys.keys[0];
-        
-        if (privkey) {
-            privKey.decrypt(passphrase);
-        } else {
-            callback("error");
-            return;
-        }
-
-        if (openpgp) {
-            var binary_string = etc.string.base64Decode(encoded_message);
-            var len = binary_string.length;
-            var bytes = new Uint8Array(len);
-            for (var i = 0; i < len; i++) bytes[i] = binary_string.charCodeAt(i);
-
-            var decrypted = openpgp.decrypt({
-                message: openpgp.message.read(bytes),
-                privateKey: privKey,
-                format: 'binary'
-            });
-
-            decrypted.then(function(d) {
-                callback(String.fromCharCode.apply(null, d.data));
-            })
-        } else {
-            callback("error");
-        }
-    }
-
-    var tryLoginPhase1 = function(){
-        etc.let.hide("login-result");
-
-        etc.util.ajax.post("/login/phase1", {
-            "username": etc.id("uname").value, "csrf": etc.util.CSRF()
-        }).then(function (e, data, x) {
-            etc.wait.on(this).done();
-
-            if (data.indexOf("Err:") < 0) {
-                var j = JSON.parse(data);
-                etc.let.hide("login-result");
-
-                encryptedContent = j.Key2;
-                
-                etc.id("waiting-phase1-response").html("<img src='" + window.__tickImg + "'/>");
-                etc.let.enable('login-phase2');
-            } else {
-                encryptedContent = "";
-                
-                etc.id("waiting-phase1-response").innerHTML = "<img src='" + window.__crossImg + "'/>";
-                etc.let.disable('login-phase2');
-                etc.let.show("login-result").$.html("交换密文错误: " + data);
-            }
-        });
-
-        return etc.wait.on(this);
-    }
-
-    var tryLoginPhase2 = function(){
-        privateKeyContent = etc.id("private-key-content").value;
-
-        setTimeout(function() {
-            etc.wait.on(this).done();
-        }, 5000);
-
-        decryptMessage(privateKeyContent, etc.id("pp").value, encryptedContent, function(p) {
-            var u = etc.id("uname").value;
-            var e = etc.id("expire").value;
-
-            if (p == "" || p == "error") {
-                etc.let.show("login-result").$.innerHTML = "私钥错误";
-                return etc.wait.on(this).done();
-            }
-
-            etc.util.write("private_key", etc.id("allow-local-storage").checked ? privateKeyContent : "");
-
-            etc.util.ajax.post("/login/phase2", {
-                "username" : u, 
-                "password" : p, 
-                "expire" : e,
-                "csrf": etc.util.CSRF()
-            }).then(function (e, data, x) {
-                etc.wait.on(this).done();
-
-                if (data.indexOf("ok") == 0) {
-                    var rs = data.split(" ");
-                    etc.util.cookie.write("unread", rs[2], 3600 * 24 * 1000);
-                    window.location.href = returnURL;
-                } else {
-                    etc.let.show("login-result").$.innerHTML = "登入失败: " + data;
-                }
-            });
-        });
-
-        return etc.wait.on(this);
-    }
 
     var tryLogin = function(){
         etc.let.hide("login-result");
 
-        etc.util.ajax.post("/login/phase2", {
+        etc.util.ajax.post("/login", {
             "username" : etc.id("simple-username").value, 
             "password" : etc.id("simple-password").value, 
             "expire" : etc.id("simple-expire").value,
@@ -132,8 +28,6 @@
             etc.wait.on(this).done();
 
             if (data.indexOf("ok") == 0) {
-                var rs = data.split(" ");
-                etc.util.cookie.write("unread", rs[2], 3600 * 24 * 1000);
                 window.location.href = returnURL;
             } else {
                 etc.let.show("login-result").$.html("登入失败: " + data);
@@ -141,19 +35,6 @@
         });
 
         return etc.wait.on(this);
-    }
-
-    var switchLoginPanel = function() {
-        var t = etc.id("login-method");
-        if (t.getAttribute("login") == "z") {
-            etc.let.hide("login-panel").show("simple-login-panel");
-            t.setAttribute("login", "simple");
-            t.innerHTML = "使用公钥登入";
-        } else {
-            etc.let.hide("simple-login-panel").show("login-panel");
-            t.setAttribute("login", "z");
-            t.innerHTML = "使用密码登入";
-        }
     }
 
     {{if .IsLoggedIn}}
@@ -210,40 +91,8 @@
         if (window.__unread > 0) 
             etc.id("message-box-count").html(window.__unread).style.display = "inline";
     {{else}}
-        window.onload = function() {
-            etc.util.lazyLoad(["/assets/openpgp.min.js"]);
-
-            var q = (window.location.href).split("?");
-            if (q.length > 1) returnURL = q[1];
-
-            etc.id("pp").on("keydown", function(ev) { if (ev.keyCode == 13) etc.id("login-phase2").click(); });
-            etc.id("simple-password").on("keydown", function(ev) { if (ev.keyCode == 13) etc.id("simple-login").click(); });
-
-            etc.id('private-key').on('change', function (evt) {
-                var f = evt.target.files[0]; 
-
-                if (f) {
-                    var r = new FileReader();
-                    r.onload = function(e) { 
-                        privateKeyContent = e.target.result;
-                        etc.id("private-key-content").value = privateKeyContent;
-                    }
-                    r.readAsText(f);
-                } else { 
-                    alert("无法打开文件");
-                }
-            }, false);
-
-            // etc.id("encrypted").on("click", tryLoginPhase1);
-            etc.id("private-key-content").on("click", function(ev) { etc.id("private-key").click(); });
-
-            privateKeyContent = etc.util.read("private_key");
-            if (privateKeyContent != null) {
-                etc.id("private-key-content").value = privateKeyContent;
-                etc.id("allow-local-storage").checked = true;
-            }
-
-            etc.let.disable('login-phase2');
+        window.onload = function() {        
+            etc.id("simple-password").on("keydown", function(ev) { if(ev.keyCode == 13) etc.id("simple-login").click(); });
         }
     {{end}}
 </script>
@@ -319,49 +168,7 @@
 </table>
 {{else}}
 
-<table class="_table" id="login-panel">
-    <tr>
-        <td>1. 用户名:</td>
-        <td><input type="textbox" id="uname" class="_f" /></td>
-        <td><div id="waiting-phase1-response" style="display: block; width:16px"></div></td>
-    </tr>
-    <tr><td></td><td>
-        <button data-onclick="tryLoginPhase1()">2. 获取交换密文</button>
-    </td></tr>
-    <tr>
-        <td>3. 私钥密码:</td><td >
-        <input type="password" id="pp" class="_f" placeholder="私钥密码" />
-        <input type="textbox" id="password" style="display: none" />
-        </td><td></td>
-    </tr>
-    <tr>
-        <td>4. 私钥:<input type="file" id="private-key" style="display:none" /></td><td>
-           <textarea id="private-key-content" class="_f" cols="37" rows="2" style="cursor: pointer;"></textarea>
-        </td>
-        <td></td>
-    </tr>
-    <tr><td></td>
-        <td>
-<input type="checkbox" id="allow-local-storage"/><label for="allow-local-storage">记住私钥内容: localStorage</label>
-        </td>
-    </tr>
-    <tr>
-        <td>Cookie:</td>
-        <td>
-            <select id="expire" class="_f">
-                <option value="1">1 天</option>
-                <option value="7">1 周</option>
-                <option value="30">30 天</option>
-                <option value="0">1 年</option>
-            </select>
-        </td><td></td>
-    </tr>
-    <tr><td></td><td>
-        <button data-onclick="tryLoginPhase2()" id="login-phase2">5. 登入</button>
-    </td></tr>
-</table>
-
-<table class="_table" id="simple-login-panel" style="display:none">
+<table class="_table" style="max-width: 300px; width: 100%;">
     <tr>
         <td>用户名:</td>
         <td><input type="textbox" id="simple-username" class="_f" /></td>
@@ -386,9 +193,5 @@
     </td></tr>
 </table>
 
-<div id="login-result"></div>
-
-<p>
-    如果您没有帐号, 可以<a href="/account/register">创建一个</a>。
-</p>
+<div id="login-result" style="word-break: break-word"></div>
 {{end}}

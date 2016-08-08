@@ -115,7 +115,7 @@ func (th ModelHandler) GET_account(w http.ResponseWriter, r *http.Request, ps ht
 		IsLoggedIn    bool
 	}
 
-	payload.AuthUser = auth.GetUser(r)
+	payload.AuthUser = auth.GetUser(r, w)
 	payload.IsLoggedIn = payload.AuthUser.Name != ""
 	payload.UserPrivilege = make(map[string]interface{})
 

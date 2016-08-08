@@ -1,45 +1,31 @@
 <title>用户注册</title>
 <p id="breadcrumbs">用户注册</p>
 
-<script type="text/javascript" src="/assets/openpgp.min.js"></script>
 <script type="text/javascript">
     var returnURL = "/";
 
     var tryReg = function(){
-        var B = etc.file("gpg-file");
-        if (!B && !etc.id("use-simple-password").checked) {
-            console.log("error");
-            return
-        }
-        var A = new FormData();
-        A.append("public_key", B);
-        A.append("username", etc.id("username").value);
-        A.append("nickname", etc.id("nickname").value);
+        etc.let.hide("reg-result");
 
-        A.append("use-simple-password", etc.id("use-simple-password").checked);
-        A.append("simple-password", etc.id("simple-password").value);
+        etc.util.ajax.post("/register", {
+            "username": etc.id("username").value, 
+            "nickname": etc.id("nickname").value,
+            "simple-password": etc.id("simple-password").value, 
+            "captcha-challenge": etc.id("captcha-img").attr("challenge"),
+            "captcha-answer": etc.id("captcha-answer").value,
+            "csrf": etc.util.CSRF(),
+        }).then(function (e, data, x) {
+            etc.wait.on(this).done();
 
-        A.append("captcha-challenge", etc.id("captcha-img").attr("challenge"));
-        A.append("captcha-answer", etc.id("captcha-answer").value);
-        
-        A.append("csrf", etc.util.CSRF());
-
-        etc.let.disable("register-button");
-
-        var C = new XMLHttpRequest();
-        C.open("POST", "/register");
-        C.onload = function() {
-            etc.let.enable("register-button");
-            switch(C.responseText){
-            case "ok":
-            window.location.href = "/account";
-            break;
-            default:
-                etc.let.show("reg-result").$.innerHTML = "注册失败: " + C.responseText;
+            if (data.indexOf("ok") >= 0){
+                window.location.href = "/account";
+            } else {
+                etc.let.show("reg-result").$.innerHTML = "注册失败: " + data;
                 refreshCaptcha();
             }
-        }
-        C.send(A);
+        });
+
+        return etc.wait.on(this);
     }
 
     function refreshCaptcha() {
@@ -59,7 +45,7 @@
 
 </script>
   
-<table class="_table" id="reg-panel">
+<table class="_table">
     
     {{if .IsOpen}}
     {{else}}
@@ -73,21 +59,9 @@
     <tr><td>昵称:</td><td><input type="textbox" id="nickname" class="_f"/></td></tr>
     <tr><td></td><td style="font-size:75%">* 公开显示的昵称</td></tr>
 
-    <tr><td>公钥:</td>
-    	<td>
-    		<input type="file" id="gpg-file" class="_f"/>
-    	</td>
-    </tr>
-    <tr><td></td><td style="font-size:75%">* 公钥格式为.gpg</td></tr>
 
-    <tr><td>
-        <input type="checkbox" id="use-simple-password"/><label for="use-simple-password">简单密码:</label>
-    </td>
-        <td>
-            <input type="textbox" id="simple-password" class="_f"/>
-        </td>
-    </tr>
-    <tr><td></td><td style="font-size:75%">* 勾选此项后公钥即失效，每次请使用该密码直接登入<br>区分大小写</td></tr>
+    <tr><td>密码:</td><td><input type="textbox" id="simple-password" class="_f"/></td></tr>
+    <tr><td></td><td style="font-size:75%">* 登入密码 (区分大小写)</td></tr>
 
     <tr><td>用户协议:</td><td>并没有</td></tr>
 
@@ -95,22 +69,9 @@
     <tr><td>验证:</td><td><input id="captcha-answer" value=""></td></tr>
 
     <tr><td></td><td>
-    <button onclick="tryReg()" id="register-button">同意协议并注册</button>
+    <button data-onclick="tryReg()">同意协议并注册</button>
     </td></tr>
 
     <tr><td colspan="2" id="reg-result">
     </td></tr>
 </table>
-<hr>
-<p>
-本站使用GnuPG进行验证登入且使用了openpgp.js，测试在以下环境中正常工作：IE 11, Chrome 26, Firefox 35。<br>
-
-如果是第一次使用请阅读[<a href="/about">帮助</a>]。
-
-<table>
-<tr><td>Windows用户请下载:&nbsp;</td><td><a href="https://www.gpg4win.org/"><img src="https://www.gpg4win.org/img/logo_footer.png"></a></td></tr>
-<tr><td>MacOS用户请下载:&nbsp;</td><td><a href="https://gpgtools.org/">
-<img src="https://gpgtools.org/images/gpgtools-logo.png" height="36"></a>
-</td></tr>
-</table>
-</p>

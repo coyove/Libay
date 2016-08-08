@@ -29,6 +29,9 @@ type ServerConfig struct {
 	MainJS  string
 	MainCSS string
 
+	MaxRetryOpportunities int
+	CooldownTime          int
+
 	AnonymousArea int
 	ReplyArea     int
 	MessageArea   int
@@ -37,8 +40,6 @@ type ServerConfig struct {
 	ImagesAllowed     interface{}
 	PostsAllowed      interface{}
 	ArticlesPerPage   int
-	Tags              interface{}
-	AdminPassword     string
 	MaxImageSize      int
 
 	MaxArticleContentLength int

@@ -33,7 +33,7 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 		User       auth.AuthUser
 		IsLoggedIn bool
 	}
-	u := auth.GetUser(r)
+	u := auth.GetUser(r, w)
 	vtt := conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOtherTrash")
 
 	payload.Article = auth.GetArticle(r, u, id, false)

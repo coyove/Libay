@@ -33,6 +33,7 @@ var configPath = flag.String("c", "./config.json", "Load config from file")
 var logPath = flag.String("l", "./log", "Log saving directory for glog, alias of '-log_dir'")
 var debugMode = flag.Bool("d", false, "Debug mode")
 var debugPort = flag.Int("debug-port", 731, "Debug server port")
+var testHash = flag.String("test-hash", "", "Make a test hash")
 
 func main() {
 	flag.Parse()
@@ -52,6 +53,11 @@ func main() {
 
 	conf.GlobalServerConfig.ConfigPath = *configPath
 	configBuf, _ := json.Marshal(conf.GlobalServerConfig)
+
+	if *testHash != "" {
+		fmt.Println("Test hash result:", auth.MakeHash(*testHash))
+		return
+	}
 
 	models.ConfigChecksum = fmt.Sprintf("%x", sha1.Sum(configBuf))[:8]
 	models.LoadTemplates()

@@ -6,7 +6,6 @@ import (
 	"github.com/golang/glog"
 
 	_ "database/sql"
-	"html"
 	"net/http"
 	"strconv"
 	"strings"
@@ -96,7 +95,8 @@ func CheckCSRF(r *http.Request) bool {
 	}
 }
 
-func GetUser(r *http.Request) (ret AuthUser) {
+func GetUser(vs ...interface{}) (ret AuthUser) {
+	r := vs[0].(*http.Request)
 	uid, _ := r.Cookie("uid")
 	invalid := false
 
@@ -130,6 +130,31 @@ func GetUser(r *http.Request) (ret AuthUser) {
 			// User has a valid cookie, now test whether it has expired
 			user := GetUserByID(id)
 			if user.SessionID == b_session_id {
+				if ur, err := r.Cookie("unread"); err != nil || ur.Value == "" {
+					if len(vs) == 2 {
+						unread := 0
+						unreadLimit := int(time.Now().UnixNano()/1e6 - 3600000*24)
+
+						err := Gdb.QueryRow(`
+		                SELECT COUNT(id) 
+		            	FROM   articles
+		            	WHERE
+		            		created_at > ` + strconv.Itoa(unreadLimit) + ` AND
+		            		(tag = ` + strconv.Itoa(user.ID+100000) + ` AND read = false AND deleted = false)
+		            	LIMIT 99`).Scan(&unread)
+
+						if err != nil {
+							glog.Errorln("Database:", err)
+						}
+
+						http.SetCookie(vs[1].(http.ResponseWriter), &http.Cookie{
+							Name:     "unread",
+							Value:    strconv.Itoa(unread),
+							Expires:  time.Now().Add(1 * time.Minute),
+							HttpOnly: false,
+						})
+					}
+				}
 				return user
 			}
 
@@ -184,7 +209,6 @@ func GetUserByID(id int) (ret AuthUser) {
 		&avatar,
 		&usage); err == nil {
 
-		comment = html.UnescapeString(comment)
 		ret = AuthUser{_id,
 			username,
 			nickname,
@@ -193,7 +217,7 @@ func GetUserByID(id int) (ret AuthUser) {
 			ip,
 			strings.Trim(status, " "),
 			strings.Trim(group, " "),
-			comment,
+			Unescape(comment),
 			avatar,
 			usage,
 			session_id}
