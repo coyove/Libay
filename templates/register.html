@@ -11,6 +11,7 @@
             "username": etc.id("username").value, 
             "nickname": etc.id("nickname").value,
             "simple-password": etc.id("simple-password").value, 
+            "hint": etc.id("password-hint").value, 
             "captcha-challenge": etc.id("captcha-img").attr("challenge"),
             "captcha-answer": etc.id("captcha-answer").value,
             "csrf": etc.util.CSRF(),
@@ -54,19 +55,21 @@
     </td></tr>
     {{end}}
     <tr><td>用户名:</td><td><input type="textbox" id="username" class="_f" /></td></tr>
-    <tr><td></td><td style="font-size:75%">* 20位以内数字字母组合用于登入</td></tr>
+    <tr><td></td><td style="font-size:75%">* 用户名用于登入 (4-64位数字字母组合)</td></tr>
 
     <tr><td>昵称:</td><td><input type="textbox" id="nickname" class="_f"/></td></tr>
-    <tr><td></td><td style="font-size:75%">* 公开显示的昵称</td></tr>
-
+    <tr><td></td><td style="font-size:75%">* 公开显示的昵称 (4-64位, 1中文字符=3bit)</td></tr>
 
     <tr><td>密码:</td><td><input type="textbox" id="simple-password" class="_f"/></td></tr>
-    <tr><td></td><td style="font-size:75%">* 登入密码 (区分大小写)</td></tr>
+    <tr><td></td><td style="font-size:75%">* 登入密码 (区分大小写, 4-64位)</td></tr>
+
+    <tr><td>密码提示:</td><td><input type="textbox" id="password-hint" class="_f"/></td></tr>
+    <tr><td></td><td style="font-size:75%">* 输错密码时的提示 (4-64位)</td></tr>
+
+    <tr><td></td><td><img onclick="refreshCaptcha()" id="captcha-img" src="" style="cursor: pointer;"></td></tr>
+    <tr><td>验证:</td><td><input id="captcha-answer" value=""></td></tr>
 
     <tr><td>用户协议:</td><td>并没有</td></tr>
-
-    <tr><td>Captcha:</td><td><img onclick="refreshCaptcha()" id="captcha-img" src="" style="cursor: pointer;"></td></tr>
-    <tr><td>验证:</td><td><input id="captcha-answer" value=""></td></tr>
 
     <tr><td></td><td>
     <button data-onclick="tryReg()">同意协议并注册</button>

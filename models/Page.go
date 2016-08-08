@@ -179,6 +179,12 @@ func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	if payload.IsTag {
+		for i, _ := range payload.Articles {
+			payload.Articles[i].Tag = ""
+		}
+	}
+
 	ServePage(w, "articles", payload)
 }
 

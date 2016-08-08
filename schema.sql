@@ -252,7 +252,8 @@ CREATE TABLE users (
     nickname text,
     public_key_file text,
     last_login_ip text DEFAULT ''::text,
-    last_last_login_ip text DEFAULT ''::text
+    last_last_login_ip text DEFAULT ''::text,
+    password_hint text DEFAULT ''::text
 );
 
 
