@@ -261,10 +261,13 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) string {
 		if pass == MakeHash(p) {
 			new_session_id := MakeHash()
 			userToken := fmt.Sprintf("%d:%s:%s:%s", id, u, new_session_id, MakeHash(u, new_session_id))
-			http.SetCookie(w, &http.Cookie{
-				Name:    "uid",
-				Value:   userToken,
-				Expires: exp, HttpOnly: true, Path: "/"})
+
+			cookie := &http.Cookie{Name: "uid", Value: userToken, HttpOnly: true, Path: "/"}
+			if expire >= 0 {
+				cookie.Expires = exp
+			}
+
+			http.SetCookie(w, cookie)
 
 			var unread int
 			unreadLimit := int(time.Now().UnixNano()/1e6 - 365*3600000*24)

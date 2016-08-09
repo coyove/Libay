@@ -377,6 +377,11 @@ table._table td ._f {
     width: 100%; 
 }
 
+td.right-align {
+    text-align: right;
+    vertical-align: text-top;
+}
+
 table.database { 
     width: 100%; 
     border-collapse: collapse;

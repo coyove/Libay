@@ -861,11 +861,17 @@
                 var A = prompt("URL:", "http://");
                 if (A === "http://" || A === "") return;
 
-                var B = (window.getSelection) ? window.getSelection() : document.selection;
-                if (B == "" || B == null) B = prompt("显示文字:", A);
+                var text = "";
+			    if (window.getSelection) {
+			        text = window.getSelection().toString();
+			    } else if (document.selection && document.selection.type != "Control") {
+			        text = document.selection.createRange().text;
+			    }
+
+                if (text == "") text = prompt("显示文字:", A);
 
                 _id(_editorId).focus();
-                _insertHTML("<a href='" + A + "' target='_blank'>" + B + "</a>");
+                _insertHTML("<a href='" + A + "' target='_blank'>" + text + "</a>");
             },
 
             "clearFormat": function() {

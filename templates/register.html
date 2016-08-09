@@ -1,5 +1,5 @@
 <title>用户注册</title>
-<p id="breadcrumbs">用户注册</p>
+<p id="breadcrumbs">用户注册 | <a href="/account">已有账号?</a></p>
 
 <script type="text/javascript">
     var returnURL = "/";
@@ -30,9 +30,12 @@
     }
 
     function refreshCaptcha() {
+        Animation.start("loading-captcha");
         etc.util.ajax.get("/new/captcha").then(function(e, d){
             etc.id("captcha-img").src = "/get/captcha/" + d;
             etc.id("captcha-img").attr("challenge", d);
+
+            Animation.stop();
         })
     }
 
@@ -46,30 +49,36 @@
 
 </script>
   
-<table class="_table">
+<table class="_table" style="max-width: 600px">
+    <style type="text/css">
+        input {
+            max-width: 300px;
+        }
+    </style>
     
-    {{if .IsOpen}}
-    {{else}}
-    <tr><td>当前状态:</td><td>
-        关闭注册
-    </td></tr>
+    {{if .IsOpen}}{{else}}
+    <tr><td class="right-align fit">当前状态:</td><td>关闭注册</td></tr>
     {{end}}
-    <tr><td>用户名:</td><td><input type="textbox" id="username" class="_f" /></td></tr>
-    <tr><td></td><td style="font-size:75%">* 用户名用于登入 (4-64位数字字母组合)</td></tr>
+    
+    <tr><td class="right-align fit">用户名:</td><td><input type="textbox" id="username" class="_f" /></td></tr>
+    <tr><td></td><td class="smaller">* 用户名用于登入 (4-64位数字字母组合)</td></tr>
 
-    <tr><td>昵称:</td><td><input type="textbox" id="nickname" class="_f"/></td></tr>
-    <tr><td></td><td style="font-size:75%">* 公开显示的昵称 (4-64位, 1中文字符=3bit)</td></tr>
+    <tr><td class="right-align fit">昵称:</td><td><input type="textbox" id="nickname" class="_f"/></td></tr>
+    <tr><td></td><td class="smaller">* 公开显示的昵称 (4-64位字符, 1中文字符=3bit)</td></tr>
 
-    <tr><td>密码:</td><td><input type="textbox" id="simple-password" class="_f"/></td></tr>
-    <tr><td></td><td style="font-size:75%">* 登入密码 (区分大小写, 4-64位)</td></tr>
+    <tr><td class="right-align fit">密码:</td><td><input type="textbox" id="simple-password" class="_f"/></td></tr>
+    <tr><td></td><td class="smaller">* 登入密码 (区分大小写, 4-64位字符)</td></tr>
 
-    <tr><td>密码提示:</td><td><input type="textbox" id="password-hint" class="_f"/></td></tr>
-    <tr><td></td><td style="font-size:75%">* 输错密码时的提示 (4-64位)</td></tr>
+    <tr><td class="right-align fit">密码提示:</td><td><input type="textbox" id="password-hint" class="_f"/></td></tr>
+    <tr><td></td><td class="smaller">* 输错密码时的提示 (4-64位字符)</td></tr>
 
-    <tr><td></td><td><img onclick="refreshCaptcha()" id="captcha-img" src="" style="cursor: pointer;"></td></tr>
-    <tr><td>验证:</td><td><input id="captcha-answer" value=""></td></tr>
+    <tr>
+        <td class="right-align fit"><span id="loading-captcha"></span></td>
+        <td><img onclick="refreshCaptcha()" id="captcha-img" src="" style="cursor: pointer;"></td>
+    </tr>
+    <tr><td class="right-align fit">验证:</td><td><input id="captcha-answer" value=""></td></tr>
 
-    <tr><td>用户协议:</td><td>并没有</td></tr>
+    <tr><td class="right-align fit">用户协议:</td><td>并没有</td></tr>
 
     <tr><td></td><td>
     <button data-onclick="tryReg()">同意协议并注册</button>

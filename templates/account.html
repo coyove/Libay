@@ -102,10 +102,6 @@
     .account-admin {
         display: table !important;
     }
-    .right-align {
-        text-align: right;
-        vertical-align: text-top;
-    }
 </style>
 
 <table class="toa account-{{.Group}}" style="display: none" id="admin-nav">
@@ -168,20 +164,21 @@
 </table>
 {{else}}
 
-<table class="_table" style="max-width: 300px; width: 100%;">
+<table class="_table" style="max-width: 300px;">
     <tr>
-        <td>用户名:</td>
+        <td class="right-align fit">用户名:</td>
         <td><input type="textbox" id="simple-username" class="_f" /></td>
     </tr>
     <tr>
-        <td>密码:</td><td>
+        <td class="right-align fit">密码:</td><td>
         <input type="password" id="simple-password" class="_f"/>
     </tr>
     <tr>
-        <td>Cookie:</td>
+        <td class="right-align fit">Cookie:</td>
         <td>
             <select id="simple-expire" class="_f">
-                <option value="1">1 天</option>
+                <option value="-1">不保存</option>
+                <option value="1" selected>1 天</option>
                 <option value="7">1 周</option>
                 <option value="30">30 天</option>
                 <option value="0">1 年</option>
