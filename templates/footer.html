@@ -6,7 +6,7 @@
 	}
 </script>
 <div id="footer">
-	<div>服务器: {{.ConfigChecksum}}, {{.Checksum}}, 负载: {{.Load}}, {{.AvgLoad}}/{{.RunTime}}, 平均: {{.AvgRenderTime}}ms
+	<div>服务器: {{.Hostname}} ({{.Load}}), 运行: {{.RunTime}}h, 平均: {{.AvgRenderTime}}ms
 
 		<span style="display:none" id="csrf">{{.CSRF}}</span>
 	</div>

@@ -7,7 +7,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/julienschmidt/httprouter"
 
-	"crypto/sha1"
 	_ "database/sql"
 	"encoding/json"
 	"fmt"
@@ -155,8 +154,6 @@ func (th ModelHandler) POST_config_update(w http.ResponseWriter, r *http.Request
 
 	if err1 == nil && err3 == nil {
 		glog.Infoln("Config updated")
-		// conf.GlobalServerConfig.InitTags(auth.Gdb)
-		ConfigChecksum = fmt.Sprintf("%x", sha1.Sum(newConfig))[:8]
 
 		if ioutil.WriteFile(path, newConfig, 0644) == nil {
 			Return(w, "ok")

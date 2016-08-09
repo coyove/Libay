@@ -4,7 +4,6 @@ import (
 	"../conf"
 
 	"github.com/golang/glog"
-	"github.com/gorilla/feeds"
 
 	_ "database/sql"
 	"encoding/binary"
@@ -603,48 +602,5 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 	} else {
 		glog.Errorln("Database:", err, id, state)
 		return "Err::DB::Update_Failure"
-	}
-}
-
-func GenerateRSS(atom bool, page int) string {
-	now := time.Now()
-	feed := &feeds.Feed{
-		Title:       conf.GlobalServerConfig.Title,
-		Link:        &feeds.Link{Href: conf.GlobalServerConfig.Host},
-		Description: conf.GlobalServerConfig.Description,
-		Author:      &feeds.Author{Name: conf.GlobalServerConfig.Author, Email: conf.GlobalServerConfig.Email},
-		Created:     now,
-	}
-
-	feed.Items = make([]*feeds.Item, 0)
-
-	a, _ := GetArticles("1", "", "")
-
-	for _, v := range a {
-		feed.Items = append(feed.Items, &feeds.Item{
-			Title:       v.Title,
-			Link:        &feeds.Link{Href: conf.GlobalServerConfig.Host + "/article/" + itoa(v.ID)},
-			Author:      &feeds.Author{Name: v.Author},
-			Created:     time.Unix(int64(v.Timestamp)/1000, 0),
-			Description: v.Content,
-		})
-	}
-
-	if atom {
-		ret, err := feed.ToAtom()
-		if err != nil {
-			glog.Errorln("Atom:", err)
-		}
-
-		return ret
-
-	} else {
-
-		ret, err := feed.ToRss()
-		if err != nil {
-			glog.Errorln("RSS:", err)
-		}
-
-		return ret
 	}
 }

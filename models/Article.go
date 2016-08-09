@@ -311,15 +311,13 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 }
 
 func (th ModelHandler) GET_feed_TYPE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// page, err := strconv.Atoi(ps.ByName("page"))
-	// if err != nil {
-	// 	ServePage(w, "404", nil)
-	// 	return
-	// }
+	w.Header().Add("Content-Type", "text/xml; charset=utf-8")
+	a, _ := auth.GetArticles("1", "", "")
+
 	if ps.ByName("type") == "rss" {
-		Return(w, auth.GenerateRSS(false, 0))
+		Return(w, auth.GenerateRSS(a))
 	} else {
-		Return(w, auth.GenerateRSS(true, 0))
+		Return(w, auth.GenerateAtom(a))
 	}
 }
 

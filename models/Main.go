@@ -7,6 +7,7 @@ import (
 	"github.com/golang/glog"
 
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -65,11 +66,9 @@ type _Template struct {
 var templates map[string]_Template
 
 var ModelHandlerDummy ModelHandler
-var ServerChecksum string
-var ConfigChecksum string
+var ServerHostname string
 var DatabaseVersion string
 var ServerLoad string
-var ServerLoadi float64
 var ServerStartUp time.Time
 var ServerTotalRenderTime int64
 var ServerTotalRenderCount int64
@@ -153,32 +152,24 @@ func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
 		CurTime         string
 		RunTime         string
 		AvgRenderTime   string
-		Checksum        string
-		ConfigChecksum  string
+		Hostname        string
 		DatabaseVersion string
 		Load            string
-		AvgLoad         string
-		CSRF            string
+
+		CSRF string
 	}
 
-	runTime := time.Now().Sub(ServerStartUp).Minutes()
-	payload.RunTime = strconv.Itoa(int(runTime)) + "." + strconv.Itoa(int(time.Now().Second()/10))
+	payload.RunTime = fmt.Sprintf("%.1f", time.Now().Sub(ServerStartUp).Hours())
 	payload.CurTime = templates[fp+".html"].Time.Format(time.RFC1123)
-	payload.AvgLoad = strconv.FormatFloat(ServerLoadi/runTime, 'f', 2, 64)
+
 	if ServerTotalRenderCount > 0 {
-		payload.AvgRenderTime = strconv.FormatFloat(float64(ServerTotalRenderTime/ServerTotalRenderCount)/1e6, 'f', 6, 64)
+		payload.AvgRenderTime = strconv.FormatFloat(
+			float64(ServerTotalRenderTime/ServerTotalRenderCount)/1e6, 'f', 3, 64)
 	}
 
-	// if fp == "editor" || fp == "list" || fp == "account" ||
-	// 	fp == "user" || fp == "register" || fp == "article" ||
-	// 	fp == "playground" || fp == "database" || fp == "config" ||
-	// 	fp == "bootstrap" {
-	// s := strconv.Itoa(int(time.Now().Unix()))
 	payload.CSRF = ""
-	// }
+	payload.Hostname = ServerHostname
 
-	payload.Checksum = ServerChecksum
-	payload.ConfigChecksum = ConfigChecksum
 	payload.Load = ServerLoad
 	payload.DatabaseVersion = strings.Split(DatabaseVersion, ",")[0]
 

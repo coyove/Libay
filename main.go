@@ -7,15 +7,10 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/julienschmidt/httprouter"
-	"github.com/kardianos/osext"
 	_ "github.com/lib/pq"
 
-	"crypto/sha1"
-	"encoding/json"
-	"fmt"
-	// "io"
 	"flag"
-	"io/ioutil"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"os"
@@ -37,9 +32,9 @@ var testHash = flag.String("test-hash", "", "Make a test hash")
 
 func main() {
 	flag.Parse()
-	filename, _ := osext.Executable()
-	exebuf, _ := ioutil.ReadFile(filename)
-	models.ServerChecksum = fmt.Sprintf("%x", sha1.Sum(exebuf))[:8]
+
+	hostname, _ := exec.Command("hostname").Output()
+	models.ServerHostname = strings.Replace(string(hostname), "\n", "", -1)
 
 	conf.LoadConfig(*configPath, nil)
 
@@ -50,16 +45,13 @@ func main() {
 	}
 
 	glog.Infoln("Load config:", *configPath)
-
 	conf.GlobalServerConfig.ConfigPath = *configPath
-	configBuf, _ := json.Marshal(conf.GlobalServerConfig)
 
 	if *testHash != "" {
 		fmt.Println("Test hash result:", auth.MakeHash(*testHash))
 		return
 	}
 
-	models.ConfigChecksum = fmt.Sprintf("%x", sha1.Sum(configBuf))[:8]
 	models.LoadTemplates()
 
 	sigs := make(chan os.Signal, 1)
@@ -79,8 +71,6 @@ func main() {
 
 			buf, _ := exec.Command("uptime").Output()
 			models.ServerLoad = (re.FindAllStringSubmatch(string(buf), -1)[0][1])
-			tmp, _ := strconv.ParseFloat(models.ServerLoad, 64)
-			models.ServerLoadi += tmp
 			time.Sleep(1 * time.Minute)
 		}
 	}()

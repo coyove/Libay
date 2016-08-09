@@ -875,8 +875,12 @@
             },
 
             "clearFormat": function() {
+                if (!_insideEditor()) return;
+
                 var s = g.etc.editor.getSelectedElement();
                 var tn = document.createTextNode(s.innerText);
+
+                if (s.getAttribute("contenteditable") == "true") return;
                 
                 s.parentNode.insertBefore(tn, s);
                 s.parentNode.removeChild(s);

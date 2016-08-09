@@ -480,3 +480,66 @@ func From60(v string) int {
 
 	return ret
 }
+
+func GenerateAtom(a []Article) string {
+	xml := []string{
+		`<?xml version="1.0" encoding="UTF-8"?>`,
+		`<feed xmlns="http://www.w3.org/2005/Atom">`,
+		`<title>`, conf.GlobalServerConfig.Title, `</title>`,
+		`<id>`, conf.GlobalServerConfig.Host, `</id>`,
+		`<updated>`, time.Now().Format(time.RFC3339), `</updated>`,
+		`<subtitle>`, conf.GlobalServerConfig.Description, `</subtitle>`,
+		`<link href="`, conf.GlobalServerConfig.Host, `"/>`,
+		`<author>`,
+		`<name>`, conf.GlobalServerConfig.Author, `</name>`,
+		`<email>`, conf.GlobalServerConfig.Email, `</email>`,
+		`</author>`,
+	}
+
+	for _, v := range a {
+		xml = append(xml,
+			`<entry>`,
+			`<title>`, v.Title, `</title>`,
+			`<updated>`, time.Unix(int64(v.Timestamp)/1000, 0).Format(time.RFC3339), `</updated>`,
+			`<id>`, strconv.Itoa(v.ID), `</id>`,
+			`<content type="html">`, v.Content, `</content>`,
+			`<link href="`, conf.GlobalServerConfig.Host+"/article/"+strconv.Itoa(v.ID), `"/>`,
+			`<author>
+				<name>`, v.Author, `</name>
+			</author>`,
+			`</entry>`,
+		)
+	}
+
+	xml = append(xml, "</feed>")
+
+	return strings.Join(xml, "")
+}
+
+func GenerateRSS(a []Article) string {
+	xml := []string{
+		`<?xml version="1.0" encoding="UTF-8"?>`,
+		`<rss version="2.0"><channel>`,
+		`<title>`, conf.GlobalServerConfig.Title, `</title>`,
+		`<pubDate>`, time.Now().Format(time.RFC1123Z), `</pubDate>`,
+		`<description>`, conf.GlobalServerConfig.Description, `</description>`,
+		`<link>`, conf.GlobalServerConfig.Host, `</link>`,
+		`<managingEditor>`, conf.GlobalServerConfig.Email + " (" + conf.GlobalServerConfig.Author, `)</managingEditor>`,
+	}
+
+	for _, v := range a {
+		xml = append(xml,
+			`<item>`,
+			`<title>`, v.Title, `</title>`,
+			`<pubDate>`, time.Unix(int64(v.Timestamp)/1000, 0).Format(time.RFC1123Z), `</pubDate>`,
+			`<link>`, conf.GlobalServerConfig.Host+"/article/"+strconv.Itoa(v.ID), `</link>`,
+			`<description>`, v.Content, `</description>`,
+			`<author>`, v.Author, `</author>`,
+			`</item>`,
+		)
+	}
+
+	xml = append(xml, "</channel></rss>")
+
+	return strings.Join(xml, "")
+}
