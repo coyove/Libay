@@ -67,6 +67,32 @@
             return etc.wait.on(this);
         }
 
+        var tryUpdatePassword = function(){
+            var op = etc.id("old-password").value;
+            if (op === "") {
+                alert("请先输入旧密码");
+                return etc.wait.on(this).done();
+            }
+
+            etc.util.ajax.post("/user/update/password", {
+                "old-password": op,
+                "new-password": etc.id("new-password").value,
+                "password-hint": etc.id("new-password-hint").value,
+                "csrf": etc.util.CSRF()
+            }).then(function(e, d, x){
+                etc.wait.on(this).done();
+
+                if (d == "ok") {
+                    alert("修改密码成功");
+                    window.location.reload();
+                } else {
+                    alert("修改失败: " + d);
+                }
+            });
+
+            return etc.wait.on(this);
+        }
+
         var tryUpdateAvatar = function(){
             etc.util.ajax.$post("/upload", {
                 "image": etc.file("user-avatar")[0],
@@ -143,14 +169,15 @@
     </script>
     </td></tr>
 
+    <tr><td colspan="2"><hr></td></tr>
+
     <tr><td class="right-align fit">用户备注:</td>
-        <td>{{.Comment}}</td></tr>
-    <tr><td class="right-align fit">修改备注:</td>
     	<td>
     		<input type="textbox" id="user-comment" style="width: 100%; max-width: 200px" value="{{.Comment}}"/>
             <button data-onclick="tryUpdateComment()">更新备注</button>
         </td>
     </tr>
+
     <tr><td></td><td>
     	<a href="/images/{{.Avatar}}" style="display: block;">
         	<img id="avatar-image" style="max-width: 150px; max-height: 150px" src="/thumbs/{{.Avatar}}">
@@ -161,6 +188,21 @@
         <input type="file" id="user-avatar" style="width: 100%; max-width: 200px" />
         <button data-onclick="tryUpdateAvatar()">上传图像</button>
     </td></tr>
+
+    <tr><td colspan="2"><hr></td></tr>
+
+    <tr><td class="right-align fit">旧密码:</td>
+        <td><input type="textbox" id="old-password" style="width: 100%; max-width: 200px"/></td>
+    </tr>
+    <tr><td class="right-align fit">新密码:</td>
+        <td><input type="textbox" id="new-password" style="width: 100%; max-width: 200px"/></td>
+    </tr>
+    <tr><td class="right-align fit">新密码提示:</td>
+        <td>
+            <input type="textbox" id="new-password-hint" style="width: 100%; max-width: 200px"/>
+            <button data-onclick="tryUpdatePassword()">修改密码</button>
+        </td>
+    </tr>
 </table>
 {{else}}
 

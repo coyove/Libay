@@ -328,7 +328,7 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) string {
 
 			return "Err::Login::Retry_Opportunities_" +
 				strconv.Itoa(maxRetryOpportunities-retry-1) +
-				"_Hint_" + hint
+				"_Hint_" + Unescape(hint)
 		}
 
 	} else {
@@ -355,7 +355,11 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) string {
 
 	u := CleanString(r.FormValue("username"))
 	nk := CleanString(r.FormValue("nickname"))
-	hint := CleanString(r.FormValue("hint"))
+	hint := Escape(r.FormValue("hint"))
+
+	if len(hint) > 64 {
+		hint = hint[:64]
+	}
 
 	if !captcha.VerifyString(r.FormValue("captcha-challenge"), r.FormValue("captcha-answer")) {
 		glog.Errorln("Challenge failed by", GetIP(r))

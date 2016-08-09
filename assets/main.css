@@ -9,9 +9,15 @@ body {
     color: #222;
     background-color: white;
 }
+
+img {
+    border: none;
+}
+
 #container {
     margin: 0 10px 0 10px;
 }
+
 input, select, textarea {
     -ms-box-sizing:border-box;
     -moz-box-sizing:border-box;

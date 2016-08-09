@@ -238,28 +238,6 @@ func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Reque
 	Return(w, auth.InvertArticleState(u, id, "locked"))
 }
 
-// func (th ModelHandler) POST_announce_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-// 	u := auth.GetUser(r)
-
-// 	id, err := strconv.Atoi(ps.ByName("id"))
-// 	if err != nil {
-// 		Return(w, "Err::Router::Invalid_Article_Id")
-// 		return
-// 	}
-
-// 	if !auth.CheckCSRF(r) {
-// 		Return(w, "Err::CSRF::CSRF_Failure")
-// 		return
-// 	}
-
-// 	if !conf.GlobalServerConfig.GetPrivilege(u.Group, "AnnounceArticle") {
-// 		Return(w, "Err::Privil::Announce_Action_Denied")
-// 		return
-// 	}
-
-// 	Return(w, auth.InvertArticleState(id, "stay_top"))
-// }
-
 func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !auth.LogIP(r) {
 		Return(w, "Err::Router::Frequent_Access")

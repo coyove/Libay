@@ -49,6 +49,7 @@ func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.R
 	u := auth.GetUser(r)
 	if u.Name == "" {
 		Return(w, "Err::Privil::Invalid_User")
+		return
 	}
 
 	c := r.FormValue("comment")
@@ -69,10 +70,53 @@ func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.R
 	}
 }
 
+func (th ModelHandler) POST_user_update_password(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !auth.LogIP(r) {
+		Return(w, "Err::Router::Frequent_Access")
+		return
+	}
+
+	u := auth.GetUser(r)
+	if u.Name == "" {
+		Return(w, "Err::Privil::Invalid_User")
+		return
+	}
+
+	op := auth.CleanString(r.FormValue("old-password"))
+	hashedOP := auth.MakeHash(op)
+
+	np := auth.CleanString(r.FormValue("new-password"))
+	if len(np) < 4 {
+		Return(w, "Err::Post::Password_Too_Short")
+		return
+	}
+	hashedNP := auth.MakeHash(np)
+
+	hint := auth.Escape(r.FormValue("password-hint"))
+
+	res, err := auth.Gdb.Exec(`
+		UPDATE users SET (password, password_hint) = ('` + hashedNP + `', '` + hint + `')
+		WHERE id = ` + strconv.Itoa(u.ID) + ` AND password = '` + hashedOP + `'`)
+
+	if err == nil {
+		if n, _ := res.RowsAffected(); n > 0 {
+			w.Write([]byte("ok"))
+			auth.Guser.Remove(u.ID)
+		} else {
+			glog.Errorln("Changing password failed:", auth.GetIP(r), "ID:", u.ID)
+			Return(w, "Err::Post::Password_Change_Failure")
+		}
+	} else {
+		glog.Errorln("Database:", err)
+		Return(w, "Err::DB::General_Failure")
+	}
+}
+
 func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	if u.Name == "" {
 		Return(w, "Err::Privil::Invalid_User")
+		return
 	}
 
 	id, err := strconv.Atoi(ps.ByName("id"))
