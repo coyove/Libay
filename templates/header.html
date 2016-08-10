@@ -51,15 +51,6 @@
             etc.id("nv-console-a").innerHTML += "(" + window.__unread + ")";
         }
 
-        function searchSite(){
-            if (etc.id('search-word').value == "") {
-                alert("请输入关键词");
-                return;
-            }
-
-            window.open("https://www.google.com/search?q=site%3A{{.URL}}+" + etc.id('search-word').value);
-        }
-
         function traditionalization(force) {
             var lang = window.navigator.userLanguage || window.navigator.language;
 

@@ -1,12 +1,16 @@
 <title>私信</title>
 <p id="breadcrumbs">
-<script type="text/javascript">
-	{{if .Message.IsViewingAll}}
-		document.write('所有私信');
+{{if .Message.IsViewingAll}}
+	所有私信
+{{else}}
+	{{if .Message.ViewingOtherName}}
+		与用户"{{.Message.ViewingOtherName}}"的私信
 	{{else}}
-		document.write('与用户"{{.Message.ViewingOtherName}}"的私信');
+		系统信息
 	{{end}}
+{{end}}
 
+<script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
 	document.write(' | 时间: ' + etc.date.format({{.Nav.Range.Start}}) + 
 		' &raquo; ' + etc.date.format({{.Nav.Range.End}}));
@@ -14,13 +18,17 @@
 </p>
 
 <script type="text/javascript">
-	function tryReadAll() {
+	function tryReadAll(n) {
 		
-		etc.util.ajax.post("/unread/message/0", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+		etc.util.ajax.post("/unread/message/" + n, {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
 			etc.wait.on(this).done();
 
 			if (text == "ok") {
-				alert("已将标记所有消息为已读");
+				if (n == 0)
+					alert("已标记所有消息为已读");
+				else
+					alert("已标记所有匿名(anonymous)发送者的系统消息为已读");
+
 				window.location.reload();
 			} else {
 				alert("发生错误: " + text);
@@ -35,11 +43,13 @@
 			if (!confirm("是否删除该私信\n\n" + 
 					"(* 删除后对方仍可以看到该私信，但发件人变为匿名)\n" +
 					"(** 您在管理面板的“全部文章”内仍可以看到该私信)")) {
-				return etc.wait.on(this);
+				return etc.wait.on(this).done();
 			}
 		}
 
-		etc.util.ajax.post("/delete/article/" + id + "/true", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+		etc.util.ajax.post("/delete/article/" + id + "/true", {
+			"csrf": etc.util.CSRF()
+		}).then(function(error, text, xhr) {
 			etc.wait.on(this).done();
 
 			if (text == "ok") {
@@ -74,9 +84,26 @@
 	<a href="{{.LastPage}}" >尾页</a>
 	]
 	{{end}}
-
-	[ <a href="javascript:void(0)" data-onclick="tryReadAll()">标记所有为已读</a> ]
 </div>
+
+<table class="toa">
+	<tr>
+		<td><a href="javascript:void(0)" data-onclick="tryReadAll(0)">标记所有为已读</a></td>
+		<td><a href="javascript:void(0)" data-onclick="tryReadAll(-1)">标记所有系统消息为已读</a></td>
+		<td>
+		<!--[if lte IE 8]>
+		<style>
+			#ask-before-delete { display: inline !important; }
+			#ask-before-delete + label:before { display: none !important; }
+			#ask-before-delete + label { color: black !important; text-decoration: none !important; }
+		</style>
+		<![endif]-->
+		<input type="checkbox" id="ask-before-delete" class="simple-check" checked="true"/>
+
+		<label for="ask-before-delete">删除前询问</label>
+		</td>
+	</tr>
+</table>
 
 
 <table id="articles">
@@ -86,7 +113,7 @@
 	</tr>
 	{{range .Messages}}
 	<tr class="darken">
-		<td class="fit smaller header">
+		<td class="fit smaller header center">
 		{{if .Sentout}}你{{else}}<a href="/user/{{.SenderID}}">{{.SenderName}}</a>{{end}}
 		→
 		{{if .Sentout}}<a href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a>{{else}}你{{end}}
@@ -139,5 +166,5 @@
 	<a href="{{.LastPage}}" >尾页</a>
 	]
 	{{end}}
-	<input type="checkbox" id="ask-before-delete" checked="true"/><label for="ask-before-delete">删除前询问</label>
+	
 </div>

@@ -136,6 +136,18 @@
 	{{end}}
 </div>
 
+{{if .IsTag}}
+	<script type="text/javascript">
+		function postUnderThisTag() {
+			etc.util.cookie.write("default-tag", "{{.CurTag}}", 60000);
+			window.location.href = "/new/article/0?" + window.location.href;
+		}
+	</script>
+	<table class="toa"><tr>
+		<td><a href="javascript:postUnderThisTag()">在此标签下发布新文章</a></td>
+	</tr></table>
+{{end}}
+
 {{if .IsReply}}
 	<table class="toa"><tr>
 			<td><a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/1">回复该文章</a></td>

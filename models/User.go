@@ -125,13 +125,19 @@ func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if id == 0 {
+	if id == 0 || id == -1 {
 		messageLimit := int(time.Now().UnixNano()/1e6 - 3600000*24*365)
+		tail := ""
+
+		if id == -1 {
+			tail = " AND author = 0"
+		}
+
 		_, err = auth.Gdb.Exec(`
         UPDATE articles 
         SET    read = true
         WHERE 
-            tag = ` + strconv.Itoa(u.ID+100000) + `
+            tag = ` + strconv.Itoa(u.ID+100000) + tail + `
         AND created_at > ` + strconv.Itoa(messageLimit))
 	} else {
 		_, err = auth.Gdb.Exec(`
@@ -142,6 +148,7 @@ func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Req
         AND 
             tag = ` + strconv.Itoa(u.ID+100000))
 	}
+
 	if err == nil {
 		auth.Gcache.Remove(`.+-` + strconv.Itoa(id) + `-(true|false)`)
 		w.Write([]byte("ok"))

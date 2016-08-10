@@ -1,8 +1,8 @@
 {{if .IsLoggedIn}}
 <title>管理面板</title>
 <p id="breadcrumbs">
-    管理面板 | <a href="javascript:void(0)" data-onclick="tryLogout()">登出系统</a> |
-    <a href="/ua/{{.ID}}/page/1">冰山(可见文章)</a> |
+    管理面板 |
+    <a href="/ua/{{.ID}}/page/1">可见文章</a> |
     <a href="/owa/{{.ID}}/page/1">全部文章</a> |
     <a href="/message/{{.ID}}/page/1">站内信箱</a>
     <badge id="message-box-count" style="display: none;"></badge>
@@ -168,6 +168,10 @@
         document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} 字节)");
     </script>
     </td></tr>
+
+    <tr>
+        <td class="right-align fit"></td><td><button data-onclick="tryLogout()">登出账号</button></td>
+    </tr>
 
     <tr><td colspan="2"><hr></td></tr>
 

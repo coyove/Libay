@@ -172,9 +172,9 @@ td.fit, th.fit{
 
 a {
     text-decoration: none;
-    color:#0035c7; /*#1580aA;*/
+    color: #54638c;
 }
-a:visited { color: #54638c; }
+
 a:hover { color: #00207a; text-decoration: underline; }
 a:active { color: #c2c3c7; }
 a.title { text-decoration: none; }
@@ -363,6 +363,32 @@ hr {
 .pager {
     margin: 5px 0; 
     word-spacing: -0.1em; 
+}
+
+input.simple-check {
+    display: none;
+}
+
+input.simple-check:checked + label:before {
+    content: '[Y]';
+    color: black;
+}
+
+input.simple-check + label:before {
+    content: '[N]';
+    font-family: "Lucida Console", Monaco, monospace;
+    color: #ccc;
+    letter-spacing: 2px;
+}
+
+input.simple-check + label {
+    color: #ccc;
+    text-decoration: line-through;
+}
+
+input.simple-check:checked + label {
+    color: black;
+    text-decoration: none;
 }
 
 table._table { 
