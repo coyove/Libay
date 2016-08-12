@@ -139,6 +139,9 @@ func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Req
         WHERE 
             tag = ` + strconv.Itoa(u.ID+100000) + tail + `
         AND created_at > ` + strconv.Itoa(messageLimit))
+
+		// TODO:
+		// Actually we should clean the cache,
 	} else {
 		_, err = auth.Gdb.Exec(`
         UPDATE articles 

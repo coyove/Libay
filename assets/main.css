@@ -128,33 +128,32 @@ td.fit, th.fit{
     line-height: 1.1;
 }
 
-#article-history {
+.dropdown {
     display: none;
     position: absolute;
     background: white;
     border: solid 1px #aaa;
     padding: 0;
     margin-top: -10px;
-    margin-left: 3em; 
     z-index: 99;
 }
 
-#article-history ul {
+.dropdown ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
 }
 
-#article-history li {
+.dropdown li {
     padding: 1px 5px;
     border-bottom: dotted 1px #ccc;
 }
 
-#article-history li:hover {
+.dropdown li:hover {
     background-color: #bddfe8;
 }
 
-#article-history-underlay {
+.dropdown-underlay {
     display:none; 
     position: absolute; 
     left: 0; 

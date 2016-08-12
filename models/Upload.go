@@ -21,10 +21,20 @@ import (
 
 func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
+	ava := r.FormValue("avatar")
+
+	if !auth.CheckCSRF(r) {
+		Return(w, `{"Error": true, "R": "CSRF"}`)
+		return
+	}
 
 	if !u.CanPostImages() {
-		Return(w, `{"Error": true, "R": "P"}`)
-		return
+		if ava == "true" && u.ID > 0 {
+			// Even user cannot upload images, he can set his own avatar
+		} else {
+			Return(w, `{"Error": true, "R": "Cannot_Upload"}`)
+			return
+		}
 	}
 
 	var payload struct {
@@ -37,22 +47,15 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	r.ParseMultipartForm(int64(1024 * 1024 * 5))
 
 	in, header, err := r.FormFile("image")
-	ava := r.FormValue("avatar")
 	if err != nil {
-		Return(w, `{"Error": true, "R": "H"}`)
+		Return(w, `{"Error": true, "R": "HTTP_Form_Failure"}`)
 		return
 	}
 	defer in.Close()
-
-	if ava == "true" && !auth.CheckCSRF(r) {
-		Return(w, `{"Error": true, "R": "C"}`)
-		return
-	}
-
 	hashBuf, _ := ioutil.ReadAll(in)
 
 	if len(hashBuf) > 1024*1024*conf.GlobalServerConfig.MaxImageSize {
-		Return(w, `{"Error": true, "R": "R"}`)
+		Return(w, `{"Error": true, "R": "Image_Too_Large"}`)
 		return
 	}
 
@@ -74,7 +77,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	if _, err := os.Stat("./images/" + fn); os.IsNotExist(err) {
 		out, err := os.Create("./images/" + fn)
 		if err != nil {
-			Return(w, `{"Error": true, "R": "I"}`)
+			Return(w, `{"Error": true, "R": "IO_Failure"}`)
 			return
 		}
 		out.Write(hashBuf)
@@ -89,7 +92,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	if err := auth.ResizeImage(hashBuf, "./thumbs/"+fn,
 		250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
 		glog.Errorln("Generating thumbnail failed: "+fn, err)
-		Return(w, `{"Error": true, "R": "G"}`)
+		Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
 		return
 	}
 

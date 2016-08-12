@@ -33,8 +33,8 @@
 {{end}}
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | 时间: ' + etc.date.format({{.Nav.Range.Start}}) + 
-	' &raquo; ' + etc.date.format({{.Nav.Range.End}}));
+	document.write(' | 从: ' + etc.date.format({{.Nav.Range.Start}}) + 
+	' | 至: ' + etc.date.format({{.Nav.Range.End}}));
 </script>
 </p>
 
@@ -144,7 +144,7 @@
 		}
 	</script>
 	<table class="toa"><tr>
-		<td><a href="javascript:postUnderThisTag()">在此标签下发布新文章</a></td>
+		<td><a href="javascript:postUnderThisTag()">在"{{.CurTag}}"里发布新文章</a></td>
 	</tr></table>
 {{end}}
 
@@ -157,12 +157,9 @@
 	<table id="articles">
 	{{range .Articles}}
 	<tr class="darken">
-		<td class="fit header"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
+		<td class="fit header right-align"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="title">
-			<a class="title" href="/article/{{.ID}}">
-				{{.Title}}
-				{{if .Content}}•{{end}}
-			</a><br>
+			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
 			<span class="time">
 			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>

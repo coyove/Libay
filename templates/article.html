@@ -1,160 +1,224 @@
 <title>[{{.Article.Tag}}] {{.Article.Title}}</title>
 <p id="breadcrumbs">
-	文章 |
+	{{if .Article.IsMessage}}
+		私信 |
 
-	{{if .Article.Revision}}
-		<a href="javascript:void(0)" data-onclick="getHistory()">rev.{{.Article.Revision}}</a> |
+		{{if .Article.IsMessageSentout}}
+		{{else}}
+		<a href="/new/message/{{.Article.AuthorID}}">回复</a> |
+		<a data-onclick="tryUnread()">标记为未读</a> |
+		{{end}}
+
+		<a data-onclick="tryDeleteRestore()">删除私信</a> |
+
+		{{if .Article.IsMessageSentout}}
+		{{else}}
+			发送者: <a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> |
+		{{end}}
 	{{else}}
-		无修订 |
+		文章
+		{{if .IsLoggedIn}}
+			<a id="get-function" href="javascript:showFunction()" class="smaller">&#9660;</a>
+		{{end}}
+		|
+
+		{{if .Article.Revision}}
+			修订: <a id="get-history" data-onclick="getHistory()">{{.Article.Revision}}次</a> |
+		{{else}}
+			无修订 |
+		{{end}}
+
+		{{if .Article.ParentID}}
+		{{else}}
+			{{if .Article.Children}}
+			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}}篇</a> /
+			{{end}}
+			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">回复</a> |
+		{{end}}
+
+		作者: <a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> |
+
+		标签: <a href="/tag/{{.Article.Tag}}/page/1">{{.Article.Tag}}</a> |
+
+		{{.Article.Hits}}次查看 |
 	{{end}}
-
-	作者: <a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> |
-
-	标签: <a href="/tag/{{.Article.Tag}}/page/1">{{.Article.Tag}}</a> |
-
-	<script type="text/javascript">
-		document.write(etc.date.format({{.Article.ModTimestamp}}, true));
-	</script> |
-
-	{{.Article.Hits}}次查看
+	<a href="javascript:switchView()" id="switch-mode" data-mode="normal">相册模式</a>
 </p>
 
-<div id="article-history-underlay" onclick="hideHistory()"></div>
-<div id="article-history"></div>
+<div id="article-history-underlay" class="dropdown-underlay" onclick="hideHistory()"></div>
+<div id="article-history" class="dropdown"></div>
+
+<div id="article-function-underlay" class="dropdown-underlay" onclick="hideFunction()"></div>
+<div id="article-function" class="dropdown">
+	<ul>
+		{{if .IsLoggedIn}}
+			{{if .IsAuthorSelf}}
+				{{if .Article.IsMessage}}{{else}}
+					<li><a href='javascript:goEdit()'>编辑</a></li>
+				{{end}}
+
+				<li><a data-onclick="tryDeleteRestore()">
+					{{if .Article.Deleted}}恢复{{else}}删除{{end}}
+				</a></li>
+			{{end}}
+
+			{{if .CanMakeLocked}}
+				<li><a data-onclick="goLock()">
+					{{if .Article.Locked}}解锁{{else}}锁定{{end}}
+				</a></li>
+			{{end}}	
+		{{end}}
+	</ul>
+</div>
 
 <script type="text/javascript">
-function goEdit() {
-	window.location.href="/edit/article/{{.Article.ID}}?" + window.location.href;
-}
-
-function goLock() {
-	etc.util.ajax.post("/lock/article/{{.Article.ID}}", {"csrf":etc.util.CSRF()}).then(function(e, d, x){
-		etc.wait.on(this).done();
-
-		if (d == "ok") {
-			alert("操作成功");
-			window.location.reload();
-		}
-		else {
-			alert("发生错误: " + d);
-		}
-	});
-
-	return etc.wait.on(this);
-}
-
-function hideHistory() {
-	etc.let.hide("article-history-underlay");
-	etc.let.hide("article-history");
-}
-
-function getHistory() {
-	if (etc.id("article-history").innerHTML != "") {
-		etc.let.show("article-history");
-		etc.let.show("article-history-underlay");
-		return etc.wait.on(this).done();
+	function goEdit() {
+		window.location.href="/edit/article/{{.Article.ID}}?" + window.location.href;
 	}
 
-	etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
-		etc.wait.on(this).done();
+	function goLock() {
+		etc.util.ajax.post("/lock/article/{{.Article.ID}}", {"csrf":etc.util.CSRF()}).then(function(e, d, x){
+			etc.wait.on(this).done();
 
-		getHistory.history = JSON.parse(d);
-		var has = false;
-		var _html = ["</ul>"];
-		for(var k in getHistory.history) {
-			has = true;
-			_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
-				getHistory.history[k].User + " - " + 
-				etc.date.format(getHistory.history[k].Date, true) + "</li>");
+			if (d == "ok") {
+				alert("操作成功");
+				window.location.reload();
+			}
+			else {
+				alert("发生错误: " + d);
+			}
+		});
+
+		return etc.wait.on(this);
+	}
+
+	function hideFunction() {
+		etc.let.hide("article-function-underlay");
+		etc.let.hide("article-function");
+	}
+
+	function showFunction() {
+		if (etc.get("#article-function li").length < 1) return;
+
+		etc.let.show("article-function").$.style.left = 
+			(etc.id("get-function").getBoundingClientRect().left - 10) + "px";;
+		etc.let.show("article-function-underlay");
+	}
+
+	function hideHistory() {
+		etc.let.hide("article-history-underlay");
+		etc.let.hide("article-history");
+	}
+
+	function getHistory() {
+		if (etc.id("article-history").innerHTML != "") {
+			etc.let.show("article-history");
+			etc.let.show("article-history-underlay");
+			return etc.wait.on(this).done();
 		}
-		if (!has) _html.push("<li>无历史版本</li>");
-		_html.push("<ul style='cursor: pointer'>");
 
-		etc.let.show("article-history").$.html(_html.reverse().join(''));
-		etc.let.show("article-history-underlay");
-	});
+		etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
+			etc.wait.on(this).done();
 
-	return etc.wait.on(this);
-}
+			getHistory.history = JSON.parse(d);
+			var has = false;
+			var _html = ["</ul>"];
+			for(var k in getHistory.history) {
+				has = true;
+				_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
+					getHistory.history[k].User + " - " + 
+					etc.date.format(getHistory.history[k].Date, true) + "</li>");
+			}
+			if (!has) _html.push("<li>无历史版本</li>");
+			_html.push("<ul style='cursor: pointer'>");
 
-function getHistoryVersion(rev) {
-	etc.util.ajax.get("/article/{{.Article.ID}}/history/" + rev).then(function(e, d, x){
-		etc.wait.on(this).done();
+			var l = etc.id("get-history").getBoundingClientRect().left - 10;
 
-		if (x.status == 503) {
-			alert("您没有查看权限");
-			return;
-		}
-		
-		var j = JSON.parse(d);
-		etc.let.show("article-revision").$.html("<em>历史版本: " + 
-			etc.date.format(getHistory.history[rev].Date, true) + " (#" + rev + ")</em>");
+			etc.let.show("article-history").$.html(_html.reverse().join('')).style.left = l + "px";
+			etc.let.show("article-history-underlay");
+		});
 
-		etc.id("article-title").html(j.Title);
-		etc.id("article-content").html(etc.string.unescape(j.Content));
-		var g = etc.id("gallery");
-		if (g && g.parentNode) g.parentNode.removeChild(g);
+		return etc.wait.on(this);
+	}
 
-		hideHistory();
-		var el = etc.id("switch-mode");
+	function getHistoryVersion(rev) {
+		etc.util.ajax.get("/article/{{.Article.ID}}/history/" + rev).then(function(e, d, x){
+			etc.wait.on(this).done();
 
-		if (el.attr("data-mode") == "gallery") {
-			el.attr("data-mode", "normal");
-			el.innerHTML = "相册模式";
-			etc.let.show("article-content");
-		}
-	});
-	return etc.wait.on(this);
-}
+			if (x.status == 503) {
+				alert("您没有查看权限");
+				return;
+			}
+			
+			var j = JSON.parse(d);
+			etc.let.show("article-revision").$.html("<em>历史版本: " + 
+				etc.date.format(getHistory.history[rev].Date, true) + " (#" + rev + ")</em>");
 
-function tryDeleteRestore(del){
-	etc.util.ajax.post("/delete/article/{{.Article.ID}}/" + del, {
-		"csrf": etc.util.CSRF()
-	}).then(function(error, text, xhr) {
-		etc.wait.on(this).done();
+			etc.id("article-title").html(j.Title);
+			etc.id("article-content").html(etc.string.unescape(j.Content));
+			var g = etc.id("gallery");
+			if (g && g.parentNode) g.parentNode.removeChild(g);
 
-		if (text == "ok") {
-			alert("已经" + (del ? "删除" : "恢复") + "该文章");
-			window.location.reload();
-		} else {
-			alert("发生错误: " + text);			
-		}
-	});
+			hideHistory();
+			var el = etc.id("switch-mode");
 
-	return etc.wait.on(this);
-}
+			if (el.attr("data-mode") == "gallery") {
+				el.attr("data-mode", "normal");
+				el.innerHTML = "相册模式";
+				etc.let.show("article-content");
+			}
+		});
+		return etc.wait.on(this);
+	}
 
-function tryUnread() {
+	function tryDeleteRestore(){
+		etc.util.ajax.post("/delete/article/{{.Article.ID}}/true", {
+			"csrf": etc.util.CSRF()
+		}).then(function(error, text, xhr) {
+			etc.wait.on(this).done();
 
-	etc.util.ajax.post("/unread/message/{{.Article.ID}}", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
-		etc.wait.on(this).done();
+			if (text == "ok") {
+				alert("操作成功");
+				window.location.reload();
+			} else {
+				alert("发生错误: " + text);			
+			}
+		});
 
-		if (text == "ok") {
-			alert("已将该消息标记为未读");
-			window.history.back();
-		} else {
-			alert("发生错误: " + text);
-		}
-	});
+		return etc.wait.on(this);
+	}
 
-	return etc.wait.on(this);
-}
+	function tryUnread() {
 
-function switchView() {
-	etc.util.lazyLoad(["/assets/gallery.js"], function(){
-		var el = etc.id("switch-mode");
+		etc.util.ajax.post("/unread/message/{{.Article.ID}}", {"csrf": etc.util.CSRF()}).then(function(error, text, xhr) {
+			etc.wait.on(this).done();
 
-		if (el.attr("data-mode") == "normal") {
-			el.attr("data-mode", "gallery");
-			el.innerHTML = "文章模式";
-			Gallery._Gallery();
-		} else {
-			el.attr("data-mode", "normal");
-			el.innerHTML = "相册模式";
-			Gallery._Normal();
-		}
-	})
-}
+			if (text == "ok") {
+				alert("已将该消息标记为未读");
+				window.history.back();
+			} else {
+				alert("发生错误: " + text);
+			}
+		});
+
+		return etc.wait.on(this);
+	}
+
+	function switchView() {
+		etc.util.lazyLoad(["/assets/gallery.js"], function(){
+			var el = etc.id("switch-mode");
+
+			if (el.attr("data-mode") == "normal") {
+				el.attr("data-mode", "gallery");
+				el.innerHTML = "文章模式";
+				Gallery._Gallery();
+			} else {
+				el.attr("data-mode", "normal");
+				el.innerHTML = "相册模式";
+				Gallery._Normal();
+			}
+		})
+	}
 </script>
 
 <div>
@@ -162,54 +226,19 @@ function switchView() {
 	{{.Article.Title}}
 	</h1>
 
-	<table class="toa"><tr>
-		{{if .Article.ParentID}}
-		{{else}}
-			{{if .Article.IsMessage}}
-				{{if .Article.IsMessageSentout}}
-				{{else}}
-				<td><a href="/new/message/{{.Article.AuthorID}}"><b>回复私信</b></a></td>
-				<td><a href="javascript:void(0)" data-onclick="tryUnread()">标记为未读</a></td>
-				{{end}}
-			{{else}}
-				{{if .Article.Children}}
-					<td><a href="/reply/{{.Article.ID}}/page/1"><b>{{.Article.Children}}篇回复</b></a></td>
-				{{end}}
-				<td><a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1"><b>回复文章</b></a></td>
-			{{end}}
-		{{end}}
-		{{if .IsLoggedIn}}
-			{{if .IsAuthorSelf}}
-				{{if .Article.IsMessage}}{{else}}
-					<td><a href='javascript:goEdit()'>编辑</a></td>
-				{{end}}
-				{{if .Article.Deleted}}
-					<td><a href='javascript:void(0)' data-onclick="tryDeleteRestore(false)">恢复</a></td>
-				{{else}}
-					<td><a href='javascript:void(0)' data-onclick="tryDeleteRestore(true)">删除</a></td>
-				{{end}}
-			{{else}}
-				{{if .Article.IsMessage}}
-					<td><a href='javascript:void(0)' data-onclick="tryDeleteRestore(true)">删除</a></td>
-				{{end}}
-			{{end}}
-
-			{{if .CanMakeLocked}}
-				<td><a href='javascript:void(0)' data-onclick="goLock()">
-					{{if .Article.Locked}}解锁{{else}}锁{{end}}
-				</a></td>
-			{{end}}	
-		{{end}}
-		<td><a href="javascript:switchView()" id="switch-mode" data-mode="normal">相册模式</a></td>
-	</tr></table>
-
 	<ul>
-		{{if .IsEditedByOthers}}
-		<li><em>文章原作者: <a href="/user/{{.Article.OriginalAuthorID}}">{{.Article.OriginalAuthor}}</a></em></li>
-		{{end}}
-
 		{{if .Article.ParentID}}
 		<li>父文章: <a href="/article/{{.Article.ParentID}}">{{.Article.ParentTitle}}</a></li>
+		{{end}}
+
+		<li id="article-revision">发布日期:
+			<script type="text/javascript">
+				document.write(etc.date.format({{.Article.ModTimestamp}}, true));
+			</script>
+		</li>
+
+		{{if .IsEditedByOthers}}
+		<li><em>文章原作者: <a href="/user/{{.Article.OriginalAuthorID}}">{{.Article.OriginalAuthor}}</a></em></li>
 		{{end}}
 
 		{{if .Article.Deleted}}
@@ -227,8 +256,6 @@ function switchView() {
 		{{if .Article.IsOthersMessage}}
 		<li><em>这是他人私信文章</em></li>
 		{{end}}
-
-		<li id="article-revision" style="display: none"></li>
 	</ul>
 </div>
 

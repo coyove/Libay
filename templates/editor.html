@@ -9,7 +9,7 @@
 		发送私信至"{{.MessageReceiverName}}" | <a href='/user/{{.ReplyTo}}'>查看用户</a>
 	{{else}}
 		{{if .Update}}
-			修改文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>转到该文章</a>
+			修改文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>返回文章</a>
 		{{else}}
 			{{if .ReplyTo}}
 				回复文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>转到该文章</a>
@@ -306,8 +306,8 @@
 	<div>
 		内容:
 		<a id="article-history-button" style="display: none" href="javascript:toggleHistoryList()">回滚历史编辑</a>	
-		<div id="article-history-underlay" onclick="toggleHistoryList()"></div>
-		<div id="article-history" style="margin-top: 0; display: none"></div>
+		<div id="article-history-underlay" class="dropdown-underlay" onclick="toggleHistoryList()"></div>
+		<div id="article-history" class="dropdown" style="margin-top: 0; display: none"></div>
 	</div>
 	<div id="tr-edit">
 		<div id="editor-container" unselectable="on">

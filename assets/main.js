@@ -947,7 +947,7 @@
                 var size = _size.split("x");
                 if (size.length < 2) return;
 
-                var cols = parseInt(size[0]), rows = parseInt(size[1]);
+                var rows = parseInt(size[0]), cols = parseInt(size[1]);
                 var width = parseInt(100 / (cols));
                 var row = "<tr>" + (new Array(cols + 1).join("<td width=" + width + "%>&nbsp;</td>")) + "</tr>";
                 var table = "<table border=1 class=_table>" + new Array(rows + 1).join(row) + "</table>";
