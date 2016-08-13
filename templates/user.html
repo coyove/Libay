@@ -1,15 +1,15 @@
 <p id="breadcrumbs">
-    "{{.User.NickName}}"的信息 |
-    <a href="/ua/{{.User.ID}}/page/1">查看该用户文章</a> | 
+    <span class='fai'>&#xe12b;</span> {{.User.NickName}} |
+
+    <span class='fai'>&#xe0bf;</span>
+    <a href="/ua/{{.User.ID}}/page/1">查看其文章</a> | 
+
+    <span class='fai'>&#xe0a5;</span>
     <a href="/new/message/{{.User.ID}}">发送私信</a>
 </p>
+
 <title>用户 -- {{.User.NickName}}</title>
-<style type="text/css">
-    .right-align {
-        text-align: right;
-        vertical-align: text-top;
-    }
-</style>
+
 <table class="_table" >
     <tr>
         <td colspan="2">

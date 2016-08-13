@@ -1,16 +1,24 @@
 {{if .IsLoggedIn}}
 <title>管理面板</title>
 <p id="breadcrumbs">
-    管理面板 |
+    <span class='fai'>&#xe0bf;</span>
     <a href="/ua/{{.ID}}/page/1">可见文章</a> |
-    <a href="/owa/{{.ID}}/page/1">全部文章</a> |
-    <a href="/message/{{.ID}}/page/1">站内信箱</a>
-    <badge id="message-box-count" style="display: none;"></badge>
+
+    <span class='fai'>&#xe04f;</span>
+    <a href="/owa/{{.ID}}/page/1">管理全部文章</a> |
+
+    <span class='fai'>&#xe0a5;</span>
+    <a id="message-box-count" href="/message/{{.ID}}/page/1">站内信箱</a> |
+
+    <span class='fai'>&#xe069;</span>
+    <a data-onclick="tryLogout()">登出账号</a>
 </p>
 
 {{else}}
 <title>用户登入</title>
-<p id="breadcrumbs">用户登入 | <a href="/account/register">创建账号</a></p>
+<p id="breadcrumbs">
+<span class='fai'>&#xe083;</span> 用户登入 | 
+<span class='fai'>&#xe128;</span> <a href="/account/register">创建账号</a></p>
 {{end}}
 
 <script type="text/javascript">
@@ -115,10 +123,14 @@
         }
 
         if (window.__unread > 0) 
-            etc.id("message-box-count").html(window.__unread).style.display = "inline";
+            etc.id("message-box-count").innerHTML += " (" + window.__unread + ")";
     {{else}}
-        window.onload = function() {        
-            etc.id("simple-password").on("keydown", function(ev) { if(ev.keyCode == 13) etc.id("simple-login").click(); });
+        window.onload = function() {
+            returnURL = window.location.href.split("?")[1] || "/";
+
+            etc.id("simple-password").on("keydown", function(ev) { 
+                if(ev.keyCode == 13) etc.id("simple-login").click(); 
+            });
         }
     {{end}}
 </script>
@@ -169,8 +181,24 @@
     </script>
     </td></tr>
 
-    <tr>
-        <td class="right-align fit"></td><td><button data-onclick="tryLogout()">登出账号</button></td>
+    <tr><td colspan="2"><hr></td></tr>
+
+    <tr><td class="right-align fit">页面语言:</td><td>
+    <input type="checkbox" id="use-trad" class="simple-check" onchange="useTrad(this)">
+    <label for="use-trad">使用繁体</label>
+    </td></tr>
+
+    <tr><td></td><td class="smaller">-- 变更后请刷新页面</td>
+    <script type="text/javascript">
+        function useTrad(e) {
+            if (e.checked)
+                etc.util.cookie.write("trad", "1", 3600 * 24 * 1000 * 365);
+            else
+                etc.util.cookie.remove("trad");
+        }
+
+        if (etc.util.cookie.read("trad") == "1") etc.id("use-trad").checked = true;
+    </script>
     </tr>
 
     <tr><td colspan="2"><hr></td></tr>

@@ -22,6 +22,7 @@ func (th ModelHandler) GET_tags(w http.ResponseWriter, r *http.Request, ps httpr
 		Tags       map[int]conf.Tag
 		IsLoggedIn bool
 		HotTags    []string
+		TotalTags  int
 	}
 
 	tags := conf.GlobalServerConfig.GetComplexTags()
@@ -46,6 +47,7 @@ func (th ModelHandler) GET_tags(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	payload.Tags = conf.GlobalServerConfig.GetComplexTags()
+	payload.TotalTags = len(payload.Tags)
 	payload.IsLoggedIn = u.Name != ""
 
 	ServePage(w, "tags", payload)
@@ -55,8 +57,8 @@ func (th ModelHandler) GET_playground(w http.ResponseWriter, r *http.Request, ps
 	ServePage(w, "404", nil)
 }
 
-// PAGE: Serve about page
-func (th ModelHandler) GET_about(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 	var payload struct {
 		TotalUsers    int
 		TotalArticles int
@@ -64,17 +66,19 @@ func (th ModelHandler) GET_about(w http.ResponseWriter, r *http.Request, ps http
 
 	auth.Gdb.QueryRow(`
         SELECT 
-            COUNT(id), 
-            (SELECT
-                COUNT(id)
-            FROM
-                articles
-            WHERE tag < 100000) AS acount 
+            reltuples, 
+            (
+                SELECT reltuples
+                FROM   pg_class 
+                WHERE  relname = 'articles'
+            ) AS acount 
         FROM
-            user_info`).
+            pg_class
+        WHERE
+            relname = 'users'`).
 		Scan(&payload.TotalUsers, &payload.TotalArticles)
 
-	ServePage(w, "about", payload)
+	ServePage(w, "index", payload)
 }
 
 func (th ModelHandler) GET_dyncaptcha(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

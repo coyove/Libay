@@ -67,12 +67,7 @@ type MessageStruct struct {
 	}
 }
 
-func PageHandler(index bool, filterType string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// var page int
-	if index {
-		ServePage(w, "index", nil)
-		return
-	}
+func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page := ps.ByName("page")
 
 	_startRender := time.Now().UnixNano()
@@ -226,23 +221,19 @@ func MessageHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 }
 
 func (th ModelHandler) GET_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler(false, "", w, r, ps)
-}
-
-func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler(true, "", w, r, ps)
+	PageHandler("", w, r, ps)
 }
 
 func (th ModelHandler) GET_tag_TAG_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler(false, "tag", w, r, ps)
+	PageHandler("tag", w, r, ps)
 }
 
 func (th ModelHandler) GET_ua_UA_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler(false, "ua", w, r, ps)
+	PageHandler("ua", w, r, ps)
 }
 
 func (th ModelHandler) GET_reply_REPLY_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler(false, "reply", w, r, ps)
+	PageHandler("reply", w, r, ps)
 }
 
 func (th ModelHandler) GET_message_MESSAGE_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -250,5 +241,5 @@ func (th ModelHandler) GET_message_MESSAGE_page_PAGE(w http.ResponseWriter, r *h
 }
 
 func (th ModelHandler) GET_owa_OWA_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler(false, "owa", w, r, ps)
+	PageHandler("owa", w, r, ps)
 }

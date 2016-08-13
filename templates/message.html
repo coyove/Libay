@@ -1,21 +1,65 @@
 <title>私信</title>
+
+<!--[if lte IE 8]>
+<style>
+	#ask-before-delete { display: inline !important; }
+	#ask-before-delete + label:before { display: none !important; }
+	#ask-before-delete + label { color: black !important; text-decoration: none !important; }
+</style>
+<![endif]-->
+
 <p id="breadcrumbs">
 {{if .Message.IsViewingAll}}
-	所有私信
+	<span class='fai'>&#xe0a5;</span> 所有私信
 {{else}}
 	{{if .Message.ViewingOtherName}}
-		与用户"{{.Message.ViewingOtherName}}"的私信
+		<span class='fai'>&#xe12b;</span> {{.Message.ViewingOtherName}}的私信
 	{{else}}
-		系统信息
+		<span class='fai'>&#xe149;</span> 系统消息
 	{{end}}
 {{end}}
 
+| <span class='fai'>&#xe074;</span>
+<a id="get-function" href="javascript:showFunction()">标记</a> |
+
+<input type="checkbox" id="ask-before-delete" class="simple-check" checked="true"/>
+<label for="ask-before-delete">删除前询问</label>
+
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | 从: ' + etc.date.format({{.Nav.Range.Start}}) + 
-		' | 至: ' + etc.date.format({{.Nav.Range.End}}));
+	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
+	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
+
+	function moveDD(p, e) {
+		var rect = p.getBoundingClientRect();
+
+		e.style.left = (rect.left - 10) + "px";
+		e.style.top = (rect.top + rect.height + 10) + "px";
+	}
+
+	function hideFunction() {
+		etc.let.hide("message-function-underlay");
+		etc.let.hide("message-function");
+	}
+
+	function showFunction() {
+		etc.let.show("message-function");
+		moveDD(etc.id("get-function"), etc.id("message-function"));
+		etc.let.show("message-function-underlay");
+	}
 </script>
 </p>
+
+<div id="message-function-underlay" class="dropdown-underlay" onclick="hideFunction()"></div>
+<div id="message-function" class="dropdown">
+	<ul>
+		<li><span class='fai'>&#xe073;</span>
+		<a data-onclick="tryReadAll(0)">所有为已读</a></li>
+
+		<li><span class='fai'>&#xe073;</span>
+		<a data-onclick="tryReadAll(-1)">所有系统消息为已读</a></li>
+	</ul>
+</div>
 
 <script type="text/javascript">
 	function tryReadAll(n) {
@@ -86,26 +130,6 @@
 	{{end}}
 </div>
 
-<table class="toa">
-	<tr>
-		<td><a href="javascript:void(0)" data-onclick="tryReadAll(0)">标记所有为已读</a></td>
-		<td><a href="javascript:void(0)" data-onclick="tryReadAll(-1)">标记所有系统消息为已读</a></td>
-		<td>
-		<!--[if lte IE 8]>
-		<style>
-			#ask-before-delete { display: inline !important; }
-			#ask-before-delete + label:before { display: none !important; }
-			#ask-before-delete + label { color: black !important; text-decoration: none !important; }
-		</style>
-		<![endif]-->
-		<input type="checkbox" id="ask-before-delete" class="simple-check" checked="true"/>
-
-		<label for="ask-before-delete">删除前询问</label>
-		</td>
-	</tr>
-</table>
-
-
 <table id="articles">
 	<tr>
 	<th class="fit"></th><th style="text-align: left">标题</th><th colspan="2">操作</th>
@@ -123,7 +147,7 @@
 			{{else}}
 				{{if .Read}}
 				{{else}}
-					<badge>未读</badge>
+					<span class="fai">&#xe09a;</span>
 				{{end}}
 			{{end}}
 			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>

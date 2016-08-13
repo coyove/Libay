@@ -51,16 +51,10 @@
             etc.id("nv-console-a").innerHTML += "(" + window.__unread + ")";
         }
 
-        function traditionalization(force) {
+        function traditionalization() {
             var lang = window.navigator.userLanguage || window.navigator.language;
 
-            if (force === false) {
-                etc.util.cookie.remove("trad");
-                window.location.reload();
-                return;
-            }
-
-            if (lang.toLowerCase() == "zh-tw" || etc.util.cookie.read("trad") == "1" || force === true) {
+            if (lang.toLowerCase() == "zh-tw" || etc.util.cookie.read("trad") == "1") {
                 etc.util.cookie.write("trad", "1", 3600 * 24 * 1000);
 
                 etc.util.lazyLoad([
@@ -69,13 +63,8 @@
                     "/assets/tongwen/tongwen_table_s2t.js",
                     "/assets/tongwen/tongwen_table_ss2t.js",
                 ], function() {
-                    if (TongWen) TongWen.trans2Trad(document);
-
-                    var e = etc.id("use-trad");
-                    if (e) {
-                        e.innerHTML = "简体页面";
-                        e.href = "javascript:traditionalization(false)";
-                    }
+                    if (TongWen) 
+                        TongWen.trans2Trad(document);
                 });
             }
         }

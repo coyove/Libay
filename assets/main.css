@@ -2,6 +2,25 @@
     This css file contains some codes from the Debian and the Moinmoin's offical websites
 */
 
+@charset 'UTF-8';
+ 
+/* @FONT-FACE loads font into browser */
+@font-face {
+  font-family: 'typicons';
+  font-weight: normal;
+  font-style: normal;
+  src: url('/assets/fonts/typicons.eot');
+  src: url('/assets/fonts/typicons.eot?#iefix') format('embedded-opentype'),
+       url('/assets/fonts/typicons.woff') format('woff'),
+       url('/assets/fonts/typicons.ttf') format('truetype'),
+       url('/assets/fonts/typicons.svg#typicons') format('svg');
+}
+
+.fai {
+    font-family: typicons;
+    cursor: default;
+}
+
 body {
     margin: 0;
     font: normal 100% sans-serif;
@@ -126,6 +145,7 @@ td.fit, th.fit{
     word-wrap: break-word;
     word-break: break-all;
     line-height: 1.1;
+    white-space: pre;
 }
 
 .dropdown {
@@ -134,7 +154,6 @@ td.fit, th.fit{
     background: white;
     border: solid 1px #aaa;
     padding: 0;
-    margin-top: -10px;
     z-index: 99;
 }
 
@@ -167,6 +186,10 @@ td.fit, th.fit{
 	min-height: 100px;
 	padding: 4px;
 	line-height: 1.1;
+}
+
+#thread-content, #thread-content * {
+    white-space: pre;
 }
 
 a {
@@ -227,6 +250,11 @@ a.block.flatten {
 #about p {
     text-indent: 2em;
     text-align: justify;
+}
+
+p {
+    margin: 0;
+    padding: 0;
 }
 
 #breadcrumbs {
@@ -369,25 +397,16 @@ input.simple-check {
 }
 
 input.simple-check:checked + label:before {
-    content: '[Y]';
+    content: '\e11e';
     color: black;
 }
 
 input.simple-check + label:before {
-    content: '[N]';
-    font-family: "Lucida Console", Monaco, monospace;
+    content: '\e122';
+    font-family: typicons;
+    display: inline-block;
+    width: 16px;
     color: #ccc;
-    letter-spacing: 2px;
-}
-
-input.simple-check + label {
-    color: #ccc;
-    text-decoration: line-through;
-}
-
-input.simple-check:checked + label {
-    color: black;
-    text-decoration: none;
 }
 
 table._table { 
@@ -532,7 +551,7 @@ span.right-block {
 }
 
 #editor-panel a { 
-    font-family: FontAwesome; 
+    font-family: typicons; 
 }
 
 #editor-panel span {

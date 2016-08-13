@@ -1,7 +1,12 @@
 <title>标签组</title>
-<p id="breadcrumbs">标签组 | 最近更新
+<p id="breadcrumbs">
+<span class='fai'>&#xe077;</span>
+{{.TotalTags}}个标签 |
+
+<span class='fai'>&#xe110;</span>
+最近更新:
 {{range .HotTags}}
-	| <a href="/tag/{{.}}/page/1">{{.}}</a>
+	<span class='fai'>&#xe10f;</span> <a href="/tag/{{.}}/page/1">{{.}}</a>
 {{end}}
 </p>
 

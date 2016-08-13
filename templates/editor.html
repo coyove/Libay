@@ -6,19 +6,23 @@
 
 <p id="breadcrumbs">
 	{{if .Message}}
-		发送私信至"{{.MessageReceiverName}}" | <a href='/user/{{.ReplyTo}}'>查看用户</a>
+		发送私信至 <span class='fai'>&#xe12b;</span> 
+		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a> | 
 	{{else}}
 		{{if .Update}}
-			修改文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>返回文章</a>
+			修改 <span class='fai'>&#xe0bf;</span>
+			<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a> | 
 		{{else}}
 			{{if .ReplyTo}}
-				回复文章No.{{.ReplyTo}} | <a href='/article/{{.ReplyTo}}'>转到该文章</a>
+				回复 <span class='fai'>&#xe0bf;</span> 
+				<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a> | 
 			{{else}}
-				发布新文章
+				<span class='fai'>&#xe0bf;</span> 发布新文章 |
 			{{end}}
 		{{end}}
-	{{end}}|
-	身份:
+	{{end}}
+
+	<span class='fai' title="以身份">&#xe12c;</span>
 	{{if .IsLoggedIn}}
 		{{.Username}}
 	{{else}}
@@ -34,7 +38,6 @@
 
 <script type="text/javascript">
 	window.onload = (function() {
-		etc.util.lazyLoad(["/assets/font.css"]);
 		etc.editor.wrap("thread-content");
 	    etc.id("thread-content").onpaste = function(event){
 			var items = (event.clipboardData || event.originalEvent.clipboardData).items;
@@ -314,21 +317,21 @@
 			<div id="editor-outter-panel" unselectable="on">
 				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
 					<span><span id="uploading-sign"></span>
-					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xf093;</a>
-					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xf03e;</a>
-					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xf14c;</a> <b>|</b>
-					<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xf0c1;</a>
-					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xf0cb;</a>
-					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xf0ca;</a>
-					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xf0ce;</a> <b>|</b>
-					<a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
+					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xe04b;</a>
+					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xe08d;</a>
+					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xe06d;</a> <b>|</b>
+					<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xe09c;</a>
+					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xe101;</a>
+					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xe114;</a>
+					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xe118;</a> <b>|</b>
+					<!-- <a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
 					<a href="javascript:etc.editor.insertNode('Bold')" title="粗体">&#xf032;</a>
 					<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
 					<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
-					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a> <b>|</b>
-					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xf121;</a>
-					<a href="javascript:etc.editor.clearFormat()" title="清空格式 (Ctrl+Shift+X)">&#xf12d;</a>
-					<a href="javascript:clearContent()" title="清空内容">&#xf057;</a>
+					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a> <b>|</b> -->
+					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xe04d;</a>
+					<a href="javascript:etc.editor.clearFormat()" title="清空格式 (Ctrl+Shift+X)">&#xe070;</a>
+					<a href="javascript:clearContent()" title="清空内容">&#xe122;</a>
 					
 					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
 					<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
@@ -396,38 +399,40 @@
 		</p>
 	</div>
 
-	<div>
-		<p>
-			<select id="thread-tag">
-				<option value="">--请选择标签--</option>
-				<optgroup label="通用标签">
+	<div style="margin-top: 5px">
+		<select id="thread-tag">
+			<option value="">--请选择标签--</option>
+			<optgroup label="通用标签">
+			{{range .Tags}}
+				{{if .Visible}}
+				<option value="{{.Name}}">
+					{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
+				</option>
+				{{end}}
+			{{end}}
+			</optgroup>
+			{{if .IsLoggedIn}}
+				<optgroup label="隐藏/限制标签">
 				{{range .Tags}}
-					{{if .Visible}}
+					{{if .Visible}}{{else}}
 					<option value="{{.Name}}">
 						{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
 					</option>
 					{{end}}
 				{{end}}
 				</optgroup>
-				{{if .IsLoggedIn}}
-					<optgroup label="隐藏/限制标签">
-					{{range .Tags}}
-						{{if .Visible}}{{else}}
-						<option value="{{.Name}}">
-							{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
-						</option>
-						{{end}}
-					{{end}}
-					</optgroup>
-				{{end}}
-			</select>
-		</p>
+			{{end}}
+		</select>
+	</div>
+
+	<div style="margin-top: 5px">
 		<button id="post-article" data-onclick="tryPost()">{{if .Update}}修改{{else}}发布{{end}}</button>
 		<button data-onclick="tryPreview()">预览</button>
 		<button onclick="editHTML()" id="html-edit" mode="wysiwyg">HTML編輯</button>
 		<button onclick="clearDraft()">清空草稿</button>
 		<span id="save-draft"></span>
 	</div>
+
 	<div>
 		<ul>
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
