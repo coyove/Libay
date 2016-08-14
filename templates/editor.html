@@ -1,7 +1,11 @@
-{{if .Update}}
-<title>编辑文章</title>
+{{if .Message}}
+	<title>发送私信</title>
 {{else}}
-<title>发布文章</title>
+	{{if .Update}}
+	<title>编辑文章</title>
+	{{else}}
+	<title>发布文章</title>
+	{{end}}
 {{end}}
 
 <p id="breadcrumbs">
@@ -235,18 +239,6 @@
 		return etc.wait.on(this);
 	}
 
-	function editHTML() {
-		if (etc.id("html-edit").attr("mode") == "wysiwyg") {
-			etc.let.hide("tr-edit").disable("post-article").show("tr-edit-html");
-			etc.id("html-edit").attr("mode", "html").innerHTML = "返回編輯";
-			etc.id("thread-content-html").value = etc.id("thread-content").innerHTML;
-		} else {
-			etc.let.hide("tr-edit-html").show("tr-edit").enable("post-article");
-			etc.id("html-edit").attr("mode", "wysiwyg").innerHTML = "HTML編輯";
-			etc.id("thread-content").innerHTML = (etc.id("thread-content-html").value);
-		}
-	}
-
 	function saveDraft() {
 		{{if .Update}}
 			var d = "draft-edit-{{.ReplyTo}}";
@@ -279,24 +271,6 @@
 
 		alert("已清空: " + d);
 		window.location.reload();
-	}
-
-	function formatHTML(){
-		etc.util.lazyLoad([
-			"/assets/html_beautify/beautify.js",
-			"/assets/html_beautify/beautify-css.js",
-			"/assets/html_beautify/beautify-html.js"
-		], function() {
-            etc.id("thread-content-html").value = 
-            html_beautify(etc.id("thread-content-html").value, {
-            	indent_size: 4,
-            	indent_char: ' ',
-            	max_preserve_newlines: 5,
-            });
-            etc.wait.on(this).done();
-		});
-
-		return etc.wait.on(this);
 	}
 </script>
 
@@ -384,21 +358,6 @@
         </div>
 	</div>
 
-	<div id="tr-edit-html" style="display:none" colspan="2">
-		<textarea rows="20" id="thread-content-html"></textarea>
-		<button data-onclick="formatHTML()">HTML排版 (jsbeautifier)</button>
-		<p style="font-size: 80%">
-		允许HTML标签:
-		{{range $key, $value := .HTMLTags}}
-		{{if $value}}&lt;{{$key}}&gt;{{end}}
-		{{end}}<br>
-		允许标签属性:
-		{{range $key, $value := .HTMLAttrs}}
-		{{if $value}}:{{$key}}{{end}}
-		{{end}}
-		</p>
-	</div>
-
 	<div style="margin-top: 5px">
 		<select id="thread-tag">
 			<option value="">--请选择标签--</option>
@@ -428,7 +387,6 @@
 	<div style="margin-top: 5px">
 		<button id="post-article" data-onclick="tryPost()">{{if .Update}}修改{{else}}发布{{end}}</button>
 		<button data-onclick="tryPreview()">预览</button>
-		<button onclick="editHTML()" id="html-edit" mode="wysiwyg">HTML編輯</button>
 		<button onclick="clearDraft()">清空草稿</button>
 		<span id="save-draft"></span>
 	</div>
@@ -440,6 +398,19 @@
 			<li>
 			使用Gist请编辑HTML并粘贴:<br> 
 			&lt;script src="https://gist.github.com/xxx/1234567890abcdef1234567890abcdef.js"&gt;&lt;/script&gt;
+			</li>
+
+			<li>
+				允许HTML标签:
+				{{range $key, $value := .HTMLTags}}
+				{{if $value}}&lt;{{$key}}&gt;{{end}}
+				{{end}}
+			</li>
+			<li>
+				允许标签属性:
+				{{range $key, $value := .HTMLAttrs}}
+				{{if $value}}:{{$key}}{{end}}
+				{{end}}
 			</li>
 		</ul>
 	</div>

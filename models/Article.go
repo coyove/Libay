@@ -211,6 +211,38 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 	Return(w, auth.InvertArticleState(u, id, "deleted"))
 }
 
+func (th ModelHandler) POST_delete_messages_from_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !auth.LogIP(r) {
+		Return(w, "Err::Router::Frequent_Access")
+		return
+	}
+
+	u := auth.GetUser(r)
+
+	if !auth.CheckCSRF(r) {
+		Return(w, "Err::CSRF::CSRF_Failure")
+		return
+	}
+
+	id, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil || id < 0 {
+		Return(w, "Err::Router::Invalid_User_Id")
+		return
+	}
+
+	if _, err := auth.Gdb.Exec(`
+		UPDATE articles 
+		SET    tag = 100000 
+		WHERE 
+			tag = ` + strconv.Itoa(u.ID+100000) + `
+		AND
+			author = ` + strconv.Itoa(id)); err != nil {
+		Return(w, "Err::DB::Update_Failure")
+	} else {
+		Return(w, "ok")
+	}
+}
+
 func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	if !u.CanPost() {

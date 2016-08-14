@@ -959,12 +959,42 @@
 
     g.etc.onload(function() {
         var elems = document.querySelectorAll("*[data-onclick]");
-        
         for (var i = 0; i < elems.length; i++) {
             if (elems[i].tagName === "A") elems[i].href = "javascript:void(0)";
-            
+
             elems[i].onclick = (function(idx){
                 return function() { g.etc.wait.onclick(elems[idx]); };
+            })(i);
+        }
+  
+        var ddelems = document.querySelectorAll("*[data-dropdown]");
+        for (var i = 0; i < ddelems.length; i++) {
+            ddelems[i].style.cursor = "pointer";
+            ddelems[i].onclick = (function(idx){
+                return function() { 
+                    var dd = g.etc.id(ddelems[idx].getAttribute("data-dropdown"));
+                    var ddol = ddelems[idx].getAttribute("data-dropdown-onload");
+                    var rect = ddelems[idx].getBoundingClientRect();
+
+                    if (ddol) eval(ddol);
+
+                    dd.style.left = (rect.left - 10) + "px";
+                    dd.style.top = (rect.bottom + 10) + "px";
+                    dd.style.display = "block";
+                    dd.style.zIndex = 99;
+
+                    var underlay = document.createElement("div");
+                    underlay.className = "dropdown-underlay";
+                    underlay.style.zIndex = 98;
+                    underlay.style.display = "block";
+
+                    dd.parentNode.insertBefore(underlay, dd);
+
+                    underlay.onclick = dd.onclick = function() {
+                        dd.style.display = "none";
+                        dd.parentNode.removeChild(underlay);
+                    };
+                };
             })(i);
         }
     });

@@ -35,6 +35,8 @@ var DummyUsers = []AuthUser{
 	AuthUser{ID: 5, Group: "user"},
 }
 
+var nicknameReverseLookup map[string]int
+
 func (au *AuthUser) CanPost() bool {
 	if au.Status == "locked" {
 		return false
@@ -167,6 +169,29 @@ func GetUser(vs ...interface{}) (ret AuthUser) {
 	return
 }
 
+func GetIDByNickname(n string) int {
+
+	if nicknameReverseLookup == nil {
+		nicknameReverseLookup = make(map[string]int)
+	}
+
+	if id, e := nicknameReverseLookup[n]; e {
+		return id
+	} else {
+		if err := Gdb.QueryRow(`
+            SELECT id
+            FROM   users
+            WHERE  users.nickname = '` + n + `'`).Scan(&id); err == nil {
+
+			nicknameReverseLookup[n] = id
+			return id
+		} else {
+			glog.Errorln("Database:", err)
+			return 0
+		}
+	}
+}
+
 func GetUserByID(id int) (ret AuthUser) {
 	var session_id, nickname, username, ip, status, group, comment, avatar string
 	var date, signupDate time.Time
@@ -223,6 +248,12 @@ func GetUserByID(id int) (ret AuthUser) {
 			session_id}
 
 		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)
+
+		if nicknameReverseLookup == nil {
+			nicknameReverseLookup = make(map[string]int)
+		}
+
+		nicknameReverseLookup[nickname] = _id
 	} else {
 		glog.Errorln("Database:", err)
 	}

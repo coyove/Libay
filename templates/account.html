@@ -1,6 +1,14 @@
 {{if .IsLoggedIn}}
 <title>管理面板</title>
+<style type="text/css">
+    .account-admin { display: inline !important; }
+</style>
+
 <p id="breadcrumbs">
+	<span class="account-{{.Group}}" data-dropdown="admin-nav">
+    	<span class='fai'>&#xe103;</span> 管理员 |
+    </span>
+    
     <span class='fai'>&#xe0bf;</span>
     <a href="/ua/{{.ID}}/page/1">可见文章</a> |
 
@@ -14,6 +22,17 @@
     <a data-onclick="tryLogout()">登出账号</a>
 </p>
 
+<div class="dropdown" id="admin-nav">
+    <ul>
+        <li><a href="/owa/0/page/1">站内所有文章</a></li>
+        <li><a href="/config/sheet">配置文件</a></li>
+        <li><a href="/database/articles/page/1">浏览数据库</a></li>
+        <li><a href="/bootstrap">配置模板</a></li>
+        <li><a href="/cache" target="_blank">缓存状态</a></li>
+    </ul>
+</div>
+
+
 {{else}}
 <title>用户登入</title>
 <p id="breadcrumbs">
@@ -22,29 +41,6 @@
 {{end}}
 
 <script type="text/javascript">
-    var returnURL = "/";
-
-    var tryLogin = function(){
-        etc.let.hide("login-result");
-
-        etc.util.ajax.post("/login", {
-            "username" : etc.id("simple-username").value, 
-            "password" : etc.id("simple-password").value, 
-            "expire" : etc.id("simple-expire").value,
-            "csrf": etc.util.CSRF()
-        }).then(function (e, data, x) {
-            etc.wait.on(this).done();
-
-            if (data.indexOf("ok") == 0) {
-                window.location.href = returnURL;
-            } else {
-                etc.let.show("login-result").$.html("登入失败: " + data);
-            }
-        });
-
-        return etc.wait.on(this);
-    }
-
     {{if .IsLoggedIn}}
         var tryLogout = function(){
             etc.util.ajax.post("/logout").then(function (e, data, x) {
@@ -125,9 +121,32 @@
         if (window.__unread > 0) 
             etc.id("message-box-count").innerHTML += " (" + window.__unread + ")";
     {{else}}
-        window.onload = function() {
-            returnURL = window.location.href.split("?")[1] || "/";
+	    var tryLogin = function(){
+	        etc.let.hide("login-result");
 
+	        etc.util.ajax.post("/login", {
+	            "username" : etc.id("simple-username").value, 
+	            "password" : etc.id("simple-password").value, 
+	            "expire" : etc.id("simple-expire").value,
+	            "csrf": etc.util.CSRF()
+	        }).then(function (e, data, x) {
+	            etc.wait.on(this).done();
+
+	            if (data.indexOf("ok") == 0) {
+	                window.location.href = window.location.href.split("?")[1] || "/";
+	            } else {
+	                var m = data.match(/Err::Login::Retry_Opportunities_(\d+)_Hint_(.+)/);
+	                var h = "登入失败: " + data;
+	                if (m[2]) h = "密码提示: " + m[2] + "<br>" + h;
+	                
+	                etc.let.show("login-result").$.html(h);
+	            }
+	        });
+
+	        return etc.wait.on(this);
+	    }
+
+        window.onload = function() {
             etc.id("simple-password").on("keydown", function(ev) { 
                 if(ev.keyCode == 13) etc.id("simple-login").click(); 
             });
@@ -136,27 +155,13 @@
 </script>
 
 {{if .IsLoggedIn}}
-<style type="text/css">
-    .account-admin {
-        display: table !important;
-    }
-</style>
-
-<table class="toa account-{{.Group}}" style="display: none" id="admin-nav">
-    <tr>
-        <td><a href="/owa/0/page/1">站内所有文章</a></td>
-        <td><a href="/config/sheet">配置文件</a></td>
-        <td><a href="/database/articles/page/1">浏览数据库</a></td>
-        <td><a href="/bootstrap">配置模板</a></td>
-        <td><a href="/cache" target="_blank">缓存状态</a></td>
-    </tr>
-</table>
 
 <table class="_table" style="width: 100%">
     <tr><td class="right-align fit">用户ID:</td><td>{{.ID}}</td></tr>
     <tr><td class="right-align fit">用户昵称:</td><td>{{.NickName}}</td></tr>
     <tr><td class="right-align fit">登入名:</td><td>{{.Name}}</td></tr>
     <tr><td class="right-align fit">用户组:</td><td>{{.Group}}</td></tr>
+
     <tr><td class="right-align fit">用户状态:</td><td>{{.Status}}</td></tr>
     
     {{range $n, $av := .UserPrivilege}}
@@ -188,7 +193,7 @@
     <label for="use-trad">使用繁体</label>
     </td></tr>
 
-    <tr><td></td><td class="smaller">-- 变更后请刷新页面</td>
+    <tr><td></td><td class="smaller">(修改后请刷新页面, 该设置在登出账号后依然有效)</td>
     <script type="text/javascript">
         function useTrad(e) {
             if (e.checked)

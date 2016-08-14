@@ -17,53 +17,57 @@
 		<a data-onclick="tryUnread()">标记为未读</a> |
 		{{end}}
 
-		{{if .Article.IsMessageSentout}}
-		{{else}}
-			<span class='fai' title="发送者">&#xe12b;</span>
-			<a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> |
-		{{end}}
+		<span class='fai'>&#xe12b;</span>
+		<a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> 
+		→ 
+		<a href="/user/{{.Article.Tag}}">{{.Article.Tag}}</a> |
 
 		<span class='fai'>&#xe123;</span>
 		<a data-onclick="tryDeleteRestore()">删除</a>
 	{{else}}
-		<span class='fai' id="get-function" onclick="showFunction()">&#xe0bf;</span>
-		<span onclick="showFunction()" style="cursor: pointer">文章</span> |
+		<span data-dropdown="article-function">
+			<span class='fai'>&#xe0bf;</span>
+			<span style="cursor: pointer">文章</span>
+		</span> |
 
 		<span class='fai' title="修改日期">&#xe120;</span>
 		<span id="article-revision">
 			<script type="text/javascript">
 				document.write(etc.date.format({{.Article.ModTimestamp}}, true));
 			</script>
-		</span>
+		</span> |
+
 		{{if .Article.Revision}}
-			(<a id="get-history" data-onclick="getHistory()">{{.Article.Revision}}次修订</a>)
-		{{end}} |
-
-		<span class='fai' title="作者">&#xe12c;</span>
-		<a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> |
-
-		{{if .IsEditedByOthers}}
-		<span class='fai' title="文章原作者">&#xe12b;</span>
-		<a href="/user/{{.Article.OriginalAuthorID}}">{{.Article.OriginalAuthor}}</a> |
+		<span data-dropdown="article-history" data-dropdown-onload="getHistory()">
+			<span class='fai'>&#xe0c3;</span> <span title="修订">r{{.Article.Revision}}</span>
+		</span> |
 		{{end}}
 
-		<span class='fai' title="标签">&#xe10f;</span>
-		<a href="/tag/{{.Article.Tag}}/page/1">{{.Article.Tag}}</a> |
+		<span class='fai'>&#xe12c;</span>
+		<a href="/user/{{.Article.AuthorID}}" title="作者">{{.Article.Author}}</a> |
+
+		{{if .IsEditedByOthers}}
+		<span class='fai'>&#xe12b;</span>
+		<a href="/user/{{.Article.OriginalAuthorID}}" title="文章原作者">{{.Article.OriginalAuthor}}</a> |
+		{{end}}
+
+		<span class='fai'>&#xe10f;</span>
+		<a href="/tag/{{.Article.Tag}}/page/1" title="标签">{{.Article.Tag}}</a> |
 
 		{{if .Article.ParentID}}
-			<span class='fai' title="父文章">&#xe00b;</span>
-			<a href="/article/{{.Article.ParentID}}">{{.Article.ParentTitle}}</a> |
+			<span class='fai'>&#xe00b;</span>
+			<a href="/article/{{.Article.ParentID}}" title="父文章">{{.Article.ParentTitle}}</a> |
 		{{else}}
 			{{if .Article.Children}}
-			<span class='fai' title="回复">&#xe0b8;</span>
-			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}}篇</a> |
+			<span class='fai'>&#xe0b8;</span>
+			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}}回复</a> |
 			{{end}}
 
-			<span class='fai' title="回复文章">&#xe0b7;</span>
+			<span class='fai'>&#xe0b7;</span>
 			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">回复文章</a> |
 		{{end}}
 
-		<span class='fai' title="查看">&#xe06e;</span> {{.Article.Hits}}次
+		<span class='fai'>&#xe06e;</span> <span title="查看">{{.Article.Hits}}</span>
 	{{end}}
 
 	{{if .Article.Deleted}}
@@ -85,28 +89,14 @@
 	{{end}}
 </p>
 
-<div id="article-history-underlay" class="dropdown-underlay" onclick="hideHistory()"></div>
-<div id="article-history" class="dropdown"></div>
+<div id="article-history" class="dropdown"><span id="article-history-loading"></span></div>
 
-<style type="text/css">
-	#get-function {
-		cursor: pointer;
-	}
-
-	#article-function span.fai {
-		display: inline-block;
-    	width: 20px;
-    	text-align: center;
-	}
-</style>
-
-<div id="article-function-underlay" class="dropdown-underlay" onclick="hideFunction()"></div>
 <div id="article-function" class="dropdown">
 	<ul>
 		<li><span class='fai'>&#xe08d;</span> 
 		<a href="javascript:switchView()" id="switch-mode" data-mode="normal">相册模式</a>
-
 		</li>
+		
 		{{if .IsLoggedIn}}
 			{{if .IsAuthorSelf}}
 				{{if .Article.IsMessage}}{{else}}
@@ -151,42 +141,14 @@
 		return etc.wait.on(this);
 	}
 
-	function moveDD(p, e) {
-		var rect = p.getBoundingClientRect();
-
-		e.style.left = (rect.left - 10) + "px";
-		e.style.top = (rect.top + rect.height + 10) + "px";
-	}
-
-	function hideFunction() {
-		etc.let.hide("article-function-underlay");
-		etc.let.hide("article-function");
-	}
-
-	function showFunction() {
-		if (etc.get("#article-function li").length < 1) return;
-
-		etc.let.show("article-function");
-		moveDD(etc.id("get-function"), etc.id("article-function"));
-		etc.let.show("article-function-underlay");
-	}
-
-	function hideHistory() {
-		etc.let.hide("article-history-underlay");
-		etc.let.hide("article-history");
-	}
-
 	function getHistory() {
-		if (etc.id("article-history").innerHTML != "") {
-			moveDD(etc.id("get-history"), etc.id("article-history"));
-			etc.let.show("article-history");
-			etc.let.show("article-history-underlay");
-			return etc.wait.on(this).done();
+		if (etc.id("article-history-loading")) {
+			Animation.start("article-history-loading");
+		} else {
+			return;
 		}
 
 		etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
-			etc.wait.on(this).done();
-
 			getHistory.history = JSON.parse(d);
 			var has = false;
 			var _html = ["</ul>"];
@@ -199,12 +161,9 @@
 			if (!has) _html.push("<li>无历史版本</li>");
 			_html.push("<ul style='cursor: pointer'>");
 
-			var ah = etc.let.show("article-history").$.html(_html.reverse().join(''))
-			moveDD(etc.id("get-history"), ah);
-			etc.let.show("article-history-underlay");
+			Animation.stop();
+			etc.id("article-history").html(_html.reverse().join(''));
 		});
-
-		return etc.wait.on(this);
 	}
 
 	function getHistoryVersion(rev) {
@@ -225,7 +184,6 @@
 			var g = etc.id("gallery");
 			if (g && g.parentNode) g.parentNode.removeChild(g);
 
-			hideHistory();
 			var el = etc.id("switch-mode");
 
 			if (el.attr("data-mode") == "gallery") {

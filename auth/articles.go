@@ -540,6 +540,13 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 		if tag >= 100000 {
 			ret.IsMessage = true
 
+			res, _ := Select1("users", tag-100000, "nickname")
+			if t, e := res["nickname"]; e {
+				ret.Tag = t.(string)
+			} else {
+				ret.Tag = "user" + strconv.Itoa(tag-100000)
+			}
+
 			if user.ID == authorID {
 				ret.IsMessageSentout = true
 			} else if user.ID == tag-100000 {

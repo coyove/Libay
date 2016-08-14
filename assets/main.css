@@ -18,7 +18,12 @@
 
 .fai {
     font-family: typicons;
-    cursor: default;
+}
+
+.dropdown span.fai {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
 }
 
 body {
@@ -145,7 +150,7 @@ td.fit, th.fit{
     word-wrap: break-word;
     word-break: break-all;
     line-height: 1.1;
-    white-space: pre;
+    white-space: pre-wrap;
 }
 
 .dropdown {
@@ -189,7 +194,7 @@ td.fit, th.fit{
 }
 
 #thread-content, #thread-content * {
-    white-space: pre;
+    white-space: pre-wrap;
 }
 
 a {
@@ -483,17 +488,28 @@ div#editor textarea {
     clear: both;
 }
 
-.tags {
+#tags {
     padding: 0;
 }
 
-.tags li { 
+#tags li { 
     float: left; 
     margin: 10px 20px;
     border-bottom: dotted 1px #888;
+    list-style: none;
 }
 
-.tags div { 
+#tags li:before {
+    font-family: typicons;
+    margin-right: 5px;
+    content: '\e06f';
+}
+
+#tags li[type=circle]:before {
+    content: '\e06e';
+}
+
+#tags div { 
     font-size: 80%; 
     margin-bottom: 5px; 
 }

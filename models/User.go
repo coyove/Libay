@@ -25,10 +25,6 @@ type AuthUserArticle struct {
 
 func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
-	if err != nil || id <= 0 {
-		ServePage(w, "404", nil)
-		return
-	}
 
 	var payload struct {
 		User          auth.AuthUser
@@ -36,7 +32,21 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 		Tags          map[int]string
 	}
 
+	if err != nil || id <= 0 {
+		if !auth.LogIP(r) {
+			ServePage(w, "404", nil)
+			return
+		}
+
+		id = auth.GetIDByNickname(auth.CleanString(ps.ByName("id")))
+		if id <= 0 {
+			ServePage(w, "404", nil)
+			return
+		}
+	}
+
 	payload.User = auth.GetUserByID(id)
+
 	if payload.User.ID == 0 {
 		ServePage(w, "404", nil)
 		return
