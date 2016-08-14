@@ -273,14 +273,18 @@ p {
     border-bottom: 1px solid #d2d3d7 ;
 }
 
-badge {
-    background-color: cadetblue;
-    color: white;
-    padding: 0 2px;
+#breadcrumbs .nc {
+    color: #54638c;
+    cursor: pointer;
+}
+
+#breadcrumbs .nc:hover, #breadcrumbs a:hover {
     text-decoration: none;
-    border: solid 1px #568e8f;
-    border-bottom: solid 2px #4b8686;
-    font-weight: bold;
+    color: steelblue;
+}
+
+#breadcrumbs .nc:active {
+    color: #c2c3c7; 
 }
 
 a.badge {

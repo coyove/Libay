@@ -22,11 +22,11 @@
 
 <span data-dropdown="message-function">
 	<span class='fai'>&#xe074;</span>
-	<span>标记</span>
+	<span class='nc'>标记</span>
 </span> |
 
 <input type="checkbox" id="ask-before-delete" class="simple-check" checked="true"/>
-<label for="ask-before-delete">删除前询问</label>
+<label for="ask-before-delete"><span class='nc'>删除前询问</span></label>
 
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
@@ -128,10 +128,6 @@
 </div>
 
 <table id="articles">
-	<tr>
-	<th class="fit"></th><th style="text-align: left">标题</th>
-	<th class="fit last">回复日期</th>
-	</tr>
 	{{range .Messages}}
 	<tr class="darken">
 		<td class="fit smaller header center">
@@ -144,7 +140,9 @@
 			<div id="m{{.ID}}" class="dropdown">
 				<ul>
 					<li><span class="fai">&#xe0b9;</span>
-					<a href="/message/{{.ReceiverID}}/page/1">查看与其对话记录</a></li>
+					<a href="/message/{{if .Sentout}}{{.ReceiverID}}{{else}}{{.SenderID}}{{end}}/page/1">
+						查看与其对话记录
+					</a></li>
 
 					{{if .Sentout}}
 					{{else}}
@@ -152,7 +150,7 @@
 					<a href="/new/message/{{.SenderID}}">回复私信</a></li>
 
 					<li><span class="fai">&#xe123;</span>
-					<a data-onclick="tryDelete({{.SenderID}}, false)">删除其发来的私信</a></li>
+					<a data-onclick="tryDelete({{.SenderID}}, false)">删除其发来的全部私信</a></li>
 					{{end}}
 					<li><span class="fai">&#xe123;</span>
 					<a data-onclick="tryDelete({{.ID}}, true)">删除该条</a></li>

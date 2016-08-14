@@ -27,22 +27,19 @@
 	{{else}}
 		<span data-dropdown="article-function">
 			<span class='fai'>&#xe0bf;</span>
-			<span style="cursor: pointer">文章</span>
+			<span class='nc'>文章</span>
 		</span> |
 
-		<span class='fai' title="修改日期">&#xe120;</span>
-		<span id="article-revision">
-			<script type="text/javascript">
-				document.write(etc.date.format({{.Article.ModTimestamp}}, true));
-			</script>
-		</span> |
-
-		{{if .Article.Revision}}
 		<span data-dropdown="article-history" data-dropdown-onload="getHistory()">
-			<span class='fai'>&#xe0c3;</span> <span title="修订">r{{.Article.Revision}}</span>
+			<span class='fai' title="修改日期">&#xe120;</span>
+			<span id="article-revision" class='nc'>
+				<script type="text/javascript">
+					document.write(etc.date.format({{.Article.ModTimestamp}}, true));
+				</script>
+				{{if .Article.Revision}}(r{{.Article.Revision}}){{end}}
+			</span>
 		</span> |
-		{{end}}
-
+		
 		<span class='fai'>&#xe12c;</span>
 		<a href="/user/{{.Article.AuthorID}}" title="作者">{{.Article.Author}}</a> |
 
