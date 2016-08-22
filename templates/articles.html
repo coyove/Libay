@@ -12,7 +12,7 @@
 
 	{{if .IsUA}}
 		<title>[[User Articles]]</title>
-		<p id="breadcrumbs"><span class='fai'>&#xe12b;</span> {{.UA.UserNickName}}
+		<p id="breadcrumbs"><span class='fai'>&#xe12b;</span> "{{.UA.UserNickName}}" [[Article]]
 	{{end}}
 
 	{{if .IsOWA}}
@@ -22,7 +22,7 @@
 			<span class='fai'>&#xe0bf;</span> [[Global Articles]]
 		{{else}}
 			{{if .OWA.IsViewingOther}}
-				<span class='fai'>&#xe12b;</span> {{.OWA.ViewingOtherName}}
+				<span class='fai'>&#xe12b;</span> "{{.OWA.ViewingOtherName}}" [[Article]]
 			{{else}}
 				<span class='fai'>&#xe12c;</span> [[My Articles]]
 			{{end}}
@@ -31,7 +31,7 @@
 
 	{{if .IsTag}}
 		<title>{{.CurTag}}</title>
-		<p id="breadcrumbs"><span class='fai'>&#xe10f;</span> {{.CurTag}} [[Article]] |
+		<p id="breadcrumbs"><span class='fai'>&#xe10f;</span> "{{.CurTag}}" [[Article]] |
 		<script type="text/javascript">
 			function postUnderThisTag() {
 				etc.util.cookie.write("default-tag", "{{.CurTag}}", 60000);

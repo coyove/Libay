@@ -387,23 +387,27 @@
 	<div>
 		<ul>
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
-			<li>回复一篇文章时内容不是必须的，可以把回复写在标题里。一般请选择[r: 回复区]标签</li>
+			<li>回复一篇文章时内容不是必须的, 可以把回复写在标题里 (一般请选择[r: 回复区]标签)</li>
 			<li>
-			使用Gist请编辑HTML并粘贴:<br> 
+			使用Gist请编辑HTML并粘贴<br> 
 			&lt;script src="https://gist.github.com/xxx/1234567890abcdef1234567890abcdef.js"&gt;&lt;/script&gt;
 			</li>
 
 			<li>
-				[[Allowed HTML tags]]:
-				{{range $key, $value := .HTMLTags}}
-				{{if $value}}&lt;{{$key}}&gt;{{end}}
-				{{end}}
-			</li>
-			<li>
-				[[Allowed tag attributes]]:
-				{{range $key, $value := .HTMLAttrs}}
-				{{if $value}}\{{$key}}{{end}}
-				{{end}}
+			如果需要更复杂的编辑, 请使用各个浏览器提供的Developer Tool
+				<select>
+					<option selected>可用的标签</option>
+					<optgroup label="[[Allowed HTML tags]]">
+						{{range $key, $value := .HTMLTags}}
+						{{if $value}}<option disabled="disabled">{{$key}}</option>{{end}}
+						{{end}}
+					</optgroup>
+					<optgroup label="[[Allowed tag attributes]]">
+						{{range $key, $value := .HTMLAttrs}}
+						{{if $value}}<option disabled="disabled">{{$key}}</option>{{end}}
+						{{end}}
+					</optgroup>
+				</select>
 			</li>
 		</ul>
 	</div>

@@ -33,10 +33,10 @@
 	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
 	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
 
-	var nad = etc.util.cookie.read("no-ask-delete");
+	var nad = etc.util.cookie.read("nad");
 	etc.id("ask-before-delete").checked = (nad == "0" || nad == "");
 	etc.id("ask-before-delete").onchange = function() {
-		etc.util.cookie.write("no-ask-delete", etc.id("ask-before-delete").checked ? "0" : "1");
+		etc.util.cookie.write("nad", etc.id("ask-before-delete").checked ? "0" : "1");
 	}
 </script>
 </p>
@@ -136,7 +136,7 @@
 		{{if .Sentout}}<a href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a>{{else}}你{{end}}
 		</td>
 		<td class="title">
-			<span data-dropdown="m{{.ID}}" class="fai">&#xe00a;</span>
+			<span data-dropdown="m{{.ID}}" class="fai">{{if .Sentout}}&#xe126;{{else}}&#xe065;{{end}}</span>
 			<div id="m{{.ID}}" class="dropdown">
 				<ul>
 					<li><span class="fai">&#xe0b9;</span>

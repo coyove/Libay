@@ -338,7 +338,11 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 		first := ret[0]
 		last := ret[len(ret)-1]
 
-		nav.Set(first.ModTimestamp, last.ModTimestamp)
+		if filterType == "reply" {
+			nav.Set(first.Timestamp, last.Timestamp)
+		} else {
+			nav.Set(first.ModTimestamp, last.ModTimestamp)
+		}
 	}
 
 	return
