@@ -866,14 +866,14 @@
                 });
             },
 
-            "insertLink": function() {
+            "insertLink": function(ask) {
                 if (!_insideEditor()) return;
 
                 var A = prompt("URL:", "http://");
                 if (A === "http://" || A === "") return;
 
                 var text = g.etc.editor.getSelected();
-                if (text == "") text = prompt("显示文字:", A);
+                if (text == "") text = ask(A);
 
                 _id(_editorId).focus();
                 _insertHTML("<a href='" + A + "' target='_blank'>" + text + "</a>");
@@ -940,8 +940,7 @@
                     document.execCommand(cmd, false, arg);
             },
 
-            "insertTable": function() {
-                var _size = prompt("行 x 列:", "3x2");
+            "insertTable": function(_size) {
                 var size = _size.split("x");
                 if (size.length < 2) return;
 
@@ -954,8 +953,8 @@
             },
 
             "insertTitle": function() {
-                _insertHTML("<table class=_table><tr><td align=center>" + 
-                    g.etc.editor.getSelected() + "</td></tr></table>");
+                var s = g.etc.editor.getSelected();
+                _insertHTML("<table class=_table><tr><td align=center>" + (s ? s : "title") + "</td></tr></table>");
             }
         },
     };

@@ -34,13 +34,13 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 
 	if err != nil || id <= 0 {
 		if !auth.LogIP(r) {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 
 		id = auth.GetIDByNickname(auth.CleanString(ps.ByName("id")))
 		if id <= 0 {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 	}
@@ -48,11 +48,11 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 	payload.User = auth.GetUserByID(id)
 
 	if payload.User.ID == 0 {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 	payload.Tags = conf.GlobalServerConfig.GetTags()
-	ServePage(w, "user", payload)
+	ServePage(w,r, "user", payload)
 }
 
 func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -197,7 +197,7 @@ func (th ModelHandler) GET_account(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	payload.UserPrivilege["Cooldown"] = conf.GlobalServerConfig.GetInt(payload.AuthUser.Group, "Cooldown")
-	ServePage(w, "account", payload)
+	ServePage(w,r, "account", payload)
 }
 
 // PAGE: Serve new user register page
@@ -206,5 +206,5 @@ func (th ModelHandler) GET_account_register(w http.ResponseWriter, r *http.Reque
 		IsOpen bool
 	}
 	payload.IsOpen = conf.GlobalServerConfig.AllowRegistration
-	ServePage(w, "register", payload)
+	ServePage(w,r, "register", payload)
 }

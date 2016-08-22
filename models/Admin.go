@@ -23,7 +23,7 @@ func (th ModelHandler) GET_database_TABLE_page_PAGE(w http.ResponseWriter, r *ht
 	u := auth.GetUser(r)
 
 	if err != nil || u.Group != "admin" {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (th ModelHandler) GET_database_TABLE_page_PAGE(w http.ResponseWriter, r *ht
 		}
 	}
 
-	ServePage(w, "database", payload)
+	ServePage(w,r, "database", payload)
 }
 
 func (th ModelHandler) POST_database_TABLE_delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -110,7 +110,7 @@ func (th ModelHandler) GET_config_sheet(w http.ResponseWriter, r *http.Request, 
 	u := auth.GetUser(r)
 
 	if u.Group != "admin" {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 
@@ -120,7 +120,7 @@ func (th ModelHandler) GET_config_sheet(w http.ResponseWriter, r *http.Request, 
 	}
 
 	payload.JSON = string(buf)
-	ServePage(w, "config", payload)
+	ServePage(w,r, "config", payload)
 }
 
 func (th ModelHandler) GET_gc(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -188,7 +188,7 @@ func (th ModelHandler) GET_bootstrap(w http.ResponseWriter, r *http.Request, ps 
 	u := auth.GetUser(r)
 
 	if u.Group != "admin" {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 
@@ -205,14 +205,14 @@ func (th ModelHandler) GET_bootstrap(w http.ResponseWriter, r *http.Request, ps 
 			}
 		}
 	}
-	ServePage(w, "bootstrap", payload)
+	ServePage(w,r, "bootstrap", payload)
 }
 
 func (th ModelHandler) GET_bootstrap_FILE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 
 	if u.Group != "admin" {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 
@@ -227,7 +227,7 @@ func (th ModelHandler) GET_bootstrap_FILE(w http.ResponseWriter, r *http.Request
 	payload.Content = auth.Escape(string(buf))
 	payload.File = ps.ByName("file")
 
-	ServePage(w, "bootstrap", payload)
+	ServePage(w,r, "bootstrap", payload)
 }
 
 func (th ModelHandler) POST_bootstrap_FILE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

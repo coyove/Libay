@@ -29,6 +29,8 @@ type ServerConfig struct {
 	MainJS  string
 	MainCSS string
 
+	GlobalDefaultLang string
+
 	MaxRetryOpportunities int
 	CooldownTime          int
 

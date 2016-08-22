@@ -1,7 +1,7 @@
 package models
 
 import (
-	// "../auth"
+	"../auth"
 	"../conf"
 
 	"github.com/golang/glog"
@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"text/template"
@@ -59,7 +60,7 @@ type ModelHandler struct {
 }
 
 type _Template struct {
-	Content *template.Template
+	Content map[string]*template.Template
 	Time    time.Time
 }
 
@@ -73,7 +74,7 @@ var ServerStartUp time.Time
 var ServerTotalRenderTime int64
 var ServerTotalRenderCount int64
 
-func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
+func ServePage(w http.ResponseWriter, r *http.Request, fp string, pl interface{}) {
 
 	if fp == "404" {
 		w.WriteHeader(404)
@@ -141,13 +142,27 @@ func ServePage(w http.ResponseWriter, fp string, pl interface{}) {
 		title.CurrentNav = "nv-user"
 	}
 
-	t := template.Must(templates["header.html"].Content, nil)
+	userLang := conf.GlobalServerConfig.GlobalDefaultLang
+	if cookie, err := r.Cookie("upl"); err == nil {
+		userLang = cookie.Value
+		// } else {
+		// 	mat := findPreferredLang.FindStringSubmatch(r.Header.Get("Accept-Language"))
+		// 	if len(mat) > 1 {
+		// 		userLang = strings.ToLower(mat[1])
+		// 	}
+	}
+
+	if _, e := templates["header.html"].Content[userLang]; !e {
+		userLang = conf.GlobalServerConfig.GlobalDefaultLang
+	}
+
+	t := template.Must(templates["header.html"].Content[userLang], nil)
 	t.Execute(w, title)
 
-	t = template.Must(templates[fp+".html"].Content, nil)
+	t = template.Must(templates[fp+".html"].Content[userLang], nil)
 	t.Execute(w, pl)
 
-	t = template.Must(templates["footer.html"].Content, nil)
+	t = template.Must(templates["footer.html"].Content[userLang], nil)
 	var payload struct {
 		CurTime         string
 		RunTime         string
@@ -180,10 +195,28 @@ func LoadTemplates() {
 	templates = make(map[string]_Template)
 
 	files, _ := ioutil.ReadDir("./templates")
+	parse := func(f os.FileInfo) {
+		temp, e := templates[f.Name()]
+		if !e {
+			temp = _Template{}
+		}
+
+		if temp.Content == nil {
+			temp.Content = make(map[string]*template.Template)
+		}
+
+		temp.Time = f.ModTime()
+
+		for lang, pret := range auth.TranslateTemplate("./templates/"+f.Name(), "./i18n.json") {
+			t, _ := template.New(f.Name()).Parse(pret)
+			temp.Content[lang] = t
+		}
+
+		templates[f.Name()] = temp
+	}
+
 	for _, f := range files {
-		// buf, _ := ioutil.ReadFile("./templates/" + f.Name())
-		t, _ := template.ParseFiles("./templates/" + f.Name())
-		templates[f.Name()] = _Template{t, f.ModTime()}
+		parse(f)
 	}
 
 	go func() {
@@ -191,8 +224,7 @@ func LoadTemplates() {
 			files, _ := ioutil.ReadDir("./templates")
 			for _, f := range files {
 				if f.ModTime().Unix() != templates[f.Name()].Time.Unix() {
-					t, _ := template.ParseFiles("./templates/" + f.Name())
-					templates[f.Name()] = _Template{t, f.ModTime()}
+					parse(f)
 					glog.Infoln("Template reloaded:", f.Name())
 				}
 			}

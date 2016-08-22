@@ -375,6 +375,20 @@ CREATE INDEX articles_tag_index ON articles USING btree (tag);
 
 
 --
+-- Name: history_article_id_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
+--
+
+CREATE INDEX history_article_id_index ON history USING btree (article_id);
+
+
+--
+-- Name: users_nickname_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX users_nickname_index ON users USING btree (nickname);
+
+
+--
 -- Name: users_username_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 

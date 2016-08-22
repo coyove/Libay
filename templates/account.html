@@ -1,5 +1,5 @@
 {{if .IsLoggedIn}}
-<title>管理面板</title>
+<title>[[Console]]</title>
 <style type="text/css">
     .account-admin { display: inline !important; }
 </style>
@@ -11,13 +11,13 @@
     </span>
     
     <span class='fai'>&#xe0bf;</span>
-    <a href="/ua/{{.ID}}/page/1">可见文章</a> |
+    <a href="/ua/{{.ID}}/page/1">[[User Articles]]</a> |
 
     <span class='fai'>&#xe04f;</span>
-    <a href="/owa/{{.ID}}/page/1">管理全部文章</a> |
+    <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a> |
 
     <span class='fai'>&#xe0a5;</span>
-    <a id="message-box-count" href="/message/{{.ID}}/page/1">站内信箱</a> |
+    <a id="message-box-count" href="/message/{{.ID}}/page/1">[[Private Message]]</a> |
 
     <span class='fai'>&#xe069;</span>
     <a data-onclick="tryLogout()">登出账号</a>
@@ -35,10 +35,10 @@
 
 
 {{else}}
-<title>用户登入</title>
+<title>[[Sign in]]</title>
 <p id="breadcrumbs">
-<span class='fai'>&#xe083;</span> 用户登入 | 
-<span class='fai'>&#xe128;</span> <a href="/account/register">创建账号</a></p>
+<span class='fai'>&#xe083;</span> [[Sign in]] | 
+<span class='fai'>&#xe128;</span> <a href="/account/register">[[Sign up]]</a></p>
 {{end}}
 
 <script type="text/javascript">
@@ -62,10 +62,10 @@
                 etc.wait.on(this).done();
 
                 if (d == "ok") {
-                    alert("更新备注成功");
+                    alert("[[Operation completed]]");
                     window.location.reload();
                 } else {
-                    alert("更新失败: " + d);
+                    alert("[[Error: ]]" + d);
                 }
             });
 
@@ -88,10 +88,10 @@
                 etc.wait.on(this).done();
 
                 if (d == "ok") {
-                    alert("修改密码成功");
+                    alert("[[Operation completed]]");
                     window.location.reload();
                 } else {
-                    alert("修改失败: " + d);
+                    alert("[[Error: ]]" + d);
                 }
             });
 
@@ -109,10 +109,10 @@
                 var j = JSON.parse(d);
 
                 if (j.Avatar == "ok"){
-                    alert("上传成功");
+                    alert("[[Operation completed]]");
                     etc.id("avatar-image").attr("src", j.Thumbnail).parentNode.href = j.Link;
                 } else {
-                    alert("发生错误");
+                    alert("[[Error: ]]" + j.R);
                 }
             });
 
@@ -246,27 +246,27 @@
 
 <table class="_table" style="max-width: 300px;">
     <tr>
-        <td class="right-align fit">用户名:</td>
+        <td class="right-align fit">[[Username]]:</td>
         <td><input type="textbox" id="simple-username" class="_f" /></td>
     </tr>
     <tr>
-        <td class="right-align fit">密码:</td><td>
+        <td class="right-align fit">[[Password]]:</td><td>
         <input type="password" id="simple-password" class="_f"/>
     </tr>
     <tr>
-        <td class="right-align fit">Cookie:</td>
+        <td class="right-align fit">[[Cookie]]:</td>
         <td>
             <select id="simple-expire" class="_f">
-                <option value="-1">不保存</option>
-                <option value="1" selected>1 天</option>
-                <option value="7">1 周</option>
-                <option value="30">30 天</option>
-                <option value="0">1 年</option>
+                <option value="-1">[[Do not use]]</option>
+                <option value="1" selected>1 [[day]]</option>
+                <option value="7">1 [[week]]</option>
+                <option value="30">1 [[month]]</option>
+                <option value="0">1 [[year]]</option>
             </select>
         </td>
     </tr>
     <tr><td></td><td>
-        <button data-onclick="tryLogin()" id="simple-login">登入</button>
+        <button data-onclick="tryLogin()" id="simple-login">[[Sign in]]</button>
     </td></tr>
 </table>
 

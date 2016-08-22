@@ -50,11 +50,11 @@ func (th ModelHandler) GET_tags(w http.ResponseWriter, r *http.Request, ps httpr
 	payload.TotalTags = len(payload.Tags)
 	payload.IsLoggedIn = u.Name != ""
 
-	ServePage(w, "tags", payload)
+	ServePage(w,r, "tags", payload)
 }
 
 func (th ModelHandler) GET_playground(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ServePage(w, "404", nil)
+	ServePage(w,r, "404", nil)
 }
 
 func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -78,7 +78,7 @@ func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httproute
             relname = 'users'`).
 		Scan(&payload.TotalUsers, &payload.TotalArticles)
 
-	ServePage(w, "index", payload)
+	ServePage(w,r, "index", payload)
 }
 
 func (th ModelHandler) GET_dyncaptcha(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

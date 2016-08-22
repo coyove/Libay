@@ -19,7 +19,7 @@ import (
 func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 
@@ -47,24 +47,24 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 
 	if payload.Article.Deleted && !vtt {
 		if u.ID == 0 {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 
 		if u.ID != payload.Article.AuthorID && u.ID != payload.Article.OriginalAuthorID {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 	}
 
 	if payload.Article.IsMessage {
 		if (payload.Article.IsOthersMessage && !vtt) || u.ID == 0 {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 	}
 
-	ServePage(w, "article", payload)
+	ServePage(w,r, "article", payload)
 }
 
 func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

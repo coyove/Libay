@@ -6,16 +6,16 @@
 	}
 </script>
 <div id="footer">
-	<div>服务器: {{.Hostname}} ({{.Load}}), 运行: {{.RunTime}}h, 平均: {{.AvgRenderTime}}ms
+	<div>[[Server]]: {{.Hostname}} ({{.Load}}), [[Run]]: {{.RunTime}}h, [[Avg]]: {{.AvgRenderTime}}ms
 
 		<span style="display:none" id="csrf">{{.CSRF}}</span>
 	</div>
 	<hr>
 	<div>
-		权利声明请发送至 / To report any abuse, please contact at
+		[[To report any abuse, please contact at]]
 		<a href="javascript:emailTo()" class="email">abuse&#65312;libay&#46;nl</a>。<br>
 
-		最近修订日期: {{.CurTime}}
+		[[Last update at]]: {{.CurTime}}
 	</div>
 </div>
 </body>

@@ -60,13 +60,13 @@ func (th ModelHandler) GET_new_article_ID(w http.ResponseWriter, r *http.Request
 	id, err := strconv.Atoi(ps.ByName("id"))
 
 	if err != nil {
-		ServePage(w, "404", nil)
+		ServePage(w, r, "404", nil)
 		return
 	}
 
 	payload.ReplyTo = id
 	payload.Update = false
-	ServePage(w, "editor", payload)
+	ServePage(w, r, "editor", payload)
 }
 
 // PAGE: Serve editor page where user can edit an article by id
@@ -76,7 +76,7 @@ func (th ModelHandler) GET_edit_article_ID(w http.ResponseWriter, r *http.Reques
 	id, err := strconv.Atoi(ps.ByName("id"))
 
 	if err != nil {
-		ServePage(w, "404", nil)
+		ServePage(w, r, "404", nil)
 		return
 	}
 
@@ -86,17 +86,17 @@ func (th ModelHandler) GET_edit_article_ID(w http.ResponseWriter, r *http.Reques
 
 	if payload.Article.AuthorID != u.ID && !conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") {
 		if payload.Article.OriginalAuthorID != u.ID {
-			ServePage(w, "404", nil)
+			ServePage(w, r, "404", nil)
 			return
 		}
 	}
 
 	if payload.Article.IsMessage {
-		ServePage(w, "404", nil)
+		ServePage(w, r, "404", nil)
 		return
 	}
 
-	ServePage(w, "editor", payload)
+	ServePage(w, r, "editor", payload)
 }
 
 func (th ModelHandler) GET_new_message_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -105,7 +105,7 @@ func (th ModelHandler) GET_new_message_ID(w http.ResponseWriter, r *http.Request
 	id, err := strconv.Atoi(ps.ByName("id"))
 
 	if err != nil || u.Name == "" || id <= 0 {
-		ServePage(w, "404", nil)
+		ServePage(w, r, "404", nil)
 		return
 	}
 
@@ -113,5 +113,5 @@ func (th ModelHandler) GET_new_message_ID(w http.ResponseWriter, r *http.Request
 	payload.Message = true
 	payload.MessageReceiverName = auth.GetUserByID(id).NickName
 
-	ServePage(w, "editor", payload)
+	ServePage(w, r, "editor", payload)
 }

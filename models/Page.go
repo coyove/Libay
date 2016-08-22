@@ -97,7 +97,7 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 		// You cannot view replies under an invalid article
 		_filter, err := strconv.Atoi(filter)
 		if err != nil || _filter <= 0 {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 	}
@@ -106,7 +106,7 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 		// No one can access "message" main tag or any tag whose index is > 100000
 		_tag := conf.GlobalServerConfig.GetTagIndex(filter)
 		if _tag == conf.GlobalServerConfig.MessageArea || _tag >= 100000 {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 
@@ -123,7 +123,7 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 		if userID == 0 {
 			// "0" means "global", only admin and users with "ViewOtherTrash" privilege can access
 			if !conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOtherTrash") {
-				ServePage(w, "404", nil)
+				ServePage(w,r, "404", nil)
 				return
 			}
 
@@ -132,7 +132,7 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 			// Each user by default can only access his own articles
 			// Admin and users with "ViewOtherTrash" privilege can access others' articles
 			if err != nil || (userID != user.ID && !conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOtherTrash")) {
-				ServePage(w, "404", nil)
+				ServePage(w,r, "404", nil)
 				return
 			}
 		}
@@ -148,7 +148,7 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 	if payload.IsUA {
 		userID, err := strconv.Atoi(filter)
 		if err != nil || userID <= 0 {
-			ServePage(w, "404", nil)
+			ServePage(w,r, "404", nil)
 			return
 		}
 
@@ -180,7 +180,7 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 		}
 	}
 
-	ServePage(w, "articles", payload)
+	ServePage(w,r, "articles", payload)
 }
 
 func MessageHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -205,7 +205,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	user := auth.GetUser(r)
 	userID, err := strconv.Atoi(filter)
 	if err != nil || userID < 0 {
-		ServePage(w, "404", nil)
+		ServePage(w,r, "404", nil)
 		return
 	}
 	payload.Message.IsViewingAll = user.ID == userID
@@ -217,7 +217,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 		return
 	}
 
-	ServePage(w, "message", payload)
+	ServePage(w,r, "message", payload)
 }
 
 func (th ModelHandler) GET_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

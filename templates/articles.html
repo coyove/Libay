@@ -1,37 +1,37 @@
 {{if .CurType}}
 	{{if .IsReply}}
-		<title>文章回复</title>
+		<title>[[Article Replies]]</title>
 		<p id="breadcrumbs">
 
 		<span class='fai'>&#xe00b;</span> 
-		<a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/1">回复该文章</a> |
+		<a href="/new/article/{{.CurTag}}?/reply/{{.CurTag}}/page/1">[[Reply this article]]</a> |
 
 		<span class='fai'>&#xe023;</span>
-		<a href="/article/{{.CurTag}}">返回文章</a>
+		<a href="/article/{{.CurTag}}">[[Back to article]]</a>
 	{{end}}
 
 	{{if .IsUA}}
-		<title>用户文章</title>
+		<title>[[User Articles]]</title>
 		<p id="breadcrumbs"><span class='fai'>&#xe12b;</span> {{.UA.UserNickName}}
 	{{end}}
 
 	{{if .IsOWA}}
-		<title>文章管理</title>
+		<title>[[Iceberg]]</title>
 		<p id="breadcrumbs">
 		{{if .OWA.IsViewingGlobal}}
-			<span class='fai'>&#xe0bf;</span> 全局文章
+			<span class='fai'>&#xe0bf;</span> [[Global Articles]]
 		{{else}}
 			{{if .OWA.IsViewingOther}}
 				<span class='fai'>&#xe12b;</span> {{.OWA.ViewingOtherName}}
 			{{else}}
-				<span class='fai'>&#xe12c;</span> 个人文章管理
+				<span class='fai'>&#xe12c;</span> [[My Articles]]
 			{{end}}
 		{{end}}
 	{{end}}
 
 	{{if .IsTag}}
 		<title>{{.CurTag}}</title>
-		<p id="breadcrumbs"><span class='fai'>&#xe10f;</span> {{.CurTag}}文章 |
+		<p id="breadcrumbs"><span class='fai'>&#xe10f;</span> {{.CurTag}} [[Article]] |
 		<script type="text/javascript">
 			function postUnderThisTag() {
 				etc.util.cookie.write("default-tag", "{{.CurTag}}", 60000);
@@ -40,11 +40,11 @@
 		</script>
 	
 		<span class='fai'>&#xe0b7;</span>
-		<a href="javascript:postUnderThisTag()">发布新文章</a>
+		<a href="javascript:postUnderThisTag()">[[Post new article]]</a>
 	{{end}}
 {{else}}
-	<title>全部文章</title>
-	<p id="breadcrumbs"><span class='fai'>&#xe0bf;</span> 全部文章
+	<title>[[All Articles]]</title>
+	<p id="breadcrumbs"><span class='fai'>&#xe0bf;</span> [[All Articles]]
 {{end}}
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
@@ -91,7 +91,7 @@
 			window.location.href = "/owa/" + _new.join(':') + "/page/1";
 		}
 	</script>
-	<button onclick="reverseTag()">反选</button>
+	<button onclick="reverseTag()">[[Inverse]]</button>
 {{end}}
 
 {{if .Announce.Content}}
@@ -103,10 +103,10 @@
 				&sect;{{.Announce.AuthorID}}-{{.Announce.ID}}-{{.Announce.Revision}}
 			</a>
 			<a href="/user/{{.Announce.AuthorID}}" class="badge">{{.Announce.Author}}</a>
-			<a href="javascript:foldAnnouncement()" class="badge">收起公告</a>
+			<a href="javascript:foldAnnouncement()" class="badge">[[Fold]]</a>
 		</div>
 		<div style="margin-top: 5px; display: none" id="unfold-announcement">
-			<a href="javascript:unfoldAnnouncement()" class="badge">展开公告</a>
+			<a href="javascript:unfoldAnnouncement()" class="badge">[[Unfold]]</a>
 		</div>
 	</div>
 
@@ -130,22 +130,22 @@
 {{end}}
 
 <div class="pager">
-	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	{{if .IsIndexPage}}[ <b>[[First page]]</b> ]{{else}}
 	[
-	<a href="{{.IndexPage}}"> 首页 </a> |
-	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	<a href="{{.IndexPage}}"> [[First page]] </a> |
+	<a href="{{.Nav.PrevPage}}"> [[Prev Page]] </a>
 	]
 	{{end}}
 
 	{{if .IsLastPage}}
-	[ <b>尾页</b> ]
+	[ <b>[[Last page]]</b> ]
 	{{else}}
 	[
-	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
-	<a href="{{.Nav.LastWeekPage}}" >周</a> |
-	<a href="{{.Nav.LastMonthPage}}">月</a> |
-	<a href="{{.Nav.LastYearPage}}" >年</a> |
-	<a href="{{.LastPage}}" >尾页</a>
+	<a href="{{.Nav.NextPage}}"> [[Next Page]] </a> |
+	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
+	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
+	<a href="{{.Nav.LastYearPage}}" >[[Year]]</a> |
+	<a href="{{.LastPage}}" >[[Last page]]</a>
 	]
 	{{end}}
 </div>
@@ -217,21 +217,21 @@
 {{end}}
 
 <div class="pager">
-	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	{{if .IsIndexPage}}[ <b>[[First page]]</b> ]{{else}}
 	[
-	<a href="{{.IndexPage}}"> 首页 </a> |
-	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	<a href="{{.IndexPage}}"> [[First page]] </a> |
+	<a href="{{.Nav.PrevPage}}"> [[Prev Page]] </a>
 	]
 	{{end}}
 	{{if .IsLastPage}}
-	[ <b>尾页</b> ]
+	[ <b>[[Last page]]</b> ]
 	{{else}}
 	[
-	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
-	<a href="{{.Nav.LastWeekPage}}" >周</a> |
-	<a href="{{.Nav.LastMonthPage}}">月</a> |
-	<a href="{{.Nav.LastYearPage}}" >年</a> |
-	<a href="{{.LastPage}}" >尾页</a>
+	<a href="{{.Nav.NextPage}}"> [[Next Page]] </a> |
+	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
+	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
+	<a href="{{.Nav.LastYearPage}}" >[[Year]]</a> |
+	<a href="{{.LastPage}}" >[[Last page]]</a>
 	]
 	{{end}}
 </div>

@@ -1,9 +1,9 @@
 <title>[{{.Article.Tag}}] {{.Article.Title}}</title>
 <p id="breadcrumbs">
 	{{if .Article.IsMessage}}
-		<span class='fai'>&#xe0a5;</span> 私信 |
+		<span class='fai'>&#xe0a5;</span> [[Private Message]] |
 
-		<span class='fai' title="修改日期">&#xe120;</span>
+		<span class='fai' title="[[Last modified date]]">&#xe120;</span>
 		<script type="text/javascript">
 			document.write(etc.date.format({{.Article.ModTimestamp}}, true));
 		</script> |
@@ -11,10 +11,10 @@
 		{{if .Article.IsMessageSentout}}
 		{{else}}
 		<span class='fai'>&#xe00b;</span>
-		<a href="/new/message/{{.Article.AuthorID}}">回复</a> |
+		<a href="/new/message/{{.Article.AuthorID}}">[[Reply]]</a> |
 
 		<span class='fai'>&#xe073;</span>
-		<a data-onclick="tryUnread()">标记为未读</a> |
+		<a data-onclick="tryUnread()">[[Mark as unread]]</a> |
 		{{end}}
 
 		<span class='fai'>&#xe12b;</span>
@@ -23,15 +23,15 @@
 		<a href="/user/{{.Article.Tag}}">{{.Article.Tag}}</a> |
 
 		<span class='fai'>&#xe123;</span>
-		<a data-onclick="tryDeleteRestore()">删除</a>
+		<a data-onclick="tryDeleteRestore()">[[Delete]]</a>
 	{{else}}
 		<span data-dropdown="article-function">
 			<span class='fai'>&#xe0bf;</span>
-			<span class='nc'>文章</span>
+			<span class='nc'>[[Article]]</span>
 		</span> |
 
 		<span data-dropdown="article-history" data-dropdown-onload="getHistory()">
-			<span class='fai' title="修改日期">&#xe120;</span>
+			<span class='fai' title="[[Last modified date]]">&#xe120;</span>
 			<span id="article-revision" class='nc'>
 				<script type="text/javascript">
 					document.write(etc.date.format({{.Article.ModTimestamp}}, true));
@@ -41,48 +41,44 @@
 		</span> |
 		
 		<span class='fai'>&#xe12c;</span>
-		<a href="/user/{{.Article.AuthorID}}" title="作者">{{.Article.Author}}</a> |
+		<a href="/user/{{.Article.AuthorID}}" title="[[Author]]">{{.Article.Author}}</a> |
 
 		{{if .IsEditedByOthers}}
 		<span class='fai'>&#xe12b;</span>
-		<a href="/user/{{.Article.OriginalAuthorID}}" title="文章原作者">{{.Article.OriginalAuthor}}</a> |
+		<a href="/user/{{.Article.OriginalAuthorID}}" title="[[Original author]]">{{.Article.OriginalAuthor}}</a> |
 		{{end}}
 
 		<span class='fai'>&#xe10f;</span>
-		<a href="/tag/{{.Article.Tag}}/page/1" title="标签">{{.Article.Tag}}</a> |
+		<a href="/tag/{{.Article.Tag}}/page/1" title="[[Tag]]">{{.Article.Tag}}</a> |
 
 		{{if .Article.ParentID}}
 			<span class='fai'>&#xe00b;</span>
-			<a href="/article/{{.Article.ParentID}}" title="父文章">{{.Article.ParentTitle}}</a> |
+			<a href="/article/{{.Article.ParentID}}" title="[[Parent article]]">{{.Article.ParentTitle}}</a> |
 		{{else}}
 			{{if .Article.Children}}
 			<span class='fai'>&#xe0b8;</span>
-			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}}回复</a> |
+			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}} [[reply(s)]]</a> |
 			{{end}}
 
 			<span class='fai'>&#xe0b7;</span>
-			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">回复文章</a> |
+			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">[[Reply this article]]</a> |
 		{{end}}
 
-		<span class='fai'>&#xe06e;</span> <span title="浏览量">{{.Article.Hits}}</span>
+		<span class='fai'>&#xe06e;</span> <span title="[[Views]]">{{.Article.Hits}}</span>
 	{{end}}
 
 	{{if .Article.Deleted}}
-		| <span class='fai' title="该文章已删除">&#xe058;</span>
+		| <span class='fai' title="[[This article has been deleted]]">&#xe058;</span>
 	{{end}}
 
 	{{if .Article.Locked}}
-		| <span class='fai' title="该文章已被锁定">&#xe0a2;</span>
+		| <span class='fai' title="[[This article has been locked]]">&#xe0a2;</span>
 	{{else}}
 		| <span class='fai'>&#xe0a4;</span>
 	{{end}}
 
 	{{if .Article.IsRestricted}}
-		| <span class='fai'>&#xe137;</span> 您没有查看权限
-	{{end}}
-
-	{{if .Article.IsOthersMessage}}
-		| <span class='fai' title="这是他人私信文章">&#xe0a5;</span>
+		| <span class='fai'>&#xe137;</span> [[No permission to view this article]]
 	{{end}}
 </p>
 
@@ -91,26 +87,26 @@
 <div id="article-function" class="dropdown">
 	<ul>
 		<li><span class='fai'>&#xe08d;</span> 
-		<a href="javascript:switchView()" id="switch-mode" data-mode="normal">相册模式</a>
+		<a href="javascript:switchView()" id="switch-mode" data-mode="normal">[[Gallery mode]]</a>
 		</li>
 		
 		{{if .IsLoggedIn}}
 			{{if .IsAuthorSelf}}
 				{{if .Article.IsMessage}}{{else}}
 					<li><span class='fai'>&#xe067;</span>
-					<a href='javascript:goEdit()'>编辑</a></li>
+					<a href='javascript:goEdit()'>[[Edit]]</a></li>
 				{{end}}
 
 				<li><span class='fai'>&#xe123;</span>
 				<a data-onclick="tryDeleteRestore()">
-					{{if .Article.Deleted}}恢复{{else}}删除{{end}}
+					{{if .Article.Deleted}}[[Restore]]{{else}}[[Delete]]{{end}}
 				</a></li>
 			{{end}}
 
 			{{if .CanMakeLocked}}
 				<li><span class='fai'>&#xe0a2;</span>
 				<a data-onclick="goLock()">
-					{{if .Article.Locked}}解锁{{else}}锁定{{end}}
+					{{if .Article.Locked}}[[Unlock]]{{else}}[[Lock]]{{end}}
 				</a></li>
 			{{end}}	
 		{{end}}
@@ -127,11 +123,11 @@
 			etc.wait.on(this).done();
 
 			if (d == "ok") {
-				alert("操作成功");
+				alert("[[Operation completed]]");
 				window.location.reload();
 			}
 			else {
-				alert("发生错误: " + d);
+				alert("[[Error: ]]" + d);
 			}
 		});
 
@@ -155,7 +151,7 @@
 					getHistory.history[k].User + " - " + 
 					etc.date.format(getHistory.history[k].Date, true) + "</li>");
 			}
-			if (!has) _html.push("<li>无历史版本</li>");
+			if (!has) _html.push("<li>[[No history version]]</li>");
 			_html.push("<ul style='cursor: pointer'>");
 
 			Animation.stop();
@@ -168,7 +164,7 @@
 			etc.wait.on(this).done();
 
 			if (x.status == 503) {
-				alert("您没有查看权限");
+				alert("[[No permission to view this article]]");
 				return;
 			}
 			
@@ -185,7 +181,7 @@
 
 			if (el.attr("data-mode") == "gallery") {
 				el.attr("data-mode", "normal");
-				el.innerHTML = "相册模式";
+				el.innerHTML = "[[Gallery mode]]";
 				etc.let.show("article-content");
 			}
 		});
@@ -199,10 +195,10 @@
 			etc.wait.on(this).done();
 
 			if (text == "ok") {
-				alert("操作成功");
+				alert("[[Operation completed]]");
 				window.location.reload();
 			} else {
-				alert("发生错误: " + text);			
+				alert("[[Error: ]]" + text);			
 			}
 		});
 
@@ -215,10 +211,10 @@
 			etc.wait.on(this).done();
 
 			if (text == "ok") {
-				alert("已将该消息标记为未读");
+				alert("[[Operation completed]]");
 				window.history.back();
 			} else {
-				alert("发生错误: " + text);
+				alert("[[Error: ]]" + text);
 			}
 		});
 
@@ -231,11 +227,11 @@
 
 			if (el.attr("data-mode") == "normal") {
 				el.attr("data-mode", "gallery");
-				el.innerHTML = "文章模式";
+				el.innerHTML = "[[Article mode]]";
 				Gallery._Gallery();
 			} else {
 				el.attr("data-mode", "normal");
-				el.innerHTML = "相册模式";
+				el.innerHTML = "[[Gallery mode]]";
 				Gallery._Normal();
 			}
 

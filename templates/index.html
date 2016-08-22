@@ -18,7 +18,11 @@
 </p>
 
 <div style="text-align: center">
-	<!-- <img src="/assets/images/logo.gif" style="margin: auto" width="100"> -->
+	<div>
+		<a href="javascript:setLang('en-us')">English</a>
+		<a href="javascript:setLang('zh-cn')">简体中文</a>
+	</div>
+
 	<img id="index-image" src="/assets/images/inazuma.svg" style="margin: auto;width: 100%; max-width: 512px; display: block;">
 
 	<div id="about">
@@ -36,10 +40,12 @@
 		</p>
 	</div>
 </div>
-<!-- 
-<hr style="border: dashed 1px #ccc">
- -->
 
 <script type="text/javascript">
     etc.id('index-image').src = window.__logoImg;
+
+    function setLang(lang) {
+    	etc.util.cookie.write("upl", lang);
+    	window.location.reload();
+    }
 </script>

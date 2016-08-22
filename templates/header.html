@@ -11,29 +11,27 @@
 <body>
 <div id="header">
     <ul id="navibar">
-        <li id="nv-index" class="link"><a href="/">首页</a></li>
-        <li id="nv-articles" class="link"><a href="/page/1">全部文章</a></li>
-        <li id="nv-article" class="link hide"><a>文章</a></li>
-        <li id="nv-user-articles" class="link hide"><a>用户文章</a></li>
-        <li id="nv-tag-articles" class="link hide"><a>标签文章</a></li>
-        <li id="nv-replies" class="link hide"><a>文章回复</a></li>
-        <li id="nv-tags" class="link"><a href="/tags">标签组</a></li>
-        <li id="nv-new-article" class="link"><a href="/new/article/0" id="nv-new-a">发布</a></li>
-        <li id="nv-console" class="link"><a href="/account" id="nv-console-a">管理面板</a></li>
-        <li id="nv-user" class="link hide"><a>用户</a></li>
-        <li id="nv-owa" class="link hide"><a>文章管理</a></li>
-        <li id="nv-messages" class="link hide"><a>私信</a></li>
-        <li id="nv-register" class="link hide"><a>注册</a></li>
-        <li id="nv-database" class="link hide"><a>数据库</a></li>
-        <li id="nv-config" class="link hide"><a>配置</a></li>
-        <li id="nv-bootstrap" class="link hide"><a>模板</a></li>
-        <li id="nv-playground" class="link hide"><a>Playground</a></li>
-        <li id="nv-about" class="link hide"><a href="/about">关于 {{.Title}}</a></li>
+        <li id="nv-index" class="link"><a href="/">[[Index]]</a></li>
+        <li id="nv-articles" class="link"><a href="/page/1">[[All Articles]]</a></li>
+        <li id="nv-article" class="link hide"><a>[[Article]]</a></li>
+        <li id="nv-user-articles" class="link hide"><a>[[User Articles]]</a></li>
+        <li id="nv-tag-articles" class="link hide"><a>[[Tagged Articles]]</a></li>
+        <li id="nv-replies" class="link hide"><a>[[Article Replies]]</a></li>
+        <li id="nv-tags" class="link"><a href="/tags">[[Tags]]</a></li>
+        <li id="nv-new-article" class="link"><a href="/new/article/0" id="nv-new-a">[[Post]]</a></li>
+        <li id="nv-console" class="link"><a href="/account" id="nv-console-a">[[Console]]</a></li>
+        <li id="nv-user" class="link hide"><a>[[User]]</a></li>
+        <li id="nv-owa" class="link hide"><a>[[Iceberg]]</a></li>
+        <li id="nv-messages" class="link hide"><a>[[Private Message]]</a></li>
+        <li id="nv-register" class="link hide"><a>[[Register]]</a></li>
+        <li id="nv-database" class="link hide"><a>[[Database]]</a></li>
+        <li id="nv-config" class="link hide"><a>[[Config]]</a></li>
+        <li id="nv-bootstrap" class="link hide"><a>[[Templates]]</a></li>
+        <li id="nv-about" class="link hide"><a href="/about">[[About]] {{.Title}}</a></li>
     </ul>
     <div id="pageline"><hr style="display:none;"></div>
 
     <script type="text/javascript">
-        window.__dateTransform = ["今天","昨天","天前","上周"];
         window.__title = "{{.Title}}";
         window.__cdn = "{{.CDN}}";
         window.__loadingImg = "{{.CDN}}/assets/images/loading.gif";

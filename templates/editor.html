@@ -1,36 +1,36 @@
 {{if .Message}}
-	<title>发送私信</title>
+	<title>[[Send Private Message]]</title>
 {{else}}
 	{{if .Update}}
-	<title>编辑文章</title>
+	<title>[[Edit article]]</title>
 	{{else}}
-	<title>发布文章</title>
+	<title>[[Post new article]]</title>
 	{{end}}
 {{end}}
 
 <p id="breadcrumbs">
 	{{if .Message}}
-		发送私信至 <span class='fai'>&#xe12b;</span> 
+		[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
 		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a> | 
 	{{else}}
 		{{if .Update}}
-			修改 <span class='fai'>&#xe0bf;</span>
+			[[Edit]] <span class='fai'>&#xe0bf;</span>
 			<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a> | 
 		{{else}}
 			{{if .ReplyTo}}
-				回复 <span class='fai'>&#xe0bf;</span> 
+				[[Reply]] <span class='fai'>&#xe0bf;</span> 
 				<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a> | 
 			{{else}}
-				<span class='fai'>&#xe0bf;</span> 发布新文章 |
+				<span class='fai'>&#xe0bf;</span> [[Post new article]] |
 			{{end}}
 		{{end}}
 	{{end}}
 
-	<span class='fai' title="以身份">&#xe12c;</span>
+	<span class='fai' title="[[Logged-in as]]">&#xe12c;</span>
 	{{if .IsLoggedIn}}
 		{{.Username}}
 	{{else}}
-		匿名
+		[[Anonymous]]
 	{{end}}
 </p>
 
@@ -86,7 +86,7 @@
 				{{end}} || selT[i].value === defaultTag
 			) {
 				selT[i].selected = true;
-				selT[i].innerHTML = h + " (默认标签)";
+				selT[i].innerHTML = h + " ([[Default tag]])";
 				etc.let.disable("thread-tag");
 				break;
 			}
@@ -121,7 +121,7 @@
 					_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
 						j[k].User + " - " + etc.date.format(j[k].Date, true) + "</li>");
 				}
-				_html.push("<li onclick='getHistoryVersion(-1)'><b>{{.Article.Author}} - 当前版本</b></li>");
+				_html.push("<li onclick='getHistoryVersion(-1)'><b>{{.Article.Author}} - [[Current version]]</b></li>");
 				_html.push("<ul style='cursor: pointer'>");
 
 				etc.id("article-history").innerHTML = _html.reverse().join('');
@@ -172,11 +172,11 @@
 			etc.wait.on(this).done();
 
 			if (text == "ok") {
-				alert("发布成功");
+				alert("[[Operation completed]]");
 				clearDraft(true);
 				goBack();
 			} else {
-				alert("发生错误: " + text);
+				alert("[[Error: ]]" + text);
 			}
 		});
 
@@ -190,7 +190,7 @@
 			etc.wait.on(this).done();
 
 			if (text.indexOf("Err::") == 0) {
-				alert("发生错误: " + text);
+				alert("[[Error: ]]" + text);
 			} else {
 				etc.id("thread-content").innerHTML = text;
 			}
@@ -249,7 +249,7 @@
 		{{end}}
 
 		etc.util.write(d, etc.id("thread-content").innerHTML);
-		etc.id("save-draft").innerHTML = "草稿保存于 " + etc.date.now() + " " + d;
+		etc.id("save-draft").innerHTML = "[[Draft has been saved at]] " + etc.date.now() + " " + d;
 	}
 
 	function clearDraft(p) {
@@ -267,20 +267,20 @@
 
 		if (p) return;
 
-		alert("已清空: " + d);
+		alert("[[Clear draft]]: " + d);
 		window.location.reload();
 	}
 </script>
 
 <div id="editor">
 	<div>
-		标题:
+		[[Title]]:
 		<span id="title-length"></span><br>
 		<textarea id="thread-title" rows="2"></textarea>
 	</div>
 	<div>
-		内容:
-		<a id="article-history-button" style="display: none" href="javascript:toggleHistoryList()">回滚历史编辑</a>	
+		[[Content]]:
+		<a id="article-history-button" style="display: none" href="javascript:toggleHistoryList()">[[Rollback history]]</a>	
 		<div id="article-history-underlay" class="dropdown-underlay" onclick="toggleHistoryList()"></div>
 		<div id="article-history" class="dropdown" style="margin-top: 0; display: none"></div>
 	</div>
@@ -292,10 +292,10 @@
 					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xe04b;</a>
 					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xe08d;</a>
 					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xe06d;</a> <b>|</b>
-					<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xe09c;</a>
+					<a href="javascript:etc.editor.insertLink(function(u){return prompt('显示文字:',u)})" title="插入链接">&#xe09c;</a>
 					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xe101;</a>
 					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xe114;</a>
-					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xe111;</a>
+					<a href="javascript:etc.editor.insertTable(prompt('行 x 列:', '3x2'))" title="插入表格">&#xe111;</a>
 					<a href="javascript:etc.editor.insertTitle()" title="插入居中标题">&#xe04d;</a> <b>|</b>
 					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xe0e5;</a>
 					<a href="javascript:etc.editor.clearFormat()" title="清空格式 (Ctrl+Shift+X)">&#xe070;</a>
@@ -330,7 +330,6 @@
 							'<input name="image" type="file" id="form-uploader"/>',
 							'<input name="direct" type="hidden" value="direct" />',
 							'<input type="submit" value="上传" /></form>'].join('');
-							
 						}
 						
 					    window.ondragover = function(e) {e.preventDefault();}
@@ -354,8 +353,8 @@
 
 	<div style="margin-top: 5px">
 		<select id="thread-tag">
-			<option value="">--请选择标签--</option>
-			<optgroup label="通用标签">
+			<option value="">[[-- please select a tag --]]</option>
+			<optgroup label="[[General tags]]">
 			{{range .Tags}}
 				{{if .Visible}}
 				<option value="{{.Name}}">
@@ -365,7 +364,7 @@
 			{{end}}
 			</optgroup>
 			{{if .IsLoggedIn}}
-				<optgroup label="隐藏/限制标签">
+				<optgroup label="[[Hidden/restricted tags]]">
 				{{range .Tags}}
 					{{if .Visible}}{{else}}
 					<option value="{{.Name}}">
@@ -379,9 +378,9 @@
 	</div>
 
 	<div style="margin-top: 5px">
-		<button id="post-article" data-onclick="tryPost()">{{if .Update}}修改{{else}}发布{{end}}</button>
-		<button data-onclick="tryPreview()">预览</button>
-		<button onclick="clearDraft()">清空草稿</button>
+		<button id="post-article" data-onclick="tryPost()">{{if .Update}}[[Edit]]{{else}}[[Post]]{{end}}</button>
+		<button data-onclick="tryPreview()">[[Preview]]</button>
+		<button onclick="clearDraft()">[[Clear draft]]</button>
 		<span id="save-draft"></span>
 	</div>
 
@@ -395,15 +394,15 @@
 			</li>
 
 			<li>
-				允许HTML标签:
+				[[Allowed HTML tags]]:
 				{{range $key, $value := .HTMLTags}}
 				{{if $value}}&lt;{{$key}}&gt;{{end}}
 				{{end}}
 			</li>
 			<li>
-				允许标签属性:
+				[[Allowed tag attributes]]:
 				{{range $key, $value := .HTMLAttrs}}
-				{{if $value}}:{{$key}}{{end}}
+				{{if $value}}\{{$key}}{{end}}
 				{{end}}
 			</li>
 		</ul>
