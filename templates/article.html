@@ -64,7 +64,7 @@
 			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">回复文章</a> |
 		{{end}}
 
-		<span class='fai'>&#xe06e;</span> <span title="查看">{{.Article.Hits}}</span>
+		<span class='fai'>&#xe06e;</span> <span title="浏览量">{{.Article.Hits}}</span>
 	{{end}}
 
 	{{if .Article.Deleted}}
@@ -250,6 +250,4 @@
 
 <hr>
 
-<div id="article-content">
-{{.Article.Content}}
-</div>
+<div id="article-content">{{.Article.Content}}</div>

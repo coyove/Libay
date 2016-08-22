@@ -96,9 +96,8 @@
 
 {{if .Announce.Content}}
 	<div id="announcement">
-		<div id="announcement-content">
-			{{.Announce.Content}}
-		</div>
+		<div id="announcement-content">{{.Announce.Content}}</div>
+		
 		<div style="margin-top: 5px" id="fold-announcement">
 			<a href="/article/{{.Announce.ID}}" class="badge">
 				&sect;{{.Announce.AuthorID}}-{{.Announce.ID}}-{{.Announce.Revision}}

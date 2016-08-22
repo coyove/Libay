@@ -747,7 +747,11 @@
             "isInside": _insideEditor,
 
             "getSelected": function() {
-                return (window.getSelection) ? window.getSelection() : document.selection;
+                if (window.getSelection) {
+                    return window.getSelection().toString();
+                } else if (document.selection && document.selection.type != "Control") {
+                    return document.selection.createRange().text;
+                }
             },
 
             "getSelectedElement": _getSelected,
@@ -868,13 +872,7 @@
                 var A = prompt("URL:", "http://");
                 if (A === "http://" || A === "") return;
 
-                var text = "";
-			    if (window.getSelection) {
-			        text = window.getSelection().toString();
-			    } else if (document.selection && document.selection.type != "Control") {
-			        text = document.selection.createRange().text;
-			    }
-
+                var text = g.etc.editor.getSelected();
                 if (text == "") text = prompt("显示文字:", A);
 
                 _id(_editorId).focus();
@@ -954,6 +952,11 @@
 
                 _insertHTML(table);
             },
+
+            "insertTitle": function() {
+                _insertHTML("<table class=_table><tr><td align=center>" + 
+                    g.etc.editor.getSelected() + "</td></tr></table>");
+            }
         },
     };
 

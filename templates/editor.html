@@ -35,9 +35,7 @@
 </p>
 
 {{if .Update}}
-<span id="article-raw-content" style="display: none">
-	{{.Article.Content}}
-</span>
+<pre id="article-raw-content" style="display: none">{{.Article.Content}}</pre>
 {{end}}
 
 <script type="text/javascript">
@@ -297,13 +295,9 @@
 					<a href="javascript:etc.editor.insertLink()" title="插入链接">&#xe09c;</a>
 					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xe101;</a>
 					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xe114;</a>
-					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xe118;</a> <b>|</b>
-					<!-- <a href="javascript:etc.editor.insertNode('heading', 'h2')" title="标题">&#xf1dc;</a>
-					<a href="javascript:etc.editor.insertNode('Bold')" title="粗体">&#xf032;</a>
-					<a href="javascript:etc.editor.insertNode('Italic')" title="斜体">&#xf033;</a>
-					<a href="javascript:etc.editor.insertNode('Underline')" title="下划线">&#xf0cd;</a>
-					<a href="javascript:etc.editor.insertNode('strikeThrough')" title="删除线">&#xf0cc;</a> <b>|</b> -->
-					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xe04d;</a>
+					<a href="javascript:etc.editor.insertTable()" title="插入表格">&#xe111;</a>
+					<a href="javascript:etc.editor.insertTitle()" title="插入居中标题">&#xe04d;</a> <b>|</b>
+					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xe0e5;</a>
 					<a href="javascript:etc.editor.clearFormat()" title="清空格式 (Ctrl+Shift+X)">&#xe070;</a>
 					<a href="javascript:clearContent()" title="清空内容">&#xe122;</a>
 					
