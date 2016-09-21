@@ -43,7 +43,6 @@
 
 <script type="text/javascript">
 	window.onload = (function() {
-		etc.editor.wrap("thread-content");
 	    etc.id("thread-content").onpaste = function(event){
 			var items = (event.clipboardData || event.originalEvent.clipboardData).items;
 
@@ -60,18 +59,10 @@
 		}
 
 		etc.id("thread-content").onkeydown = (function (ev) {
-		  	var key;
-		  	var isShift, isCtrl;
-		  	if (window.event) {
-		    	key = window.event.keyCode;
-		    	isShift = !!window.event.shiftKey;
-		    	isCtrl = !!window.event.ctrlKey;
-		  	} else {
-		    	key = ev.which;
-		    	isShift = !!ev.shiftKey;
-		    	isCtrl = !!ev.ctrlKey;
-		  	}
-			if (isShift && isCtrl && key == 88) etc.editor.clearFormat();
+	        if (ev.keyCode == 9 || ev.which == 9) {
+	            ev.preventDefault();
+	            etc.editor.insertText(etc.id("thread-content"), "\t");
+	        }
 		});
 
 		var selT = etc.get('#thread-tag option');
@@ -203,7 +194,7 @@
 			if (text.indexOf("Err::") == 0) {
 				alert("[[Error: ]]" + text);
 			} else {
-				etc.id("thread-content").innerHTML = text;
+				etc.let.show("hide-preview").show("article-content").$.innerHTML = text;
 			}
 		});
 
@@ -376,17 +367,19 @@
 	<div style="margin-top: 5px">
 		<button id="post-article" data-onclick="tryPost()">{{if .Update}}[[Edit]]{{else}}[[Post]]{{end}}</button>
 		<button data-onclick="tryPreview()">[[Preview]]</button>
+		<button id="hide-preview" onclick="etc.let.hide('article-content').hide(this)" style="display:none">[[Hide]]</button>
 		<button onclick="clearDraft()">[[Clear draft]]</button>
 		<span id="save-draft"></span>
 	</div>
+
+	<div style="display: none" id="article-content"></div>
 
 	<div>
 		<ul>
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
 			<li>
-			如果需要更复杂的编辑, 请使用各个浏览器提供的Developer Tool直接编辑DOM
-				<select>
-					<option selected>可用的标签</option>
+				<a href="/article/870" target="_blank">BBCode语法说明</a>，使用[html][/html]时<select>
+					<option selected>[[Allowed HTML tags]]</option>
 					<optgroup label="[[Allowed HTML tags]]">
 						{{range $key, $value := .HTMLTags}}
 						{{if $value}}<option disabled="disabled">{{$key}}</option>{{end}}

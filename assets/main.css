@@ -175,7 +175,7 @@ td.fit, th.fit{
 }
 
 #article-content > table td {
-    line-height: 1.5;
+    line-height: 1.2;
 }
 
 #article-content h2, #article-content ol, #article-content ul {
@@ -193,7 +193,7 @@ td.fit, th.fit{
 }
 
 #article-content table.csv td, #article-content table.csv th {
-    padding: 0.5em;
+    padding: 0.2em;
     border: solid 1px #ddd;
 }
 
@@ -214,7 +214,6 @@ td.fit, th.fit{
     border-spacing: 0;
     font: normal 12px/20px Consolas, "Liberation Mono", Menlo, Courier, monospace;
     width: 100%;
-    line-height: 1.2em;
 }
 
 #article-content table.code tr.li0 {
@@ -239,6 +238,7 @@ td.fit, th.fit{
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    line-height: 1.5;
 }
 
 #article-content .zebra-false td.lin {
@@ -249,6 +249,7 @@ td.fit, th.fit{
     word-wrap: break-word;
     word-break: break-word;
     padding-left: 6px;
+    line-height: 1.5;
 }
 
 #article-content a {
@@ -584,10 +585,6 @@ table.database td {
 
 div#editor {
     /*max-width:500px;*/
-    width: 100%;
-}
-
-div#editor table {
     width: 100%;
 }
 

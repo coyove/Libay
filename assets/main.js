@@ -251,8 +251,6 @@
         return e;
     };
 
-    var _editorId = null;
-
     var _getSelected = function(isStart) {
         var range, sel, container;
         if (document.selection) {
@@ -438,6 +436,9 @@
                 case "a":
                 case "span":
                     e.style.display = "inherit";
+                    break;
+                case "button":
+                    e.style.display = "inline-block";
                     break;
                 default:
                     e.style.display = "block";
@@ -740,71 +741,6 @@
         },
         
         "editor": {
-            "wrap": function(id) { _editorId = id; },
-
-            "insertHTML": _insertHTML,
-
-            "isInside": _insideEditor,
-
-            "getSelected": function() {
-                if (window.getSelection) {
-                    return window.getSelection().toString();
-                } else if (document.selection && document.selection.type != "Control") {
-                    return document.selection.createRange().text;
-                }
-            },
-
-            "getSelectedElement": _getSelected,
-
-            "getSelectedElements": function() {
-                var nextNode = function(node) {
-                    if (node.hasChildNodes()) {
-                        return node.firstChild;
-                    } else {
-                        while (node && !node.nextSibling) {
-                            node = node.parentNode;
-                        }
-                        if (!node) {
-                            return null;
-                        }
-                        return node.nextSibling;
-                    }
-                }
-
-                var getRangeSelectedNodes = function(range) {
-                    var node = range.startContainer;
-                    var endNode = range.endContainer;
-
-                    // Special case for a range that is contained within a single node
-                    if (node == endNode) {
-                        return [node];
-                    }
-
-                    // Iterate nodes until we hit the end container
-                    var rangeNodes = [];
-                    while (node && node != endNode) {
-                        rangeNodes.push( node = nextNode(node) );
-                    }
-
-                    // Add partially selected nodes at the start of the range
-                    node = range.startContainer;
-                    while (node && node != range.commonAncestorContainer) {
-                        rangeNodes.unshift(node);
-                        node = node.parentNode;
-                    }
-
-                    return rangeNodes;
-                }
-
-                if (window.getSelection) {
-                    var sel = window.getSelection();
-                    if (!sel.isCollapsed) {
-                        return getRangeSelectedNodes(sel.getRangeAt(0));
-                    }
-                }
-                return [];
-            },
-
             "insertText": function(myField, myValue) {
                 //IE support
                 if (document.selection) {
@@ -877,97 +813,6 @@
                     }
                     etc.editor.uploadImage(files, callback, options);
                 });
-            },
-
-            "insertLink": function(ask) {
-                if (!_insideEditor()) return;
-
-                var A = prompt("URL:", "http://");
-                if (A === "http://" || A === "") return;
-
-                var text = g.etc.editor.getSelected();
-                if (text == "") text = ask(A);
-
-                _id(_editorId).focus();
-                _insertHTML("<a href='" + A + "' target='_blank'>" + text + "</a>");
-            },
-
-            "clearFormat": function() {
-                if (!_insideEditor()) return;
-
-                var s = g.etc.editor.getSelectedElement();
-                var tn = document.createTextNode(s.innerText);
-
-                if (s.getAttribute("contenteditable") == "true") return;
-                
-                s.parentNode.insertBefore(tn, s);
-                s.parentNode.removeChild(s);
-            },
-
-            "switchMonospace": function() {
-                var e = _id(_editorId);
-                var items = e.getElementsByTagName("*");
-                var m = e.attr("data-mono");
-
-                for (var i = 0; i < e.childNodes.length; i++) {
-                    var n = e.childNodes[i];
-
-                    if (n.nodeName == "#text") {
-                        var span = document.createElement("span");
-                        span.innerHTML = n.nodeValue;
-                        e.insertBefore(span, n);
-                        e.removeChild(n);
-                    }
-                }
-
-                if (m === "courier") {
-                    for (var i = items.length; i--;)
-                        items[i].className = items[i].className.replace(/font\-courier/g, "font-lucida");
-
-                    e.attr("data-mono", "lucida");
-                } else if (m === "lucida") {
-                    for (var i = items.length; i--;)
-                        items[i].className = items[i].className.replace(/font\-(courier|lucida)/g, "");
-
-                    e.attr("data-mono", "normal");
-                } else {
-                    for (var i = items.length; i--;) items[i].className += " font-courier";
-                    e.attr("data-mono", "courier");
-                }
-            },
-
-            "insertList": function(elem) {
-                _id(_editorId).focus();
-
-                if (elem == 'ol')
-                    document.execCommand("insertorderedlist", false);
-                else
-                    document.execCommand("insertunorderedlist", false);
-            },
-
-            "insertNode": function(cmd, arg) {
-                _id(_editorId).focus();
-                if (cmd == "heading")
-                    document.execCommand("formatBlock", false, "<" + arg + ">");
-                else
-                    document.execCommand(cmd, false, arg);
-            },
-
-            "insertTable": function(_size) {
-                var size = _size.split("x");
-                if (size.length < 2) return;
-
-                var rows = parseInt(size[0]), cols = parseInt(size[1]);
-                var width = parseInt(100 / (cols));
-                var row = "<tr>" + (new Array(cols + 1).join("<td width=" + width + "%>&nbsp;</td>")) + "</tr>";
-                var table = "<table border=1 class=_table>" + new Array(rows + 1).join(row) + "</table>";
-
-                _insertHTML(table);
-            },
-
-            "insertTitle": function() {
-                var s = g.etc.editor.getSelected();
-                _insertHTML("<table class=_table><tr><td align=center>" + (s ? s : "title") + "</td></tr></table>");
             }
         },
     };

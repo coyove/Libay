@@ -77,22 +77,25 @@ type Tokenizer struct {
 
 func TokenizeString(bbcode string, maxTags int) *Tokenizer {
 	hits := reBBCodeTokens.FindAllStringSubmatchIndex(bbcode, maxTags)
-	inCode := false
+	inCode := ""
 	h := 0
 	for h < len(hits) {
 		tag := bbcode[hits[h][0]:hits[h][1]]
+		_tag := strings.ToLower(tag)
 
-		if strings.ToLower(tag) == "[/code]" {
-			inCode = false
+		if _tag == "[/code]" || _tag == "[/html]" || _tag == "[/csv]" {
+			if _tag[2:len(_tag)-1] == inCode {
+				inCode = ""
+			}
 		}
 
-		if inCode {
+		if inCode != "" {
 			hits = append(hits[:h], hits[h+1:]...)
 			continue
 		}
 
-		if strings.ToLower(tag) == "[code]" {
-			inCode = true
+		if _tag == "[code]" || _tag == "[html]" || _tag == "[csv]" {
+			inCode = _tag[1 : len(_tag)-1]
 		}
 
 		h++
@@ -331,7 +334,7 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 			if len(lines) == 1 {
 				bits = append(bits, html.EscapeString(t.Text))
 			} else if t.Text == "\n" {
-				bits = append(bits, "\n")
+				bits = append(bits, "</td></tr><tr class='zebra-"+tok.Zebra()+"'><td>")
 			} else {
 				start, end, err := buildHTMLTag(t)
 				if err != nil {
@@ -358,7 +361,7 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 				bits = append(bits, translate(t, t.End))
 			case "hr":
 				if !t.End {
-					bits = append(bits, "</td></tr><tr class='zebra-"+tok.Zebra()+"'><td><hr>")
+					bits = append(bits, "<hr>")
 				}
 			case "url":
 				if t.End {
@@ -438,7 +441,7 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 							bits = append(bits, "<table class='code'>"+
 								highlighter.Highlight([]byte(t.Text), 4)+"</table>")
 						case "html":
-							bits = append(bits, "<div class='html'>"+FilterHTML(t.Text, 0)+"</div>")
+							bits = append(bits, "<span class='html'>"+FilterHTML(t.Text, 0)+"</span>")
 						case "csv":
 							r := csv.NewReader(strings.NewReader(t.Text))
 							record, err := r.ReadAll()
@@ -544,7 +547,7 @@ func BBCodeToHTML(bbcode string) (string, string, []error) {
 	tok := TokenizeString(bbcode, -1)
 	bits, errs := tokensToHTML(tok)
 
-	html := "<table><tr class='zebra-false'><td>" + strings.Join(bits, "") + "</td></tr></table>"
+	html := "<table class='bbcode'><tr class='zebra-false'><td>" + strings.Join(bits, "") + "</td></tr></table>"
 	preview := FilterHTML(html, 256)
 
 	return html, preview, errs
