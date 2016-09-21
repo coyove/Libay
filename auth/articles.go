@@ -26,6 +26,7 @@ type Article struct {
 	OriginalAuthorID int
 	OriginalAuthor   string
 	Content          string
+	Raw              string
 	Timestamp        int
 	ModTimestamp     int
 	Deleted          bool
@@ -319,7 +320,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 			Tag:          _tag,
 			Author:       author,
 			AuthorID:     authorID,
-			Content:      preview,
+			Content:      Unescape(preview),
 			Timestamp:    createdAt,
 			ModTimestamp: modifiedAt,
 			Deleted:      deleted,
@@ -460,6 +461,7 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
             articles.title, 
             articles.tag, 
             articles.content, 
+            articles.raw,
             articles.author, 
       COALESCE(users.nickname, 'user' || articles.author::TEXT),
             articles.original_author,
@@ -496,11 +498,11 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 
 	if rows.Next() {
 		var id, tag, authorID, originalAuthorID, hits, parentID, childrenCount, revision int
-		var title, content, author, originalAuthor, parentTitle string
+		var title, content, raw, author, originalAuthor, parentTitle string
 		var createdAt, modifiedAt int
 		var deleted, locked bool
 
-		rows.Scan(&id, &title, &tag, &content, &authorID, &author,
+		rows.Scan(&id, &title, &tag, &content, &raw, &authorID, &author,
 			&originalAuthorID, &originalAuthor,
 			&createdAt, &modifiedAt, &deleted, &locked,
 			&hits, &parentID, &childrenCount, &revision,
@@ -524,6 +526,7 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 			OriginalAuthor:   originalAuthor,
 			OriginalAuthorID: originalAuthorID,
 			Content:          content,
+			Raw:              raw,
 			Timestamp:        createdAt,
 			ModTimestamp:     modifiedAt,
 			Deleted:          deleted,

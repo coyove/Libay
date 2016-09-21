@@ -805,6 +805,25 @@
                 return [];
             },
 
+            "insertText": function(myField, myValue) {
+                //IE support
+                if (document.selection) {
+                    myField.focus();
+                    sel = document.selection.createRange();
+                    sel.text = myValue;
+                }
+                //MOZILLA and others
+                else if (myField.selectionStart || myField.selectionStart == '0') {
+                    var startPos = myField.selectionStart;
+                    var endPos = myField.selectionEnd;
+                    myField.value = myField.value.substring(0, startPos)
+                        + myValue
+                        + myField.value.substring(endPos, myField.value.length);
+                    myField.selectionStart = startPos + myValue.length;
+                    myField.selectionEnd = startPos + myValue.length;
+                }
+            },
+
             "uploadImage": function(files, callback, options) {
                 options = options || {};
 
@@ -819,11 +838,6 @@
                     alert("Err::Upload::" + A);
                     if (callback) callback();
                 };
-
-                if (!_insideEditor() && options["editor"]) {
-                    if (callback) callback();
-                    return;
-                }
 
                 if (!file || !file.type.match(/image.*/)) {
                     if (/\.(jpg|png)\-(small|large)/.test(file.name)) {
@@ -858,9 +872,8 @@
                     var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
 
                     if (options["editor"]) {
-                        _id(options["editor"]).focus();
-                        _insertHTML("<a href='" + _link +
-                            "' target='_blank'><img src='" + _thumb + "' class='article-image'></a>");
+                        etc.editor.insertText(_id(options["editor"]), 
+                            "[url=_blank;" + _link + "][img]" + _thumb + "[/img][/url]");
                     }
                     etc.editor.uploadImage(files, callback, options);
                 });

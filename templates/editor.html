@@ -26,16 +26,19 @@
 		{{end}}
 	{{end}}
 
-	<span class='fai' title="[[Logged-in as]]">&#xe12c;</span>
+	<span class='fai'>&#xe12c;</span>
+
+	<span title="[[Logged-in as]]">
 	{{if .IsLoggedIn}}
 		{{.Username}}
 	{{else}}
 		[[Anonymous]]
 	{{end}}
+	</span>
 </p>
 
 {{if .Update}}
-<pre id="article-raw-content" style="display: none">{{.Article.Content}}</pre>
+<pre id="article-raw-content" style="display: none">{{.Article.Raw}}</pre>
 {{end}}
 
 <script type="text/javascript">
@@ -98,9 +101,9 @@
         	setInterval(saveDraft, 20000);
 			var d = etc.util.read("draft-edit-{{.ReplyTo}}");
 			if (d && d.length > 1) 
-				etc.id("thread-content").html(d);
+				etc.id("thread-content").value = (d);
 			else
-				etc.id("thread-content").html(etc.string.unescape(etc.id("article-raw-content").innerHTML));
+				etc.id("thread-content").value = (etc.string.unescape(etc.id("article-raw-content").innerHTML));
 
 			etc.id("thread-title").value = etc.string.unescape("{{.Article.Title}}");
 
@@ -132,7 +135,7 @@
 		{{else}}
 			setInterval(saveDraft, 20000);
 			var d = etc.util.read({{if .Message}}"draft-message-{{.ReplyTo}}"{{else}}"draft-{{.ReplyTo}}"{{end}});		
-			if (d && d.length > 1) etc.id("thread-content").html(d);
+			if (d && d.length > 1) etc.id("thread-content").value = (d);
 
 			setupScroll();
 		{{end}}
@@ -165,16 +168,24 @@
 		etc.util.ajax.post("/post/{{.ReplyTo}}", {
 			"tag": etc.id("thread-tag").value,
 			"title": title == "" ? "---" : title,
-			"content": etc.id("thread-content").innerHTML,
+			"content": etc.id("thread-content").value,
 			"update": "{{.Update}}",
 			"csrf": etc.util.CSRF()
 		}).then(function(error, text, xhr) {
 			etc.wait.on(this).done();
 
-			if (text == "ok") {
+			if (/ok::.+/.test(text)) {
 				alert("[[Operation completed]]");
 				clearDraft(true);
-				goBack();
+				{{if .Update}}
+					location.href = "/article/{{.ReplyTo}}";
+				{{else}}
+					{{if .ReplyTo}}
+						location.href = "/reply/{{.ReplyTo}}/page/1";
+					{{else}}
+						location.href = "/tag/" + text.substr(4) + "/page/1";
+					{{end}}
+				{{end}}
 			} else {
 				alert("[[Error: ]]" + text);
 			}
@@ -185,7 +196,7 @@
 
 	function tryPreview(){
 		etc.util.ajax.post("/preview", {
-			"content": etc.id("thread-content").innerHTML
+			"content": etc.id("thread-content").value
 		}).then(function(error, text, xhr) {
 			etc.wait.on(this).done();
 
@@ -197,14 +208,6 @@
 		});
 
 		return etc.wait.on(this);
-	}
-
-	function goBack() {
-		var url = window.location.href.split("?");
-		if (url.length < 2) 
-			window.location.href = '/';
-		else
-			window.location.href = (url[1]);
 	}
 
 	function toggleHistoryList() {
@@ -229,7 +232,7 @@
 				etc.wait.on(this).done();
 				var j = JSON.parse(d);
 				etc.id("thread-title").value = (etc.string.unescape(j.Title));
-				etc.id("thread-content").innerHTML = (etc.string.unescape(j.Content));
+				etc.id("thread-content").value = (etc.string.unescape(j.Raw));
 				
 				toggleHistoryList();
 			});
@@ -248,7 +251,7 @@
 		{{end}}
 		{{end}}
 
-		etc.util.write(d, etc.id("thread-content").innerHTML);
+		etc.util.write(d, etc.id("thread-content").value);
 		etc.id("save-draft").innerHTML = "[[Draft has been saved at]] " + etc.date.now() + " " + d;
 	}
 
@@ -291,14 +294,7 @@
 					<span><span id="uploading-sign"></span>
 					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xe04b;</a>
 					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xe08d;</a>
-					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xe06d;</a> <b>|</b>
-					<a href="javascript:etc.editor.insertLink(function(u){return prompt('显示文字:',u)})" title="插入链接">&#xe09c;</a>
-					<a href="javascript:etc.editor.insertList('ol')" title="插入顺序列表">&#xe101;</a>
-					<a href="javascript:etc.editor.insertList('ul')" title="插入列表">&#xe114;</a>
-					<a href="javascript:etc.editor.insertTable(prompt('行 x 列:', '3x2'))" title="插入表格">&#xe111;</a>
-					<a href="javascript:etc.editor.insertTitle()" title="插入居中标题">&#xe04d;</a> <b>|</b>
-					<a href="javascript:etc.editor.switchMonospace()" title="切换字体 (默认 <-> 等距)">&#xe0e5;</a>
-					<a href="javascript:etc.editor.clearFormat()" title="清空格式 (Ctrl+Shift+X)">&#xe070;</a>
+					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xe06d;</a>
 					<a href="javascript:clearContent()" title="清空内容">&#xe122;</a>
 					
 					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
@@ -306,7 +302,7 @@
 
 					<script type="text/javascript">
 						function clearContent() {
-							if (confirm("是否清空内容")) etc.id("thread-content").innerHTML = "";
+							if (confirm("是否清空内容")) etc.id("thread-content").value = "";
 						}
 
 						etc.id("file-uploader").onchange = function(e) { tryUploadImage('', e); }
@@ -347,7 +343,7 @@
 			</div>
 		</div>
 		<div id="content-container">
-	        <div contenteditable="true" id="thread-content"></div>
+	        <textarea id="thread-content" rows="20"></textarea>
         </div>
 	</div>
 
@@ -387,14 +383,8 @@
 	<div>
 		<ul>
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
-			<li>回复一篇文章时内容不是必须的, 可以把回复写在标题里 (一般请选择[r: 回复区]标签)</li>
 			<li>
-			使用Gist请编辑HTML并粘贴<br> 
-			&lt;script src="https://gist.github.com/xxx/1234567890abcdef1234567890abcdef.js"&gt;&lt;/script&gt;
-			</li>
-
-			<li>
-			如果需要更复杂的编辑, 请使用各个浏览器提供的Developer Tool
+			如果需要更复杂的编辑, 请使用各个浏览器提供的Developer Tool直接编辑DOM
 				<select>
 					<option selected>可用的标签</option>
 					<optgroup label="[[Allowed HTML tags]]">

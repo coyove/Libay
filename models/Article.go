@@ -16,10 +16,38 @@ import (
 	"time"
 )
 
+func canUserViewThis(u auth.AuthUser, article auth.Article, admin bool) bool {
+	if article.Deleted && !admin {
+		if u.ID == 0 {
+			return false
+		}
+
+		if u.ID != article.AuthorID && u.ID != article.OriginalAuthorID {
+			return false
+		}
+	}
+
+	if article.IsMessage {
+		if u.ID == 0 {
+			return false
+		}
+
+		if article.IsOthersMessage && !admin {
+			return false
+		}
+	}
+
+	if article.IsRestricted {
+		return false
+	}
+
+	return true
+}
+
 func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		ServePage(w,r, "404", nil)
+		ServePage(w, r, "404", nil)
 		return
 	}
 
@@ -34,7 +62,7 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 		IsLoggedIn bool
 	}
 	u := auth.GetUser(r, w)
-	vtt := conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOtherTrash")
+	vtt := conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOthers")
 
 	payload.Article = auth.GetArticle(r, u, id, false)
 	payload.IsAuthorSelf = (u.ID == payload.Article.AuthorID || vtt || u.ID == payload.Article.OriginalAuthorID)
@@ -45,26 +73,50 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 	payload.User = u
 	payload.IsLoggedIn = u.Name != ""
 
-	if payload.Article.Deleted && !vtt {
-		if u.ID == 0 {
-			ServePage(w,r, "404", nil)
-			return
-		}
+	if canUserViewThis(u, payload.Article, vtt) {
+		ServePage(w, r, "article", payload)
+	} else {
+		ServePage(w, r, "404", nil)
+	}
 
-		if u.ID != payload.Article.AuthorID && u.ID != payload.Article.OriginalAuthorID {
-			ServePage(w,r, "404", nil)
+}
+
+func (th ModelHandler) GET_article_ID_raw_HID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		ServePage(w, r, "404", nil)
+		return
+	}
+
+	hid, err := strconv.Atoi(ps.ByName("hid"))
+	if err != nil {
+		ServePage(w, r, "404", nil)
+		return
+	}
+
+	raw := ""
+	u := auth.GetUser(r, w)
+	article := auth.GetArticle(r, u, id, false)
+
+	if !canUserViewThis(u, article, conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOthers")) {
+		ServePage(w, r, "404", nil)
+		return
+	}
+
+	if hid == 0 {
+		raw = article.Raw
+	} else {
+
+		if his, err := auth.Select1("history", hid, "raw"); err != nil {
+			ServePage(w, r, "404", nil)
 			return
+		} else {
+			raw = his["raw"].(string)
 		}
 	}
 
-	if payload.Article.IsMessage {
-		if (payload.Article.IsOthersMessage && !vtt) || u.ID == 0 {
-			ServePage(w,r, "404", nil)
-			return
-		}
-	}
-
-	ServePage(w,r, "article", payload)
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write([]byte(auth.Unescape(raw)))
 }
 
 func (th ModelHandler) GET_article_ID_history(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -124,36 +176,24 @@ func (th ModelHandler) GET_article_ID_history_HID(w http.ResponseWriter, r *http
 	}
 
 	u := auth.GetUser(r)
+	article := auth.GetArticle(r, u, aid, false)
 
-	cur, err := auth.Select1("articles", aid, "deleted", "author", "original_author", "tag")
-	if err != nil {
+	if !canUserViewThis(u, article, conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers")) {
 		Return(w, 503)
 		return
 	}
 
-	if cur["deleted"].(bool) {
-		if cur["author"].(int) != u.ID || !conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") {
-			if cur["original_author"].(int) != u.ID {
-				Return(w, 503)
-				return
-			}
-		}
-	}
-
-	if !u.CanView(cur["tag"].(int)) {
-		Return(w, 503)
-		return
-	}
-
-	if his, err := auth.Select1("history", hid, "title", "content"); err != nil {
+	if his, err := auth.Select1("history", hid, "title", "content", "raw"); err != nil {
 		Return(w, 503)
 	} else {
 		var payload struct {
 			Title   string
 			Content string
+			Raw     string
 		}
 		payload.Title = his["title"].(string)
 		payload.Content = his["content"].(string)
+		payload.Raw = his["raw"].(string)
 		Return(w, payload)
 	}
 }
@@ -338,26 +378,37 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	}
 
 	_title := auth.Escape(title)
-	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
-	_preview := auth.Escape(_extracted1)
+	//_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
+	_content, _preview, errs := auth.BBCodeToHTML(content)
+	//_preview := auth.Escape(_extracted1)
+	if len(errs) > 0 {
+		return "Err::Post::BBCode_Error"
+	}
 
 	if user.ID == 0 {
 		ip := strings.Split(auth.GetIP(r), ".")
 
 		if len(ip) >= 4 {
-			content = "<div>[ IP: " + strings.Join(ip[:3], ".") + ".* ]</div>" + content
+			_content = "<div>[ IP: " + strings.Join(ip[:3], ".") + ".* ]</div>" + _content
 		} else {
 			return "Err::Post::Cannot_Get_IP"
 		}
 	}
 
-	_content := auth.Escape(_extracted2)
+	_content = auth.Escape(_content)
+	_preview = auth.Escape(_preview)
+	_raw := auth.Escape(content)
 
 	if _tag == -1 {
 		return "Err::Post::Invalid_Tag"
 	}
 
-	if user.ID == 0 && (_tag != conf.GlobalServerConfig.AnonymousArea && _tag != conf.GlobalServerConfig.ReplyArea) {
+	if !user.CanView(_tag) {
+		return "Err::Post::Restricted_Tag"
+	}
+
+	if user.ID == 0 && (_tag != conf.GlobalServerConfig.AnonymousArea &&
+		_tag != conf.GlobalServerConfig.ReplyArea) {
 		return "Err::Post::Invalid_Tag_For_Anonymous"
 	}
 
@@ -370,10 +421,8 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 	_now := time.Now().UnixNano() / 1e6
 
 	sql := `SELECT 
-               new_article('%s',   %d,   '%s',     '%s',      %d,   %d,  %d,      %d, %d);`
-	//                      |      |      |         |         |     |    |        |   |
-	//                      V      V      V         V         V     V    V        V   V
-	sql = fmt.Sprintf(sql, _title, _tag, _content, _preview, _now, _now, user.ID, id, cooldown)
+               new_article('%s', %d, '%s', '%s', '%s', %d, %d, %d, %d, %d);`
+	sql = fmt.Sprintf(sql, _title, _tag, _content, _raw, _preview, _now, _now, user.ID, id, cooldown)
 
 	var succ int
 
@@ -392,7 +441,7 @@ func NewArticle(r *http.Request, user auth.AuthUser, id int, tag string, title s
 				id,
 			))
 			// auth.Gcache.Clear()
-			return "ok"
+			return "ok::" + tag
 		} else {
 			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ/1e3) + "s"
 		}
@@ -409,16 +458,22 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 	}
 
 	_title := auth.Escape(title)
-	_extracted1, _extracted2, _ := auth.ExtractContent(content, user)
-	_preview := auth.Escape(_extracted1)
-	_content := auth.Escape(_extracted2)
+	// _extracted1, _extracted2, _ := auth.ExtractContent(content, user)
+	_content, _preview, errs := auth.BBCodeToHTML(content)
+	if len(errs) > 0 {
+		return "Err::Post::BBCode_Error"
+	}
+
+	_preview = auth.Escape(_preview)
+	_content = auth.Escape(_content)
+	_raw := auth.Escape(content)
 
 	if _tag == -1 {
 		return "Err::Post::Invalid_Tag"
 	}
 
 	var authorID, revision, oldTag, oauthorID, oldParent int
-	var oldContent, oldTitle string
+	var oldContent, oldTitle, oldRaw string
 	var oldTime int
 	var locked bool
 
@@ -429,6 +484,7 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
             tag,
             title,
             content,
+            raw,
             modified_at,
             locked,
             parent,
@@ -437,7 +493,7 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
             articles 
         WHERE 
             id = `+strconv.Itoa(id)).
-		Scan(&authorID, &oauthorID, &oldTag, &oldTitle, &oldContent, &oldTime, &locked, &oldParent, &revision) != nil {
+		Scan(&authorID, &oauthorID, &oldTag, &oldTitle, &oldContent, &oldRaw, &oldTime, &locked, &oldParent, &revision) != nil {
 		return "Err::DB::Select_Failure"
 	}
 
@@ -463,10 +519,11 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 	cooldown := conf.GlobalServerConfig.GetInt(user.Group, "Cooldown")
 
 	sql := `SELECT 
-            update_article(%d, '%s',   %d,   %d,      '%s',     '%s',      %d,            '%s',     %d,       '%s',         %d,       %d)`
-	//                     |    |      |     |         |         |         |                |        |          |           |         |
-	//                     V    V      V     V         V         V         V                V        V          V           V         V
-	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _preview, time.Now().UnixNano()/1e6, oldTitle, authorID, oldContent, oldTime, cooldown)
+            update_article(%d, '%s', %d, %d, '%s', '%s', '%s', %d, 
+            '%s', %d, '%s', '%s', %d, %d)`
+
+	sql = fmt.Sprintf(sql, id, _title, _tag, user.ID, _content, _raw, _preview, time.Now().UnixNano()/1e6,
+		oldTitle, authorID, oldContent, oldRaw, oldTime, cooldown)
 
 	var succ int
 
@@ -480,7 +537,7 @@ func UpdateArticle(user auth.AuthUser, id int, tag string, title string, content
 				user.ID, oauthorID,
 				id, oldParent,
 			))
-			return "ok"
+			return "ok::" + strconv.Itoa(id)
 		} else {
 			return "Err::Post::Cooldown_" + strconv.Itoa(cooldown-succ/1e3) + "s"
 		}

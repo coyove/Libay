@@ -18,7 +18,7 @@
         <li id="nv-tag-articles" class="link hide"><a>[[Tagged Articles]]</a></li>
         <li id="nv-replies" class="link hide"><a>[[Article Replies]]</a></li>
         <li id="nv-tags" class="link"><a href="/tags">[[Tags]]</a></li>
-        <li id="nv-new-article" class="link"><a href="/new/article/0" id="nv-new-a">[[Post]]</a></li>
+        <li id="nv-new-article" class="link"><a href="/new/article/0">[[Post]]</a></li>
         <li id="nv-console" class="link"><a href="/account" id="nv-console-a">[[Console]]</a></li>
         <li id="nv-user" class="link hide"><a>[[User]]</a></li>
         <li id="nv-owa" class="link hide"><a>[[Iceberg]]</a></li>
@@ -40,7 +40,6 @@
 
         etc.id("{{.CurrentNav}}").className = "current"
         etc.id("nv-console-a").href += "?" + window.location.href;
-        etc.id("nv-new-a").href += "?" + window.location.href;
 
         window.__unread = parseInt(etc.util.cookie.read("unread"));
 

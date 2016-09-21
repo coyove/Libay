@@ -76,10 +76,6 @@
 	{{else}}
 		| <span class='fai'>&#xe0a4;</span>
 	{{end}}
-
-	{{if .Article.IsRestricted}}
-		| <span class='fai'>&#xe137;</span> [[No permission to view this article]]
-	{{end}}
 </p>
 
 <div id="article-history" class="dropdown"><span id="article-history-loading"></span></div>
@@ -88,6 +84,10 @@
 	<ul>
 		<li><span class='fai'>&#xe08d;</span> 
 		<a href="javascript:switchView()" id="switch-mode" data-mode="normal">[[Gallery mode]]</a>
+		</li>
+
+		<li><span class='fai'>&#xe0d4;</span> 
+		<a href="javascript:gotoRaw()" id="goto-raw" data-raw="0">[[Raw]]</a>
 		</li>
 		
 		{{if .IsLoggedIn}}
@@ -116,6 +116,11 @@
 <script type="text/javascript">
 	function goEdit() {
 		window.location.href="/edit/article/{{.Article.ID}}?" + window.location.href;
+	}
+
+	function gotoRaw() {
+		var e = etc.id("goto-raw");
+		window.open("/article/{{.Article.ID}}/raw/" + e.attr("data-raw"));
 	}
 
 	function goLock() {
@@ -184,6 +189,8 @@
 				el.innerHTML = "[[Gallery mode]]";
 				etc.let.show("article-content");
 			}
+
+			etc.id("goto-raw").attr("data-raw", rev);
 		});
 		return etc.wait.on(this);
 	}

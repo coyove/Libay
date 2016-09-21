@@ -33,10 +33,10 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 SET search_path = public, pg_catalog;
 
 --
--- Name: new_article(text, integer, text, text, bigint, bigint, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: new_article(text, integer, text, text, text, bigint, bigint, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION new_article(ptitle text, ptag integer, pcontent text, ppreview text, pcreated_at bigint, pmodified_at bigint, pauthor integer, pparent integer, pcooldown integer) RETURNS bigint
+CREATE FUNCTION new_article(ptitle text, ptag integer, pcontent text, praw text, ppreview text, pcreated_at bigint, pmodified_at bigint, pauthor integer, pparent integer, pcooldown integer) RETURNS bigint
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -53,8 +53,8 @@ BEGIN
 
     if sec >= Pcooldown * 1000 or Pcooldown = 0 then
 
-        insert into articles ("title", "tag", "content", "preview", "created_at", "modified_at", "author", "original_author", "parent") 
-                    values   (Ptitle , Ptag , Pcontent , Ppreview , Pcreated_at , Pmodified_at , Pauthor , Pauthor, Pparent);
+        insert into articles ("title", "tag", "content", "raw", "preview", "created_at", "modified_at", "author", "original_author", "parent") 
+                    values   (Ptitle , Ptag , Pcontent , Praw,  Ppreview , Pcreated_at , Pmodified_at , Pauthor , Pauthor, Pparent);
         update articles set "modified_at" = Pmodified_at, "children" = "children" + 1 where "id" = Pparent;
         return 0;
     else
@@ -64,7 +64,7 @@ END;
 $$;
 
 
-ALTER FUNCTION public.new_article(ptitle text, ptag integer, pcontent text, ppreview text, pcreated_at bigint, pmodified_at bigint, pauthor integer, pparent integer, pcooldown integer) OWNER TO postgres;
+ALTER FUNCTION public.new_article(ptitle text, ptag integer, pcontent text, praw text, ppreview text, pcreated_at bigint, pmodified_at bigint, pauthor integer, pparent integer, pcooldown integer) OWNER TO postgres;
 
 --
 -- Name: new_user_registered(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -83,10 +83,10 @@ $$;
 ALTER FUNCTION public.new_user_registered() OWNER TO postgres;
 
 --
--- Name: update_article(integer, text, integer, integer, text, text, bigint, text, integer, text, bigint, integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: update_article(integer, text, integer, integer, text, text, text, bigint, text, integer, text, text, bigint, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION update_article(pid integer, ptitle text, ptag integer, pauthor integer, pcontent text, ppreview text, pmodified_at bigint, pold_title text, pold_author integer, pold_content text, pold_modified_at bigint, pcooldown integer) RETURNS bigint
+CREATE FUNCTION update_article(pid integer, ptitle text, ptag integer, pauthor integer, pcontent text, praw text, ppreview text, pmodified_at bigint, pold_title text, pold_author integer, pold_content text, pold_raw text, pold_modified_at bigint, pcooldown integer) RETURNS bigint
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -102,10 +102,10 @@ BEGIN
         );
 
     if sec >= Pcooldown * 1000 or Pcooldown = 0 then
-        update articles set ("title", "tag", "author", "content", "preview", "modified_at", "rev") 
-                            = (Ptitle, Ptag, Pauthor, Pcontent, Ppreview, Pmodified_at, "rev" + 1) where "id" = Pid;
-        insert into history ("article_id", "date", "title", "content", "user_id") 
-                        values (Pid, Pold_modified_at, Pold_title, Pold_content, Pold_author);
+        update articles set ("title", "tag", "author", "content", "raw", "preview", "modified_at", "rev") 
+                            = (Ptitle, Ptag, Pauthor, Pcontent, Praw, Ppreview, Pmodified_at, "rev" + 1) where "id" = Pid;
+        insert into history ("article_id", "date", "title", "content", "raw", "user_id") 
+                        values (Pid, Pold_modified_at, Pold_title, Pold_content, Pold_raw, Pold_author);
         return 0;
     else
         return sec;
@@ -114,7 +114,7 @@ END;
 $$;
 
 
-ALTER FUNCTION public.update_article(pid integer, ptitle text, ptag integer, pauthor integer, pcontent text, ppreview text, pmodified_at bigint, pold_title text, pold_author integer, pold_content text, pold_modified_at bigint, pcooldown integer) OWNER TO postgres;
+ALTER FUNCTION public.update_article(pid integer, ptitle text, ptag integer, pauthor integer, pcontent text, praw text, ppreview text, pmodified_at bigint, pold_title text, pold_author integer, pold_content text, pold_raw text, pold_modified_at bigint, pcooldown integer) OWNER TO postgres;
 
 --
 -- Name: article_id_seq; Type: SEQUENCE; Schema: public; Owner: coyove
@@ -154,7 +154,8 @@ CREATE TABLE articles (
     preview text DEFAULT ''::text,
     rev integer DEFAULT 0,
     original_author integer,
-    read boolean DEFAULT false
+    read boolean DEFAULT false,
+    raw text DEFAULT ''::text NOT NULL
 );
 
 
@@ -184,7 +185,8 @@ CREATE TABLE history (
     date bigint,
     content text,
     user_id integer,
-    title text
+    title text,
+    raw text DEFAULT ''::text NOT NULL
 );
 
 

@@ -36,10 +36,16 @@ func (th ModelHandler) POST_preview(w http.ResponseWriter, r *http.Request, ps h
 		Return(w, fmt.Sprintf("Err::Post::Content_Too_Long_%d_KiB_Exceeded", ex/1024))
 		return
 	}
-	_, p, _ := auth.ExtractContent(content, auth.AuthUser{})
+	// _, p, _ := auth.ExtractContent(content, auth.AuthUser{})
+	_content, _, errs := auth.BBCodeToHTML(content)
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	Return(w, p)
+	if len(errs) > 0 {
+		Return(w, "Err::Post::BBCode_Error")
+	} else {
+		Return(w, _content)
+	}
 }
 
 func PrepareEditor(r *http.Request) (EditorStruct, auth.AuthUser) {
