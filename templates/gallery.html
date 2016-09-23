@@ -1,0 +1,67 @@
+<title>图片列表</title>
+
+<p id="breadcrumbs">
+	<span class='fai'>&#xe08d;</span> "{{.UploaderName}}" [[Gallery]]
+
+<script type="text/javascript">
+	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
+	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
+	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
+</script>
+</p>
+
+<div class="pager">
+	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	[
+	<a href="{{.IndexPage}}"> 首页 </a> |
+	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	]
+	{{end}}
+
+	{{if .IsLastPage}}
+	[ <b>尾页</b> ]
+	{{else}}
+	[
+	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
+	<a href="{{.Nav.LastWeekPage}}" >周</a> |
+	<a href="{{.Nav.LastMonthPage}}">月</a> |
+	<a href="{{.Nav.LastYearPage}}">年</a> |
+	<a href="{{.LastPage}}" >尾页</a>
+	]
+	{{end}}
+</div>
+
+<div id="gallery">
+	{{range .Images}}
+		<div class="image">
+			<div>
+				<a href="/images/{{.Path}}" target="_blank"><img src="/thumbs/{{.Path}}"></a>
+			</div>
+
+			<div class="date"><script type="text/javascript">
+				document.write(etc.date.format({{.Timestamp}}));
+			</script></div>
+		</div>
+	{{end}}
+</div>
+
+<div class="pager">
+	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	[
+	<a href="{{.IndexPage}}"> 首页 </a> |
+	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	]
+	{{end}}
+	{{if .IsLastPage}}
+	[ <b>尾页</b> ]
+	{{else}}
+	[
+	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
+	<a href="{{.Nav.LastWeekPage}}" >周</a> |
+	<a href="{{.Nav.LastMonthPage}}">月</a> |
+	<a href="{{.Nav.LastYearPage}}">年</a> |
+	<a href="{{.LastPage}}" >尾页</a>
+	]
+	{{end}}
+	
+</div>

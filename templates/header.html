@@ -23,6 +23,7 @@
         <li id="nv-user" class="link hide"><a>[[User]]</a></li>
         <li id="nv-owa" class="link hide"><a>[[Iceberg]]</a></li>
         <li id="nv-messages" class="link hide"><a>[[Private Message]]</a></li>
+        <li id="nv-gallery" class="link hide"><a>[[Gallery]]</a></li>
         <li id="nv-register" class="link hide"><a>[[Register]]</a></li>
         <li id="nv-database" class="link hide"><a>[[Database]]</a></li>
         <li id="nv-config" class="link hide"><a>[[Config]]</a></li>
@@ -62,6 +63,10 @@
                     if (TongWen) 
                         TongWen.trans2Trad(document);
                 });
+            }
+
+            if (lang.toLowerCase() == "en-us") {
+                etc.util.cookie.write("upl", "en-us");
             }
         }
 

@@ -67,6 +67,13 @@ type MessageStruct struct {
 	}
 }
 
+type GalleryStruct struct {
+	BasePage
+
+	Images       []auth.Image
+	UploaderName string
+}
+
 func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page := ps.ByName("page")
 
@@ -220,6 +227,42 @@ func MessageHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	ServePage(w, r, "message", payload)
 }
 
+func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	_startRender := time.Now().UnixNano()
+	defer func() {
+		d := time.Now().UnixNano() - _startRender
+		atomic.AddInt64(&ServerTotalRenderTime, d)
+		atomic.AddInt64(&ServerTotalRenderCount, 1)
+	}()
+
+	var payload GalleryStruct
+
+	page := ps.ByName("page")
+	filter := ps.ByName("gallery")
+
+	payload.IsLastPage = page == "last"
+	payload.IsIndexPage = page == "1"
+	payload.IndexPage = "/gallery/" + filter + "/page/1"
+	payload.LastPage = "/gallery/" + filter + "/page/last"
+
+	userID, err := strconv.Atoi(filter)
+	if err != nil || userID < 0 {
+		ServePage(w, r, "404", nil)
+		return
+	}
+
+	payload.Images, payload.Nav = auth.GetGallery(page, userID)
+	payload.UploaderName = auth.GetUserByID(userID).NickName
+
+	if len(payload.Images) == 0 && page != "1" {
+		http.Redirect(w, r, payload.IndexPage, http.StatusFound)
+		return
+	}
+
+	ServePage(w, r, "gallery", payload)
+}
+
 func (th ModelHandler) GET_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	PageHandler("", w, r, ps)
 }
@@ -236,10 +279,14 @@ func (th ModelHandler) GET_reply_REPLY_page_PAGE(w http.ResponseWriter, r *http.
 	PageHandler("reply", w, r, ps)
 }
 
+func (th ModelHandler) GET_owa_OWA_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	PageHandler("owa", w, r, ps)
+}
+
 func (th ModelHandler) GET_message_MESSAGE_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	MessageHandler(w, r, ps)
 }
 
-func (th ModelHandler) GET_owa_OWA_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler("owa", w, r, ps)
+func (th ModelHandler) GET_gallery_GALLERY_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	GalleryHandler(w, r, ps)
 }

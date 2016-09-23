@@ -214,7 +214,8 @@ CREATE TABLE images (
     id integer DEFAULT nextval('image_id_seq'::regclass) NOT NULL,
     image text,
     uploader integer,
-    date timestamp with time zone DEFAULT now()
+    date timestamp with time zone DEFAULT now(),
+    ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000) NOT NULL
 );
 
 
@@ -381,6 +382,13 @@ CREATE INDEX articles_tag_index ON articles USING btree (tag);
 --
 
 CREATE INDEX history_article_id_index ON history USING btree (article_id);
+
+
+--
+-- Name: ts_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX ts_index ON images USING btree (ts);
 
 
 --

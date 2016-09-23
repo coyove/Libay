@@ -168,6 +168,9 @@
 			if (/ok::.+/.test(text)) {
 				alert("[[Operation completed]]");
 				clearDraft(true);
+				{{if .Message}}
+					location.href = "/message/{{.ReplyTo}}/page/1";
+				{{else}}
 				{{if .Update}}
 					location.href = "/article/{{.ReplyTo}}";
 				{{else}}
@@ -176,6 +179,7 @@
 					{{else}}
 						location.href = "/tag/" + text.substr(4) + "/page/1";
 					{{end}}
+				{{end}}
 				{{end}}
 			} else {
 				alert("[[Error: ]]" + text);
@@ -283,10 +287,11 @@
 			<div id="editor-outter-panel" unselectable="on">
 				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
 					<span><span id="uploading-sign"></span>
-					<a href="javascript:etc.id('file-uploader').click()" title="上传图片">&#xe04b;</a>
-					<a href="javascript:etc.id('file-uploader-imgur').click()" title="上传图片至imgur">&#xe08d;</a>
-					<a href="javascript:openUploader()" title="打开新窗口上传图片（兼容）">&#xe06d;</a>
-					<a href="javascript:clearContent()" title="清空内容">&#xe122;</a>
+					<a href="javascript:etc.id('file-uploader').click()" title="[[Upload image]]">&#xe04b;</a>
+					<a href="javascript:etc.id('file-uploader-imgur').click()" title="[[Upload image to imgur.com]]">&#xe08d;</a>
+					<a href="javascript:openUploader()" title="[[Upload image in a new window]]">&#xe06d;</a>
+					<a href="javascript:insertLink()" title="[[Insert link]]">&#xe09b;</a>
+					<a href="javascript:clearContent()" title="[[Clear content]]">&#xe122;</a>
 					
 					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
 					<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
@@ -294,6 +299,18 @@
 					<script type="text/javascript">
 						function clearContent() {
 							if (confirm("是否清空内容")) etc.id("thread-content").value = "";
+						}
+
+						function insertLink() {
+							var url = prompt("URL:", "http://");
+							var text = prompt("Text:", url);
+							var bb = "[url"
+							if (text == url && text != "")
+								bb += "]" + url + "[/url]";
+							else 
+								bb += "=" + url + "]" + text + "[/url]";
+
+							etc.editor.insertText(etc.id("thread-content"), bb);
 						}
 
 						etc.id("file-uploader").onchange = function(e) { tryUploadImage('', e); }

@@ -57,6 +57,13 @@ type Message struct {
 	Read         bool
 }
 
+type Image struct {
+	ID         int
+	UploaderID int
+	Path       string
+	Timestamp  int
+}
+
 type BackForth struct {
 	NextPage string
 	PrevPage string
@@ -418,6 +425,58 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 			senderID, senderName,
 			senderID == userID,
 			createdAt, read})
+	}
+
+	if direction == "ASC" {
+		for i, j := 0, len(ret)-1; i < j; i, j = i+1, j-1 {
+			ret[i], ret[j] = ret[j], ret[i]
+		}
+	}
+
+	if len(ret) > 0 {
+		nav.Set(ret[0].Timestamp, ret[len(ret)-1].Timestamp)
+	}
+
+	return
+}
+
+func GetGallery(enc string, userID int) (ret []Image, nav BackForth) {
+	ret = make([]Image, 0)
+
+	direction, compare, ts, invalid := ExtractTS(enc)
+	if invalid {
+		return
+	}
+
+	nav.Set(ts, ts)
+
+	_start := time.Now()
+	rows, err := Gdb.Query(`
+        SELECT
+            id, image, uploader, ts
+        FROM
+            images
+        WHERE 
+            ts ` + compare + itoa(ts) + ` AND uploader = ` + itoa(userID) + `
+        ORDER BY
+            ts ` + direction + ` 
+        LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage))
+
+	if err != nil {
+		glog.Errorln("Database:", err)
+		return
+	}
+
+	GmessageTimer.Push(time.Now().Sub(_start).Nanoseconds())
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var id, uploaderID, timestamp int
+		var path string
+
+		rows.Scan(&id, &path, &uploaderID, &timestamp)
+		ret = append(ret, Image{id, uploaderID, path, timestamp})
 	}
 
 	if direction == "ASC" {

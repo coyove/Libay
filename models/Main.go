@@ -121,6 +121,8 @@ func ServePage(w http.ResponseWriter, r *http.Request, fp string, pl interface{}
 		}
 	case "message":
 		title.CurrentNav = "nv-messages"
+	case "gallery":
+		title.CurrentNav = "nv-gallery"
 	case "bootstrap":
 		title.CurrentNav = "nv-bootstrap"
 	case "config":
