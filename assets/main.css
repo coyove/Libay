@@ -20,6 +20,10 @@
     font-family: typicons;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font: normal 100% sans-serif;
@@ -399,13 +403,8 @@ a.block.flatten {
 #about {
     text-align: left; 
     margin: auto; 
-    max-width:500px; 
+    max-width: 500px; 
     width: 100%;
-}
-
-#about p {
-    text-indent: 2em;
-    text-align: justify;
 }
 
 p {
@@ -423,18 +422,19 @@ p {
     background-color: transparent;
     background-color: #f5f6f7;
     border-bottom: 1px solid #d2d3d7 ;
+    overflow: hidden;
 }
 
 #breadcrumbs .nc, #breadcrumbs a {
     color: #54638c;
     cursor: pointer;
-    padding: 10px 4px;
-    margin: -10px -4px;
+    padding: 10px 4px 11px 4px;
+    margin: -10px -4px -11px -4px;
 }
 
 #breadcrumbs .nc:hover, #breadcrumbs a:hover {
     text-decoration: none;
-    background-color: #eee;
+    background-color: #eaeaea;
 }
 
 #breadcrumbs .nc:active, #breadcrumbs a:active {
@@ -500,7 +500,7 @@ a.badge {
 #navibar li.current, #navibar li.current:hover {
     background: #f5f6f7;
     border: 1px solid #aaa;
-    border-bottom: 1px solid #f5f6f7;
+    border-bottom: 1px dotted #bababa;
     margin-bottom: -1px;
 }
 
@@ -682,6 +682,10 @@ div#editor textarea {
     	background: #f5f6f7;
     	border: solid 1px #aaa;
     	margin-bottom: 0;
+    }
+
+    #index-image-td {
+        display: none;
     }
 }
 

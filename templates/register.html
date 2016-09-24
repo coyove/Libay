@@ -1,7 +1,7 @@
-<title>用户注册</title>
+<title>[[Sign up]]</title>
 <p id="breadcrumbs">
-<span class='fai'>&#xe128;</span> 用户注册 | 
-<span class='fai'>&#xe097;</span> <a href="/account">已有账号?</a></p>
+<span class='fai'>&#xe128;</span> [[Sign up]] | 
+<span class='fai'>&#xe097;</span> <a href="/account">[[Already have one]]?</a></p>
 
 <script type="text/javascript">
     var returnURL = "/";
@@ -23,7 +23,7 @@
             if (data.indexOf("ok") >= 0){
                 window.location.href = "/account";
             } else {
-                etc.let.show("reg-result").$.innerHTML = "注册失败: " + data;
+                etc.let.show("reg-result").$.innerHTML = "[[Error: ]]" + data;
                 refreshCaptcha();
             }
         });
@@ -59,31 +59,31 @@
     </style>
     
     {{if .IsOpen}}{{else}}
-    <tr><td class="right-align fit">当前状态:</td><td>关闭注册</td></tr>
+    <tr><td class="right-align fit">[[Current state]]:</td><td>[[Closed]]</td></tr>
     {{end}}
     
-    <tr><td class="right-align fit">用户名:</td><td><input type="textbox" id="username" class="_f" /></td></tr>
-    <tr><td></td><td class="smaller">* 用户名用于登入 (4-64位数字字母组合)</td></tr>
+    <tr><td class="right-align fit">[[Username]]:</td><td><input type="textbox" id="username" class="_f" /></td></tr>
+    <tr><td></td><td class="smaller">* [[Enter username to sign in (4-64 chars)]]</td></tr>
 
-    <tr><td class="right-align fit">昵称:</td><td><input type="textbox" id="nickname" class="_f"/></td></tr>
-    <tr><td></td><td class="smaller">* 公开显示的昵称 (4-64位字符, 1中文字符=3位)</td></tr>
+    <tr><td class="right-align fit">[[Nickname]]:</td><td><input type="textbox" id="nickname" class="_f"/></td></tr>
+    <tr><td></td><td class="smaller">* [[Publicly displayed name (4-64 chars)]]</td></tr>
 
-    <tr><td class="right-align fit">密码:</td><td><input type="textbox" id="simple-password" class="_f"/></td></tr>
-    <tr><td></td><td class="smaller">* 登入密码 (区分大小写, 4-64位字符)</td></tr>
+    <tr><td class="right-align fit">[[Password]]:</td><td><input type="textbox" id="simple-password" class="_f"/></td></tr>
+    <tr><td></td><td class="smaller">* [[Case sensitive (4-64 chars)]]</td></tr>
 
-    <tr><td class="right-align fit">密码提示:</td><td><input type="textbox" id="password-hint" class="_f"/></td></tr>
-    <tr><td></td><td class="smaller">* 输错密码时的提示 (4-64位字符)</td></tr>
+    <tr><td class="right-align fit">[[Password Hint]]:</td><td><input type="textbox" id="password-hint" class="_f"/></td></tr>
+    <tr><td></td><td class="smaller">* [[Hint displayed when wrong password typed]]</td></tr>
 
     <tr>
         <td class="right-align fit"><span id="loading-captcha"></span></td>
         <td><img onclick="refreshCaptcha()" id="captcha-img" src="" style="cursor: pointer;"></td>
     </tr>
-    <tr><td class="right-align fit">验证:</td><td><input id="captcha-answer" value=""></td></tr>
+    <tr><td class="right-align fit">[[Captcha]]:</td><td><input id="captcha-answer" value=""></td></tr>
 
-    <tr><td class="right-align fit">用户协议:</td><td>并没有</td></tr>
+    <tr><td class="right-align fit">[[EULA]]:</td><td>---</td></tr>
 
     <tr><td></td><td>
-    <button data-onclick="tryReg()">同意协议并注册</button>
+    <button data-onclick="tryReg()">[[I agree and sign up]]</button>
     </td></tr>
 
     <tr><td colspan="2" id="reg-result">

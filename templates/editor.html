@@ -289,7 +289,6 @@
 					<span><span id="uploading-sign"></span>
 					<a href="javascript:etc.id('file-uploader').click()" title="[[Upload image]]">&#xe04b;</a>
 					<a href="javascript:etc.id('file-uploader-imgur').click()" title="[[Upload image to imgur.com]]">&#xe08d;</a>
-					<a href="javascript:openUploader()" title="[[Upload image in a new window]]">&#xe06d;</a>
 					<a href="javascript:insertLink()" title="[[Insert link]]">&#xe09b;</a>
 					<a href="javascript:clearContent()" title="[[Clear content]]">&#xe122;</a>
 					
@@ -324,19 +323,11 @@
 								Animation.stop();
 							}, {"editor": "thread-content", "imgur": imgur});
 						}
-
-						function openUploader() {
-							var w = window.open("", "",
-								"resizable=no, toolbar=no, scrollbars=no, menubar=no, status=no, directories=no, width=500, height=500");
-							w.document.body.innerHTML = ['<form method="post" id="ie-upload-workaround" ',
-							'action="https://2ax.org/upload" ',
-							'enctype="multipart/form-data" encoding="multipart/form-data">',
-							'<input name="image" type="file" id="form-uploader"/>',
-							'<input name="direct" type="hidden" value="direct" />',
-							'<input type="submit" value="上传" /></form>'].join('');
-						}
 						
-					    window.ondragover = function(e) {e.preventDefault();}
+					    window.ondragover = function(e) { 
+					    	e.preventDefault(); 
+					    }
+					    
 					    window.ondrop = function(e) {
 					    	e.preventDefault(); 
 
@@ -393,6 +384,16 @@
 
 	<div>
 		<ul>
+			<!--[if lt IE 10]>
+			<li>IE7,8,9 [[Upload image]]:
+				<form method="post" action="/upload" target="_blank" enctype="multipart/form-data" encoding="multipart/form-data">
+					<input name="image" type="file" id="form-uploader"/>
+					<input name="direct" type="hidden" value="direct" />
+					<input type="submit" value="上传" />
+				</form>
+			</li>
+			<![endif]-->
+
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
 			<li>
 				<a href="/article/870" target="_blank">BBCode语法说明</a>，使用[html][/html]时<select>

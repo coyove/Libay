@@ -150,7 +150,11 @@ Disallow: /tag/`))
 						info = "guest." + info
 					}
 
-					glog.Infoln(info, referer, "->", url)
+					if len(url) > 5 && (url[:5] == "/timg" || url[:4] == "/img") {
+
+					} else {
+						glog.Infoln(info, referer, "->", url)
+					}
 				}
 
 				handler(w, r, ps)

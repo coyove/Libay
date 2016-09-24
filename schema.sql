@@ -215,7 +215,9 @@ CREATE TABLE images (
     image text,
     uploader integer,
     date timestamp with time zone DEFAULT now(),
-    ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000) NOT NULL
+    ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000) NOT NULL,
+    hits integer DEFAULT 0 NOT NULL,
+    path text DEFAULT ''::text NOT NULL
 );
 
 

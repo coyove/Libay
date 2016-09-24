@@ -55,7 +55,8 @@
 
 {{if .IsOWA}}
 	{{range $key, $value := .Tags}}
-	   <input class="select-tag" type="checkbox" id="check-{{$key}}" name="check-{{$key}}" onclick="updateTag({{$key}})" checked/><label for="check-{{$key}}">{{$value}}</label>
+	   <input class="simple-check" type="checkbox" id="check-{{$key}}" onclick="updateTag({{$key}})" checked/>
+	   <label for="check-{{$key}}">{{$value}}</label>
 	{{end}}
 	<script type="text/javascript">
 		var omit = "{{.CurTag}}".split(":");
@@ -83,7 +84,7 @@
 			var omit = "{{.CurTag}}".split(":");
 			var _new = [omit[0]];
 
-			var chks = document.querySelectorAll("input.select-tag");
+			var chks = document.querySelectorAll("input.simple-check");
 			for (var i in chks) {
 				if (chks[i].checked) _new.push(chks[i].id.replace("check-", ""));
 			}
@@ -132,8 +133,8 @@
 <div class="pager">
 	{{if .IsIndexPage}}[ <b>[[First page]]</b> ]{{else}}
 	[
-	<a href="{{.IndexPage}}"> [[First page]] </a> |
-	<a href="{{.Nav.PrevPage}}"> [[Prev Page]] </a>
+	<a href="{{.IndexPage}}">[[First page]]</a> |
+	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
 	]
 	{{end}}
 
@@ -141,7 +142,7 @@
 	[ <b>[[Last page]]</b> ]
 	{{else}}
 	[
-	<a href="{{.Nav.NextPage}}"> [[Next Page]] </a> |
+	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
 	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
 	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
 	<a href="{{.Nav.LastYearPage}}" >[[Year]]</a> |
@@ -219,15 +220,15 @@
 <div class="pager">
 	{{if .IsIndexPage}}[ <b>[[First page]]</b> ]{{else}}
 	[
-	<a href="{{.IndexPage}}"> [[First page]] </a> |
-	<a href="{{.Nav.PrevPage}}"> [[Prev Page]] </a>
+	<a href="{{.IndexPage}}">[[First page]]</a> |
+	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
 	]
 	{{end}}
 	{{if .IsLastPage}}
 	[ <b>[[Last page]]</b> ]
 	{{else}}
 	[
-	<a href="{{.Nav.NextPage}}"> [[Next Page]] </a> |
+	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
 	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
 	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
 	<a href="{{.Nav.LastYearPage}}" >[[Year]]</a> |

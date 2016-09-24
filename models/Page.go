@@ -72,6 +72,7 @@ type GalleryStruct struct {
 
 	Images       []auth.Image
 	UploaderName string
+	IsSelf       bool
 }
 
 func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -238,6 +239,7 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 
 	var payload GalleryStruct
 
+	user := auth.GetUser(r)
 	page := ps.ByName("page")
 	filter := ps.ByName("gallery")
 
@@ -254,6 +256,7 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 
 	payload.Images, payload.Nav = auth.GetGallery(page, userID)
 	payload.UploaderName = auth.GetUserByID(userID).NickName
+	payload.IsSelf = userID == user.ID
 
 	if len(payload.Images) == 0 && page != "1" {
 		http.Redirect(w, r, payload.IndexPage, http.StatusFound)

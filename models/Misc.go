@@ -50,11 +50,11 @@ func (th ModelHandler) GET_tags(w http.ResponseWriter, r *http.Request, ps httpr
 	payload.TotalTags = len(payload.Tags)
 	payload.IsLoggedIn = u.Name != ""
 
-	ServePage(w,r, "tags", payload)
+	ServePage(w, r, "tags", payload)
 }
 
 func (th ModelHandler) GET_playground(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ServePage(w,r, "404", nil)
+	ServePage(w, r, "404", nil)
 }
 
 func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -62,6 +62,10 @@ func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httproute
 	var payload struct {
 		TotalUsers    int
 		TotalArticles int
+		TotalImages   int
+
+		CanPostImages bool
+		IsLoggedIn    bool
 	}
 
 	auth.Gdb.QueryRow(`
@@ -71,14 +75,24 @@ func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httproute
                 SELECT reltuples
                 FROM   pg_class 
                 WHERE  relname = 'articles'
+            ) AS acount,
+            (
+                SELECT reltuples
+                FROM   pg_class 
+                WHERE  relname = 'images'
             ) AS acount 
         FROM
             pg_class
         WHERE
             relname = 'users'`).
-		Scan(&payload.TotalUsers, &payload.TotalArticles)
+		Scan(&payload.TotalUsers, &payload.TotalArticles, &payload.TotalImages)
 
-	ServePage(w,r, "index", payload)
+	u := auth.GetUser(r)
+
+	payload.IsLoggedIn = u.ID != 0
+	payload.CanPostImages = u.CanPostImages()
+
+	ServePage(w, r, "index", payload)
 }
 
 func (th ModelHandler) GET_dyncaptcha(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

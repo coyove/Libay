@@ -406,7 +406,7 @@ func GenerateAtom(a []Article) string {
 			`<title>`, v.Title, `</title>`,
 			`<updated>`, time.Unix(int64(v.Timestamp)/1000, 0).Format(time.RFC3339), `</updated>`,
 			`<id>`, strconv.Itoa(v.ID), `</id>`,
-			`<content type="html">`, v.Content, `</content>`,
+			`<content type="html">`, Escape(v.Content), `</content>`,
 			`<link href="`, conf.GlobalServerConfig.Host+"/article/"+strconv.Itoa(v.ID), `"/>`,
 			`<author>
 				<name>`, v.Author, `</name>
@@ -437,7 +437,7 @@ func GenerateRSS(a []Article) string {
 			`<title>`, v.Title, `</title>`,
 			`<pubDate>`, time.Unix(int64(v.Timestamp)/1000, 0).Format(time.RFC1123Z), `</pubDate>`,
 			`<link>`, conf.GlobalServerConfig.Host+"/article/"+strconv.Itoa(v.ID), `</link>`,
-			`<description>`, v.Content, `</description>`,
+			`<description>`, Escape(v.Content), `</description>`,
 			`<author>`, v.Author, `</author>`,
 			`</item>`,
 		)

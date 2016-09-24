@@ -1,13 +1,5 @@
 <title>私信</title>
 
-<!--[if lte IE 8]>
-<style>
-	#ask-before-delete { display: inline !important; }
-	#ask-before-delete + label:before { display: none !important; }
-	#ask-before-delete + label { color: black !important; text-decoration: none !important; }
-</style>
-<![endif]-->
-
 <p id="breadcrumbs">
 {{if .Message.IsViewingAll}}
 	<span class='fai'>&#xe0a5;</span> 所有私信
@@ -108,21 +100,21 @@
 </script>
 
 <div class="pager">
-	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	{{if .IsIndexPage}}[ <b>[[First Page]]</b> ]{{else}}
 	[
-	<a href="{{.IndexPage}}"> 首页 </a> |
-	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	<a href="{{.IndexPage}}">[[First Page]]</a> |
+	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
 	]
 	{{end}}
 
 	{{if .IsLastPage}}
-	[ <b>尾页</b> ]
+	[ <b>[[Last Page]]</b> ]
 	{{else}}
 	[
-	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
-	<a href="{{.Nav.LastWeekPage}}" >周</a> |
-	<a href="{{.Nav.LastMonthPage}}">月</a> |
-	<a href="{{.LastPage}}" >尾页</a>
+	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
+	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
+	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
+	<a href="{{.LastPage}}" >[[Last Page]]</a>
 	]
 	{{end}}
 </div>
@@ -179,21 +171,21 @@
 </table>
 
 <div class="pager">
-	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
+	{{if .IsIndexPage}}[ <b>[[First Page]]</b> ]{{else}}
 	[
-	<a href="{{.IndexPage}}"> 首页 </a> |
-	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
+	<a href="{{.IndexPage}}">[[First Page]]</a> |
+	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
 	]
 	{{end}}
+
 	{{if .IsLastPage}}
-	[ <b>尾页</b> ]
+	[ <b>[[Last Page]]</b> ]
 	{{else}}
 	[
-	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
-	<a href="{{.Nav.LastWeekPage}}" >周</a> |
-	<a href="{{.Nav.LastMonthPage}}">月</a> |
-	<a href="{{.LastPage}}" >尾页</a>
+	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
+	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
+	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
+	<a href="{{.LastPage}}" >[[Last Page]]</a>
 	]
 	{{end}}
-	
 </div>

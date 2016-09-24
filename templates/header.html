@@ -8,6 +8,14 @@
 <link rel="stylesheet" type="text/css" href="{{.CDN}}/assets/{{.MainCSS}}">
 <link rel='icon' type='image/png' href='{{.CDN}}/assets/favicon.png'>
 
+<!--[if lte IE 8]>
+<style>
+    .simple-check { display: inline !important; }
+    .simple-check + label:before { display: none !important; }
+    .simple-check + label { color: black !important; text-decoration: none !important; }
+</style>
+<![endif]-->
+
 <body>
 <div id="header">
     <ul id="navibar">
@@ -24,7 +32,7 @@
         <li id="nv-owa" class="link hide"><a>[[Iceberg]]</a></li>
         <li id="nv-message" class="link hide"><a>[[Private Message]]</a></li>
         <li id="nv-gallery" class="link hide"><a>[[Gallery]]</a></li>
-        <li id="nv-register" class="link hide"><a>[[Register]]</a></li>
+        <li id="nv-register" class="link hide"><a>[[Sign Up]]</a></li>
         <li id="nv-database" class="link hide"><a>[[Database]]</a></li>
         <li id="nv-config" class="link hide"><a>[[Config]]</a></li>
         <li id="nv-bootstrap" class="link hide"><a>[[Templates]]</a></li>
@@ -48,11 +56,22 @@
             etc.id("nv-console-a").innerHTML += "(" + window.__unread + ")";
         }
 
-        function traditionalization() {
+        function i18n(upl) {
+            if (upl) {
+                etc.util.cookie.write("upl", upl, 3600 * 24 * 1000 * 365);
+                if (upl == "zh-tw") {
+                    etc.util.cookie.write("trad", "1", 3600 * 24 * 1000 * 365);
+                } else {
+                    etc.util.cookie.remove("trad");
+                }
+                return;
+            }
+
             var lang = window.navigator.userLanguage || window.navigator.language;
 
             if (lang.toLowerCase() == "zh-tw" || etc.util.cookie.read("trad") == "1") {
-                etc.util.cookie.write("trad", "1", 3600 * 24 * 1000);
+                etc.util.cookie.write("trad", "1", 3600 * 24 * 1000 * 365);
+                etc.util.cookie.write("upl", "zh-cn", 3600 * 24 * 1000 * 365);
 
                 etc.util.lazyLoad([
                     "/assets/tongwen/tongwen_core.js",
@@ -66,11 +85,11 @@
             }
 
             if (lang.toLowerCase() == "en-us") {
-                etc.util.cookie.write("upl", "en-us");
+                etc.util.cookie.write("upl", "en-us", 3600 * 24 * 1000 * 365);
             }
         }
 
-        etc.onload(traditionalization);
+        etc.onload(function() { i18n(); });
     </script>
 </div>
 

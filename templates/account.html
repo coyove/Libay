@@ -23,7 +23,7 @@
     <a href="/gallery/{{.ID}}/page/1">[[Gallery]]</a> |
 
     <span class='fai'>&#xe069;</span>
-    <a data-onclick="tryLogout()">登出账号</a>
+    <a data-onclick="tryLogout()">[[Log Out]]</a>
 </p>
 
 <div class="dropdown" id="admin-nav">
@@ -162,8 +162,8 @@
 
 <table class="_table" style="width: 100%">
     <tr><td class="right-align fit">用户ID:</td><td>{{.ID}}</td></tr>
-    <tr><td class="right-align fit">用户昵称:</td><td>{{.NickName}}</td></tr>
-    <tr><td class="right-align fit">登入名:</td><td>{{.Name}}</td></tr>
+    <tr><td class="right-align fit">[[Nickname]]:</td><td>{{.NickName}}</td></tr>
+    <tr><td class="right-align fit">[[Username]]:</td><td>{{.Name}}</td></tr>
     <tr><td class="right-align fit">用户组:</td><td>{{.Group}}</td></tr>
 
     <tr><td class="right-align fit">用户状态:</td><td>{{.Status}}</td></tr>
@@ -189,26 +189,6 @@
         document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} 字节)");
     </script>
     </td></tr>
-
-    <tr><td colspan="2"><hr></td></tr>
-
-    <tr><td class="right-align fit">页面语言:</td><td>
-    <input type="checkbox" id="use-trad" class="simple-check" onchange="useTrad(this)">
-    <label for="use-trad">使用繁体</label>
-    </td></tr>
-
-    <tr><td></td><td class="smaller">(修改后请刷新页面, 该设置在登出账号后依然有效)</td>
-    <script type="text/javascript">
-        function useTrad(e) {
-            if (e.checked)
-                etc.util.cookie.write("trad", "1", 3600 * 24 * 1000 * 365);
-            else
-                etc.util.cookie.remove("trad");
-        }
-
-        if (etc.util.cookie.read("trad") == "1") etc.id("use-trad").checked = true;
-    </script>
-    </tr>
 
     <tr><td colspan="2"><hr></td></tr>
 
@@ -238,7 +218,7 @@
     <tr><td class="right-align fit">新密码:</td>
         <td><input type="textbox" id="new-password" style="width: 100%; max-width: 200px"/></td>
     </tr>
-    <tr><td class="right-align fit">新密码提示:</td>
+    <tr><td class="right-align fit">[[Password Hint]]:</td>
         <td>
             <input type="textbox" id="new-password-hint" style="width: 100%; max-width: 200px"/>
             <button data-onclick="tryUpdatePassword()">修改密码</button>

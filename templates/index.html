@@ -1,52 +1,213 @@
 <script type="text/javascript">
-	document.title = window.__title + "首页";
+	document.title = "[[Index]] -- " + window.__title;
 </script>
 
 <p id="breadcrumbs">
-	<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAAAeCAMAAAC45KifAAABj1BMVEVHcEwAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgMAAgMfaY8URV4AAAAdY4YYVHEfaY4MKzscX4EAAAAfaY4WTGcAAAAeZoscYIIaWXkTQloEDxUaW3sVR2APM0UWSmUdY4YJICsdYoYAAAAMKTgDDRICCAwOMUIZV3YWS2YZVXMeZoocYYMZVHITQVgCCAsQN0sFEhkAAAARPFEPNEYcXoAAAgIXT2wLKDcYUnAaWHgVSGIAAAAZVXQAAQEaWHgeZooeZIgbXn8JIS0URF0ZVXQTQloWS2cROU0TQFcOMEECCAsfaI0YUG0VR2EZVXMXTmoOMUIXUGwURFwaWHgTQVgROk4SPlUTQVgOMUMURV4PMkQTQVkbXH0AAQIUQlobWnoVR2ALJTIbW3wXTWkPNEcQNkkPM0UXT2sQNUgNLDwNLDwVR2AYUW4fapAfaY8faY4eZoodY4gdYoUZVHIaWHgXTmsWTGgcX4IZVXMbXX4VSWMZVXQURV4bW3sYUG1od+4TAAAAc3RSTlMAEhkdEAcCAQMEBRcGCSIg/osO68f8UvMV/Z4N9+TCgjDRjl/v5kPtC04oKVfAnKXx4Ld/LWg1CG9k1xuiR7DEhyS8Jsfz79NTerRml2uTWiz5u867qFCR5+BQbKS+dL+Cn/s4bcueZOvdl6g3tUyDPID5XcEZqQAAAz1JREFUeF6N1PlX00AQB/ANTZqk6UEDLUEAAQGqUIGKXEW0IMrlrQLeF94nk6QnN3+4y6Shs1R9fn/q62Q/Oztv3zIaNWRahiUrKquLlpIMQ4po7H+iyT9/zaYzPd+l09+rSmBlZi49sxKLnN4kqAdPO+HAUnc7ACRGzwbCotM2PnsDeAa+9cviJrr1JBs+5USXC+UjB46TySl0UznZh39v7xVbJi0q6dlrrcvREHWUXAbsQmXPxSXpeYU4d7AdODwo5u17XCJOvBFgNkakcG4OgEu9n0dwUSdKgtP8hTsA955KQd9p4A7PsEmch4BDWIxNLQiSKg95zvW7ufc28LRf5hJ1Wq+11c7lOTeSpiaf86Q0zkk1fWdQCQXOAJHwXDx2PKuf9JP2+kmaKj/KuRFf4k7SdzjrSwtTkvYnJxSt9jPEHVaT5nKKmWyqOUSatBTf6TlxVOOR4zkyd4jk3u+iDpXaX4zVOWzicWnb9h0iOYWdBx3EIZKd33pZ5zBpplgu2E1Jk0+QSE5hv1IgDpHs/M6OU+ewwLS7V/6YxPkQqWW/nCcOlfI7+3a9w3IjUFhfRIdI0odez2keQ4dI0WcldBK3A9Rh8wsAHf1tIqSaiwPo7D6/GxYhPXC7FfvZepXVaCF6PNHR/pQqOOebPKdyeD8nSHh/bO4Uy28uGVQy0gCkJ+rY3Mk7mWiYOj14Lqd4tOsmBCk1CShdQYk6sNFbyjsAnRfCNWcVndYH5V3XhsRZImmBq7iqDyXqdL+danGwhD2hM4OVxvj4a9c5Bqk00XWTSMTpikhT7fhzlEvEScQbIngzRUmNjE+DPyfBYUHpMpH07LDnXDJ0Fvq3lAqayZrDBEnPdpKlXLros0Tq6q5KWeqgdKsqzceoQ6WlNlaTxjYBwNle/0EcjCbdSgCAW/rU7M0ZHUFallktE4PXuVM5yGNpcwydqrTWyJ2DImCG0aHSnHhjlcHO7XLFrb7PE4wRackt7ZWwYqMjSFfxdadSLL6Bj0zTalQsBeXHHS4yA+8s7lApu4JvuxBduhJfTmdWh6wQE6NGLqzd7OubHv6aCjIxWhhlMapiWg2GHAnWV/SUZRhWSlPZX/Ib9rZewTFpjKUAAAAASUVORK5CYII=" style="display: inline-block;line-height: 1;vertical-align: text-bottom;height: 16px;"> | 
+	<span data-dropdown="language">
+		<span class='fai'>&#xe149;</span>
+		<span class='nc'>[[Language]]</span>
+	</span> |
 
-	<span class='fai'>&#xe14f;</span>
-	<a href="javascript:window.open('https://www.google.com/search?q=site%3A' + window.location.href)">Google</a> |
+	<span class='fai' title='[[Total Articles]]'>&#xe062;</span> {{.TotalArticles}} |
 
-	<span class='fai' title='用户数'>&#xe083;</span> {{.TotalUsers}} | 
+	<span class='fai' title='[[Total Images]]'>&#xe08d;</span> {{.TotalImages}} |
 
-	<span class='fai' title='文章数'>&#xe07d;</span> {{.TotalArticles}} |
+	<span class='fai' title='[[Total Users]]'>&#xe083;</span> {{.TotalUsers}} | 
 
 	<span class='fai'>&#xe0dc;</span> <a href="/feed/atom">Atom</a> |
 
-	<span class='fai'>&#xe0dc;</span> <a href="/feed/rss">RSS</a>
+	<span class='fai'>&#xe0dc;</span> <a href="/feed/rss">RSS</a> |
+
+	<span class='fai'>&#xe14f;</span>
+	<a href="javascript:window.open('https://www.google.com/search?q=site%3A' + window.location.href)">Google</a>
 </p>
 
+<div id="language" class="dropdown">
+	<ul>
+		<li><a href="javascript:setLang('zh-cn')">Simplified Chinese</a></li>
+		<li><a href="javascript:setLang('zh-tw')">Traditional Chinese</a></li>
+		<li><a href="javascript:setLang('en-us')">English (beta)</a></li>
+	</ul>
+</div>
+
+<style type="text/css">
+	#about div {
+		margin: 4px 0; 
+	}
+
+	#index-image {
+		margin:auto;
+		width:100%;
+		max-width:350px;
+		display:block;
+	}
+
+	#upload-area {
+		border: dashed 2px #ccc;
+		padding: 6px 10px;
+		width: 100%;
+	}
+
+	#upload-area > div { cursor: pointer; }
+	#upload-area > div:hover { color: steelblue; }
+
+	#select-code {
+		display: none;
+	}
+
+	#select-code > div { 
+		height: 24px; 
+	}
+
+	#select-code > div * {
+		height: 100%;
+		vertical-align: top;
+	}
+
+	.image-code {
+		width: 100%;
+		resize: vertical;
+	}
+</style>
+
 <div style="text-align: center">
-	<div>
-		<a href="javascript:setLang('en-us')">English</a>
-		<a href="javascript:setLang('zh-cn')">简体中文</a>
-	</div>
-	<hr style="border: dashed 1px #ccc">
 
-	<img id="index-image" src="/assets/images/inazuma.svg" style="margin: auto;width: 100%; max-width: 512px; display: block;">
-
-	<div id="about">
-		<p>
-			<a href="https://github.com/coyove/Libay"><b>Libay</b></a>是一个非常自由的交流平台，这里的文章原则上<b>除了</b>以下内容都是允许存在的：
-			<ul>
-				<li>暴力与犯罪</li>
-				<li>儿童色情</li>
-				<li>以盈利为目的的非法版权</li>
-			</ul>
-		</p>
-
-		<p>
-			如果您认为站内文章违反了这些规则，可以发送邮件反映(abuse&#65312;libay&#46;nl)或匿名留言。
-		</p>
-	</div>
+	<table style="margin: 0 auto"><tr>
+	<td style="width: 33%" id="index-image-td">
+		<img id="index-image" src="/assets/images/inazuma.svg">
+		<div style="font-size: 80%">
+		Pixiv: <a href="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=53691885" target="_blank">53691885</a>,
+		Vectorized by Coyove
+		</div>
+	</td>
+	<td>
+		<div id="about">
+			<div>
+				tmp.is a super duper simple image hosting site	
+			</div>
+			{{if .IsLoggedIn}}
+				{{if .CanPostImages}}
+				{{else}}
+					<div>您所在的用户组无法上传图片</div>
+				{{end}}
+			{{else}}
+				<div>[[To upload images, please ]]<a href="/account">[[sign in]]</a></div>
+			{{end}}
+			<input style="display: none" id="select-file" type="file" multiple>
+			<div id="upload-area">
+				<div onclick='etc.id("select-file").click()'>
+					[[Select or drag'n drop images to upload]] <span id="uploading-sign"></span>
+				</div>
+				<div id="select-code">
+					<div>
+						<select id="select-code-type">
+							<option value="image-full-url">[[Full Images URL]]</option>
+							<option value="image-thumb-url">[[Thumb Images URL]]</option>
+							<option value="image-full-bbcode" selected>[[Full Images BBCode]]</option>
+							<option value="image-thumb-bbcode">[[Thumb Images BBCode]]</option>
+							<option value="image-full-md">[[Full Images Markdown]]</option>
+							<option value="image-thumb-md">[[Thumb Images Markdown]]</option>
+						</select>
+						<a class="title block inline-block" href="javascript:copy()">
+							<span class='fai'>&#xe04a;</span>
+						</a>
+					</div>
+					<textarea style="display:none" class="image-code" id="image-full-url" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-thumb-url" readonly></textarea>
+					<textarea class="image-code" id="image-full-bbcode" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-thumb-bbcode" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-full-md" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-thumb-md" readonly></textarea>
+				</div>
+			</div>
+		</div>
+	</td>
+	</tr></table>
 </div>
 
 <script type="text/javascript">
     etc.id('index-image').src = window.__logoImg;
 
     function setLang(lang) {
-    	etc.util.cookie.write("upl", lang);
+    	i18n(lang);
     	window.location.reload();
     }
+
+    var upa = etc.id("upload-area");
+
+    upa.ondragover = function(e) { 
+    	e.preventDefault();
+    	upa.style.backgroundColor = "#abceea";
+    }
+
+    upa.ondragleave = function(e) { 
+    	e.preventDefault(); 
+    	upa.style.backgroundColor = "white";
+    }
+    
+    upa.ondrop = function(e) {
+    	e.preventDefault(); 
+    	upa.style.backgroundColor = "white";
+
+    	goUploading(etc.file(e.dataTransfer.files))
+    }
+
+    etc.id("select-file").onchange = function(e) { 
+		Animation.start("uploading-sign");
+		goUploading(etc.file('select-file', e));
+		etc.id("select-file").value = "";
+	}
+
+	etc.id("select-code-type").onchange = function(e) {
+		var texts = etc.get(".image-code");
+		for (var i = 0; i < texts.length; i++) {
+        	texts[i].style.display = "none";
+		}
+
+		etc.let.show(this.value);
+	}
+
+	function copy() {
+		etc.id(etc.id("select-code-type").value).focus();
+		etc.id(etc.id("select-code-type").value).select();
+		document.execCommand('copy');
+	}
+
+	function goUploading(files) {
+		Animation.start("uploading-sign");
+    	var uploaded = {};
+
+    	etc.editor.uploadImage(files, function() {
+			Animation.stop();
+			var imgs = (uploaded["uploaded"]);
+			for (var i in imgs) {
+				var a = document.createElement("a");
+				var img = document.createElement("img");
+
+				img.style.maxWidth = "100px";
+				img.style.maxHeight = "100px";
+				img.src = imgs[i][0];
+
+				a.href = imgs[i][1];
+				a.target = "_blank";
+
+				a.appendChild(img);
+				upa.appendChild(a);
+
+				window.UploadedImages = window.UploadedImages || {};
+
+				etc.id("image-full-url").value += location.origin + imgs[i][1] + "\n";
+				etc.id("image-thumb-url").value += location.origin + imgs[i][0] + "\n";
+
+				etc.id("image-full-bbcode").value += "[img]" + location.origin + imgs[i][1] + "[/img]\n";
+				etc.id("image-thumb-bbcode").value += "[url=" + location.origin + imgs[i][1] + "][img]" + 
+					location.origin + imgs[i][0] + "[/img][/url]\n";
+
+				etc.id("image-full-md").value += "![](" + location.origin + imgs[i][1] + ")\n";
+				etc.id("image-thumb-md").value += "![](" + location.origin + imgs[i][0] + ")\n";
+
+				etc.let.show("select-code");
+			}
+		}, uploaded);
+	}
 </script>

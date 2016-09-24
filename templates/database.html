@@ -83,18 +83,23 @@
 	}
 
 	function _update(str) {
+		var q = "";
 		switch (str) {
 			case "lock":
-			etc.id("sql-statement").value = "update user_info set \"status\"='locked' where id="; 
+			q = "update user_info set \"status\"='locked' where id="; 
 			break;
 			case "unlock":
-			etc.id("sql-statement").value = "update user_info set \"status\"='ok' where id="; 
+			q = "update user_info set \"status\"='ok' where id="; 
 			break;
 			case "newtag":
-			etc.id("sql-statement").value = "insert into tags (id, name, description, restricted, hidden, short)" +
+			q = "insert into tags (id, name, description, restricted, hidden, short)" +
 				" values (?,'','','[]',false,'')";
 			break;
+			case "deldupimg":
+			q = "delete from images where id not in (select max(id) from images group by image, uploader)"
 		}
+
+		etc.id("sql-statement").value = q;
 	}
 </script>
 
@@ -117,6 +122,7 @@
 	<button onclick="_update('unlock')">解锁用户</button>
 	<button onclick="_update('newtag')">添加标签</button>
 	<button onclick="tryUpdateTags()">更新标签</button>
+	<button onclick="_update('deldupimg')">删除重复图片记录</button>
 	</div>
 </div>
 

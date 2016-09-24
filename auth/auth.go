@@ -44,6 +44,7 @@ var Hostname string
 var Gdb *sql.DB
 var Gcache *Cache
 var Guser *Cache
+var Gimage *Cache
 var GarticleTimer *FixedQueue
 var GmessageTimer *FixedQueue
 var GuserTimer *FixedQueue
@@ -430,8 +431,10 @@ func ConnectDatabase(t string, conn string) error {
 
 		Gcache = NewCache(conf.GlobalServerConfig.CacheEntities)
 		Guser = NewCache(conf.GlobalServerConfig.CacheEntities)
+		Gimage = NewCache(conf.GlobalServerConfig.CacheEntities)
 		Gcache.Start()
 		Guser.Start()
+		Gimage.Start()
 
 		GarticleTimer = NewFixedQueue(20, 60)
 		GmessageTimer = NewFixedQueue(20, 120)
