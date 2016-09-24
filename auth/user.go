@@ -72,6 +72,10 @@ func (au *AuthUser) CanView(tag int) bool {
 		return false
 	}
 
+	if au.Group == "admin" {
+		return true
+	}
+
 	_tag := conf.GlobalServerConfig.GetComplexTags()[tag]
 
 	if !_tag.Restricted {
@@ -222,17 +226,17 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-		&username,
-		&session_id,
-		&nickname,
-		&date,
-		&ip,
-		&signupDate,
-		&status,
-		&group,
-		&comment,
-		&avatar,
-		&usage); err == nil {
+			&username,
+			&session_id,
+			&nickname,
+			&date,
+			&ip,
+			&signupDate,
+			&status,
+			&group,
+			&comment,
+			&avatar,
+			&usage); err == nil {
 
 		ret = AuthUser{_id,
 			username,

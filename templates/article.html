@@ -32,12 +32,9 @@
 
 		<span data-dropdown="article-history" data-dropdown-onload="getHistory()">
 			<span class='fai' title="[[Last modified date]]">&#xe120;</span>
-			<span id="article-revision" class='nc'>
-				<script type="text/javascript">
-					document.write(etc.date.format({{.Article.ModTimestamp}}, true));
-				</script>
-				{{if .Article.Revision}}(r{{.Article.Revision}}){{end}}
-			</span>
+			<span id="article-revision" class='nc'><script type="text/javascript">
+				document.write(etc.date.format({{.Article.ModTimestamp}}, true));
+			</script>{{if .Article.Revision}} (r{{.Article.Revision}}){{end}}</span>
 		</span> |
 		
 		<span class='fai'>&#xe12c;</span>

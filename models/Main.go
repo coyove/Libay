@@ -95,15 +95,11 @@ func ServePage(w http.ResponseWriter, r *http.Request, fp string, pl interface{}
 	title.MainJS = conf.GlobalServerConfig.MainJS
 
 	switch fp {
-	case "404":
-	case "about":
-		title.CurrentNav = "nv-about"
+	case "404", "footer", "header":
 	case "account":
 		title.CurrentNav = "nv-console"
-	case "article":
-		title.CurrentNav = "nv-article"
-	case "index":
-		title.CurrentNav = "nv-index"
+	case "editor":
+		title.CurrentNav = "nv-new-article"
 	case "articles":
 		ps := pl.(PageStruct)
 
@@ -119,29 +115,8 @@ func ServePage(w http.ResponseWriter, r *http.Request, fp string, pl interface{}
 		case "owa":
 			title.CurrentNav = "nv-owa"
 		}
-	case "message":
-		title.CurrentNav = "nv-messages"
-	case "gallery":
-		title.CurrentNav = "nv-gallery"
-	case "bootstrap":
-		title.CurrentNav = "nv-bootstrap"
-	case "config":
-		title.CurrentNav = "nv-config"
-	case "database":
-		title.CurrentNav = "nv-database"
-	case "editor":
-		title.CurrentNav = "nv-new-article"
-	case "footer":
-	case "header":
-	case "list":
-	case "playground":
-		title.CurrentNav = "nv-playground"
-	case "register":
-		title.CurrentNav = "nv-register"
-	case "tags":
-		title.CurrentNav = "nv-tags"
-	case "user":
-		title.CurrentNav = "nv-user"
+	default:
+		title.CurrentNav = "nv-" + fp
 	}
 
 	userLang := conf.GlobalServerConfig.GlobalDefaultLang

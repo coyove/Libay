@@ -61,6 +61,10 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 	fn := fmt.Sprintf("%x", sha1.Sum(hashBuf))
 	dirs := string(fn[0]) + "/" + string(fn[1]) + "/"
+	if ava == "true" {
+		dirs = "avatar/" + strconv.Itoa(u.ID/100) + "/" + strconv.Itoa(u.ID) + "/"
+	}
+
 	fn = dirs + fn[2:]
 	ext := filepath.Ext(header.Filename)
 
@@ -114,15 +118,10 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	if ava == "true" {
-		var oldAvatar string
+		if _, err := auth.Gdb.Exec(`UPDATE user_info SET avatar = '` + fn + "' WHERE id = " + uid); err == nil {
 
-		if err := auth.Gdb.QueryRow(`
-			SELECT avatar FROM user_info WHERE id = ` + uid + `;
-			UPDATE user_info SET avatar = '` + fn + "' WHERE id = " + uid).
-			Scan(&oldAvatar); err == nil {
-
-			os.Remove("./images/" + oldAvatar)
-			os.Remove("./thumbs/" + oldAvatar)
+			// os.Remove("./images/" + oldAvatar)
+			// os.Remove("./thumbs/" + oldAvatar)
 
 			payload.Avatar = "ok"
 			auth.Guser.Remove(u.ID)
@@ -131,7 +130,6 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 			glog.Errorln("Database:", err)
 			payload.Avatar = "error"
 		}
-		// payload.Avatar = auth.SetUserAvatar(u, fn)
 	}
 
 	if r.FormValue("direct") != "direct" {

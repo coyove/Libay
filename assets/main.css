@@ -20,12 +20,6 @@
     font-family: typicons;
 }
 
-.dropdown span.fai {
-    display: inline-block;
-    width: 20px;
-    text-align: center;
-}
-
 body {
     margin: 0;
     font: normal 100% sans-serif;
@@ -185,8 +179,8 @@ td.fit, th.fit{
 }
 
 #gallery div.image img {
-    max-width: 200px;
-    max-height: 200px;
+    max-width: 250px;
+    max-height: 250px;
 }
 
 #article-content {
@@ -296,6 +290,7 @@ td.fit, th.fit{
 #article-content table.code span.dec { color: #0086b3; }
 #article-content table.code span.typ { color: #0086b3; }
 #article-content table.code span.pun { font-weight: bold; }
+
 .dropdown {
     display: none;
     position: absolute;
@@ -318,6 +313,12 @@ td.fit, th.fit{
 
 .dropdown li:hover {
     background-color: #bddfe8;
+}
+
+.dropdown span.fai {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
 }
 
 .dropdown-underlay {
@@ -418,22 +419,25 @@ p {
     padding: 3px 10px;
     font-size: 90%;
     line-height: 2;
+    word-spacing: 2px;
     background-color: transparent;
     background-color: #f5f6f7;
     border-bottom: 1px solid #d2d3d7 ;
 }
 
-#breadcrumbs .nc {
+#breadcrumbs .nc, #breadcrumbs a {
     color: #54638c;
     cursor: pointer;
+    padding: 10px 4px;
+    margin: -10px -4px;
 }
 
 #breadcrumbs .nc:hover, #breadcrumbs a:hover {
     text-decoration: none;
-    color: steelblue;
+    background-color: #eee;
 }
 
-#breadcrumbs .nc:active {
+#breadcrumbs .nc:active, #breadcrumbs a:active {
     color: #c2c3c7; 
 }
 
@@ -522,30 +526,6 @@ hr {
     border-top: solid 1px #ccc;
 }
 
-.toa {
-    margin: 0.5em 0;
-    border: solid 1px #a9abb3;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-.toa td {
-    font-size: 90%;
-    border-top: dotted 1px #a9abb3;
-    padding: 0.25em 0.5em;
-}
-.toa td a {
-    text-decoration: none;
-    display: block;
-}
-.toa td:not([class=no-hover]):hover {
-    background-color: #f0f0f4;
-}
-.toa td.head {
-    background: #a9abb3;
-    color: white;
-    border-right: dotted 1px;
-    
-}
 .pager {
     margin: 5px 0; 
     word-spacing: -0.1em; 
@@ -608,10 +588,6 @@ table.database td {
     padding: 0.33em;
     border-radius: 3px;
 }
-
-.font-courier { font-family: "Courier New", Courier, monospace; }
-.font-lucida { font-family: "Lucida Console", Monaco, monospace; line-height: 1.15;}
-.font-purple { color: #800080 !important; }
 
 div#editor {
     /*max-width:500px;*/
