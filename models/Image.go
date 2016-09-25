@@ -175,7 +175,9 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	uid := strconv.Itoa(u.ID)
 
 	_, err = auth.Gdb.Exec(`
-		INSERT INTO images (image, path, uploader) VALUES ('` + url + "', '" + path + "', " + uid + `);
+		INSERT INTO images (image, path, uploader, ts) 
+		VALUES 
+			('` + url + `', '` + path + `', ` + uid + `, ` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `);
 		UPDATE user_info SET image_usage = image_usage + ` + imageSize + ` WHERE id = ` + uid)
 
 	payload.Error = err != nil
@@ -334,4 +336,34 @@ func (th ModelHandler) POST_delete_images_ID(w http.ResponseWriter, r *http.Requ
 	}
 
 	Return(w, "ok")
+}
+
+func (th ModelHandler) POST_search_image(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	url := strings.Split(r.FormValue("url"), "/")
+	_, id := getRealPath(url[len(url)-1])
+
+	if !auth.LogIP(r) {
+		Return(w, "Err::Router::Frequent_Access")
+		return
+	}
+
+	if id == 0 {
+		Return(w, 503)
+		return
+	}
+
+	var ts int
+	if err := auth.Gdb.QueryRow(`
+		SELECT 
+			ts 
+		FROM 
+			images 
+		WHERE 
+			uploader = ` + strconv.Itoa(id) + ` AND image = '` + url[len(url)-1] + `'`).
+		Scan(&ts); err == nil {
+		ts = ts + 1
+		Return(w, fmt.Sprintf("ok::/gallery/%d/page/before=%s_%s", id, auth.HashTS(ts), auth.To60(uint64(ts))))
+	} else {
+		Return(w, "Err::DB::Nothing_Found")
+	}
 }

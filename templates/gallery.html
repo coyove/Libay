@@ -18,7 +18,11 @@
 </p>
 
 <div id="gallery-function" class="dropdown">
+	<div style="padding: 2px">
+		<input id="search-url" placeholder="[[Search by URL]]" style="width: 100%">
+	</div>
 	<ul>
+		<li><a data-onclick="searchImage()">[[Search]]</a></li>
 		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages()">[[Delete selected]]</a></li>
 		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages(true)">[[Delete all in this page]]</a></li>
 		<li><span class='fai'>&#xe072;</span> <a href="javascript:selectAll()">[[Select all]]</a></li>
@@ -33,6 +37,13 @@
 </script>
 
 <script type="text/javascript">
+	etc.id("search-url").onclick = function(e) {
+		if (!e) e = window.event;
+
+		e.cancelBubble = true;
+		e.stopPropagation();
+	}
+
 	function selectAll() {
 		var checks = etc.get(".simple-check");
 
@@ -71,6 +82,23 @@
 			if (text == "ok") {
 				alert("[[Operation completed]]");
 				window.location.reload();
+			} else {
+				alert("[[Error: ]]" + text);			
+			}
+		});
+
+		return etc.wait.on(this);
+	}
+
+	function searchImage() {
+		etc.util.ajax.post("/search/image", { 
+			"url": etc.id("search-url").value,
+			"csrf": etc.util.CSRF() 
+		}).then(function(e, text) {
+			etc.wait.on(this).done();
+
+			if (text.indexOf("ok::") > -1) {
+				location.href = text.substr(4);
 			} else {
 				alert("[[Error: ]]" + text);			
 			}

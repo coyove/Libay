@@ -100,7 +100,7 @@
 				</a></li>
 
 				<li><span class='fai'>&#xe123;</span>
-				<a data-onclick="tryDeleteRestore(false)">[[Delete all images]]</a></li>
+				<a data-onclick="tryDeleteRestore(false)">[[Delete article's images]]</a></li>
 			{{end}}
 
 			{{if .CanMakeLocked}}
@@ -197,7 +197,7 @@
 
 	function tryDeleteRestore(article){
 		if (!article) {
-			if (!confirm("[[Confirm to delete all images in this article]]")) 
+			if (!confirm("[[Confirm to delete all your images in this article]]")) 
 				return etc.wait.on(this).done();
 		}
 

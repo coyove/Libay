@@ -781,7 +781,7 @@
                     'Authorization': 'Client-ID c37fc05199a05b7'
                 }).then(function(e, rt, x) {
                     if (e) {
-                        onError("AJAX");
+                        onError("AJAX" + e);
                         return;
                     }
 
