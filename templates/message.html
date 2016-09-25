@@ -99,25 +99,11 @@
 	etc.util.cookie.remove("unread");
 </script>
 
-<div class="pager">
-	{{if .IsIndexPage}}[ <b>[[First Page]]</b> ]{{else}}
-	[
-	<a href="{{.IndexPage}}">[[First Page]]</a> |
-	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
-	]
-	{{end}}
-
-	{{if .IsLastPage}}
-	[ <b>[[Last Page]]</b> ]
-	{{else}}
-	[
-	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
-	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
-	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
-	<a href="{{.LastPage}}" >[[Last Page]]</a>
-	]
-	{{end}}
-</div>
+<script type="text/javascript">
+	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
+		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
+		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}"));
+</script>
 
 <table id="articles">
 	{{range .Messages}}
@@ -170,22 +156,8 @@
 	{{end}}
 </table>
 
-<div class="pager">
-	{{if .IsIndexPage}}[ <b>[[First Page]]</b> ]{{else}}
-	[
-	<a href="{{.IndexPage}}">[[First Page]]</a> |
-	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
-	]
-	{{end}}
-
-	{{if .IsLastPage}}
-	[ <b>[[Last Page]]</b> ]
-	{{else}}
-	[
-	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
-	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
-	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
-	<a href="{{.LastPage}}" >[[Last Page]]</a>
-	]
-	{{end}}
-</div>
+<script type="text/javascript">
+	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
+		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
+		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}"));
+</script>

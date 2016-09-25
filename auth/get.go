@@ -350,7 +350,13 @@ func GetGallery(enc string, userID int) (ret []Image, nav BackForth) {
 		var path string
 
 		rows.Scan(&id, &path, &uploaderID, &timestamp)
-		ret = append(ret, Image{id, uploaderID, path, timestamp})
+		ret = append(ret, Image{
+			id,
+			uploaderID,
+			conf.GlobalServerConfig.ImageHost + "/" + path,
+			conf.GlobalServerConfig.ImageHost + "/small-" + path,
+			timestamp,
+		})
 	}
 
 	if direction == "ASC" {

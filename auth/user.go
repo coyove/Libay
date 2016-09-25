@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -35,7 +36,10 @@ var DummyUsers = []AuthUser{
 	AuthUser{ID: 5, Group: "user"},
 }
 
-var nicknameReverseLookup map[string]int
+var nicknameReverseLookup struct {
+	sync.Mutex
+	Map map[string]int
+}
 
 func (au *AuthUser) CanPost() bool {
 	if au.Status == "locked" {
@@ -174,12 +178,14 @@ func GetUser(vs ...interface{}) (ret AuthUser) {
 }
 
 func GetIDByNickname(n string) int {
+	nicknameReverseLookup.Lock()
+	defer nicknameReverseLookup.Unlock()
 
-	if nicknameReverseLookup == nil {
-		nicknameReverseLookup = make(map[string]int)
+	if nicknameReverseLookup.Map == nil {
+		nicknameReverseLookup.Map = make(map[string]int)
 	}
 
-	if id, e := nicknameReverseLookup[n]; e {
+	if id, e := nicknameReverseLookup.Map[n]; e {
 		return id
 	} else {
 		if err := Gdb.QueryRow(`
@@ -187,7 +193,7 @@ func GetIDByNickname(n string) int {
             FROM   users
             WHERE  users.nickname = '` + n + `'`).Scan(&id); err == nil {
 
-			nicknameReverseLookup[n] = id
+			nicknameReverseLookup.Map[n] = id
 			return id
 		} else {
 			glog.Errorln("Database:", err)
@@ -226,17 +232,17 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-			&username,
-			&session_id,
-			&nickname,
-			&date,
-			&ip,
-			&signupDate,
-			&status,
-			&group,
-			&comment,
-			&avatar,
-			&usage); err == nil {
+		&username,
+		&session_id,
+		&nickname,
+		&date,
+		&ip,
+		&signupDate,
+		&status,
+		&group,
+		&comment,
+		&avatar,
+		&usage); err == nil {
 
 		ret = AuthUser{_id,
 			username,
@@ -253,11 +259,13 @@ func GetUserByID(id int) (ret AuthUser) {
 
 		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)
 
-		if nicknameReverseLookup == nil {
-			nicknameReverseLookup = make(map[string]int)
+		nicknameReverseLookup.Lock()
+		if nicknameReverseLookup.Map == nil {
+			nicknameReverseLookup.Map = make(map[string]int)
 		}
 
-		nicknameReverseLookup[nickname] = _id
+		nicknameReverseLookup.Map[nickname] = _id
+		nicknameReverseLookup.Unlock()
 	} else {
 		glog.Errorln("Database:", err)
 	}

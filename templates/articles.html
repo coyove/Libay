@@ -130,26 +130,11 @@
 	</script>
 {{end}}
 
-<div class="pager">
-	{{if .IsIndexPage}}[ <b>[[First page]]</b> ]{{else}}
-	[
-	<a href="{{.IndexPage}}">[[First page]]</a> |
-	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
-	]
-	{{end}}
-
-	{{if .IsLastPage}}
-	[ <b>[[Last page]]</b> ]
-	{{else}}
-	[
-	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
-	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
-	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
-	<a href="{{.Nav.LastYearPage}}" >[[Year]]</a> |
-	<a href="{{.LastPage}}" >[[Last page]]</a>
-	]
-	{{end}}
-</div>
+<script type="text/javascript">
+	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
+		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
+		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}"));
+</script>
 
 {{if .IsReply}}
 	<table id="articles">
@@ -217,22 +202,8 @@
 </table>
 {{end}}
 
-<div class="pager">
-	{{if .IsIndexPage}}[ <b>[[First page]]</b> ]{{else}}
-	[
-	<a href="{{.IndexPage}}">[[First page]]</a> |
-	<a href="{{.Nav.PrevPage}}">[[Prev Page]]</a>
-	]
-	{{end}}
-	{{if .IsLastPage}}
-	[ <b>[[Last page]]</b> ]
-	{{else}}
-	[
-	<a href="{{.Nav.NextPage}}">[[Next Page]]</a> |
-	<a href="{{.Nav.LastWeekPage}}" >[[Week]]</a> |
-	<a href="{{.Nav.LastMonthPage}}">[[Month]]</a> |
-	<a href="{{.Nav.LastYearPage}}" >[[Year]]</a> |
-	<a href="{{.LastPage}}" >[[Last page]]</a>
-	]
-	{{end}}
-</div>
+<script type="text/javascript">
+	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
+		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
+		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}"));
+</script>

@@ -49,6 +49,7 @@ type Image struct {
 	ID         int
 	UploaderID int
 	Path       string
+	ThumbPath  string
 	Timestamp  int
 }
 

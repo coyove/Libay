@@ -187,6 +187,21 @@ td.fit, th.fit{
     max-height: 250px;
 }
 
+#gallery .img-id {
+    display: block;
+    position: absolute;
+    font-size: 80%;
+    margin: 2px;
+    padding: 0 4px;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=75)";
+    filter: alpha(opacity=75);
+    -moz-opacity: 0.55;
+    -khtml-opacity: 0.75;
+    opacity: 0.75;
+    background-color: white;
+    border: dashed 1px #666;
+}
+
 #article-content {
     word-wrap: break-word;
     word-break: break-all;

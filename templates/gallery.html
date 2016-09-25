@@ -6,7 +6,7 @@
 	{{if .IsSelf}}
 	| <span data-dropdown="gallery-function">
 		<span class='fai'>&#xe072;</span> 
-		<span class="nc">删除</span>
+		<span class="nc">[[Images]]</span>
 	</span>
 	{{end}}
 
@@ -19,33 +19,18 @@
 
 <div id="gallery-function" class="dropdown">
 	<ul>
-		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages()">删除选定</a></li>
-		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages(true)">删除全部</a></li>
-		<li><span class='fai'>&#xe072;</span> <a href="javascript:selectAll()">全选</a></li>
-		<li><span class='fai'>&#xe072;</span> <a href="javascript:invertSelection()">反选</a></li>
+		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages()">[[Delete selected]]</a></li>
+		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages(true)">[[Delete all in this page]]</a></li>
+		<li><span class='fai'>&#xe072;</span> <a href="javascript:selectAll()">[[Select all]]</a></li>
+		<li><span class='fai'>&#xe072;</span> <a href="javascript:invertSelection()">[[Inverse selection]]</a></li>
 	</ul>
 </div>
 
-<div class="pager">
-	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
-	[
-	<a href="{{.IndexPage}}"> 首页 </a> |
-	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
-	]
-	{{end}}
-
-	{{if .IsLastPage}}
-	[ <b>尾页</b> ]
-	{{else}}
-	[
-	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
-	<a href="{{.Nav.LastWeekPage}}" >周</a> |
-	<a href="{{.Nav.LastMonthPage}}">月</a> |
-	<a href="{{.Nav.LastYearPage}}">年</a> |
-	<a href="{{.LastPage}}" >尾页</a>
-	]
-	{{end}}
-</div>
+<script type="text/javascript">
+	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
+		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
+		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}"));
+</script>
 
 <script type="text/javascript">
 	function selectAll() {
@@ -74,8 +59,8 @@
 			}
 		}
 
-		if (ids.length == 0) return;
-		if (!confirm("是否删除: " + ids.join(","))) return;
+		if (ids.length == 0) return etc.wait.on(this).done();
+		if (!confirm("[[Confirm to delete]]: " + ids.join(","))) return etc.wait.on(this).done();
 
 		etc.util.ajax.post("/delete/images", { 
 			"ids": ids.join(","),
@@ -99,7 +84,8 @@
 	{{range .Images}}
 		<div class="image">
 			<div>
-				<a href="/img/{{.Path}}" target="_blank"><img src="/timg/{{.Path}}"></a>
+				<span class="img-id">{{.ID}}</span>
+				<a href="{{.Path}}" target="_blank"><img src="{{.ThumbPath}}"></a>
 			</div>
 
 			<div class="date">
@@ -112,23 +98,8 @@
 	{{end}}
 </div>
 
-<div class="pager">
-	{{if .IsIndexPage}}[ <b>首页</b> ]{{else}}
-	[
-	<a href="{{.IndexPage}}"> 首页 </a> |
-	<a href="{{.Nav.PrevPage}}"> 上一页 </a>
-	]
-	{{end}}
-	{{if .IsLastPage}}
-	[ <b>尾页</b> ]
-	{{else}}
-	[
-	<a href="{{.Nav.NextPage}}"> 下一页 </a> |
-	<a href="{{.Nav.LastWeekPage}}" >周</a> |
-	<a href="{{.Nav.LastMonthPage}}">月</a> |
-	<a href="{{.Nav.LastYearPage}}">年</a> |
-	<a href="{{.LastPage}}" >尾页</a>
-	]
-	{{end}}
-	
-</div>
+<script type="text/javascript">
+	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
+		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
+		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}"));
+</script>

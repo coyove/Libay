@@ -187,6 +187,12 @@ Disallow: /tag/`))
 	// }
 	// glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
 
+	glog.Infoln("Start image server on", conf.GlobalServerConfig.ImageListen)
+	muxImage := http.NewServeMux()
+	muxImage.HandleFunc("/", models.ServeImage)
+	go http.ListenAndServe("127.0.0.1:"+conf.GlobalServerConfig.ImageListen, muxImage)
+	go models.UploadDeamon()
+
 	if *debugMode {
 
 		conf.GlobalServerConfig.MainCSS = "main.css"

@@ -771,19 +771,8 @@
                 var file = files.shift();
 
                 var onError = function(A) {
-                    alert("Err::Upload::" + A);
-                    if (callback) callback();
+                    if (callback) callback("Err::Upload::" + A);
                 };
-
-                
-                // if (!file || !file.type.match(/image.*/)) {
-                //     if (/\.(jpg|png)\-(small|large)/.test(file.name)) {
-                //         // Twitter images
-                //     } else {
-                //         onError("Invalid_Image");
-                //         return
-                //     }
-                // }
  
                 etc.util.ajax.$post(options["imgur"] ? "https://api.imgur.com/3/image" : "/upload",
                 {
@@ -812,8 +801,12 @@
                         etc.editor.insertText(_id(options["editor"]), 
                             "[url=_blank;" + _link + "][img]" + _thumb + "[/img][/url]");
                     }
+
                     options["uploaded"] = options["uploaded"] || [];
                     options["uploaded"].push([_thumb, _link]);
+
+                    if (options["uploaded_callback"])
+                        options["uploaded_callback"](_thumb, _link);
 
                     etc.editor.uploadImage(files, callback, options);
                 });

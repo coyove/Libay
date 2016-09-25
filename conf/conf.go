@@ -12,14 +12,16 @@ import (
 )
 
 type ServerConfig struct {
-	Connect string
-	Salt    string
-	Listen  string
+	Connect     string
+	Salt        string
+	Listen      string
+	ImageListen string
 
 	CDNPrefix string
 
 	Host        string
 	DebugHost   string
+	ImageHost   string
 	Referer     string
 	Description string
 	Title       string
@@ -38,11 +40,13 @@ type ServerConfig struct {
 	ReplyArea     int
 	MessageArea   int
 
-	AllowRegistration bool
-	ImagesAllowed     interface{}
-	PostsAllowed      interface{}
-	ArticlesPerPage   int
-	MaxImageSize      int
+	AllowRegistration    bool
+	ImagesAllowed        interface{}
+	PostsAllowed         interface{}
+	ArticlesPerPage      int
+	MaxImageSize         int
+	ImagePointsThreshold int
+	ImagePointsDecline   int
 
 	MaxArticleContentLength int
 	MaxRevision             int

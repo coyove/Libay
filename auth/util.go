@@ -320,7 +320,7 @@ func To60(v uint64) string {
 	return string(ret)
 }
 
-func From60(v string) int {
+func From60(v string) uint64 {
 	find := func(b byte) byte {
 		if b >= 'a' && b <= 'z' {
 			return b - 'a'
@@ -337,15 +337,15 @@ func From60(v string) int {
 		return 60
 	}
 
-	var ret int
+	var ret uint64
 
 	for i, _ := range v {
-		idx := int(find(v[i]))
+		idx := uint64(find(v[i]))
 		if idx == 60 {
 			return 0
 		}
 
-		ret += idx * int(math.Pow(60, float64(i)))
+		ret += idx * uint64(math.Pow(60, float64(i)))
 	}
 
 	return ret
@@ -369,7 +369,7 @@ func ExtractTS(enc string) (string, string, int, bool) {
 			return "", "", 0, true
 		}
 
-		ts := From60(matches[3])
+		ts := int(From60(matches[3]))
 
 		if HashTS(ts) != matches[2] {
 			return "", "", 0, true

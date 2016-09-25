@@ -17,15 +17,47 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
+var uploadDeamon struct {
+	sync.Mutex
+
+	Map          map[int]int
+	MapThreshold map[int]int
+}
+
+func UploadDeamon() {
+	for {
+		uploadDeamon.Lock()
+		if uploadDeamon.Map == nil {
+			uploadDeamon.Map = make(map[int]int)
+			uploadDeamon.MapThreshold = make(map[int]int)
+		}
+
+		for k, v := range uploadDeamon.Map {
+			uploadDeamon.Map[k] = v - conf.GlobalServerConfig.ImagePointsDecline
+			if v <= 0 {
+				delete(uploadDeamon.Map, k)
+				delete(uploadDeamon.MapThreshold, k)
+			}
+		}
+
+		uploadDeamon.Unlock()
+		time.Sleep(10 * time.Second)
+	}
+}
+
 func calcImagePath(fn string, ext string, id int) (string, string, string) {
 	buf := auth.MakeHashRaw(fn)
-	hash := auth.To60(uint64(binary.BigEndian.Uint32(buf[:4])))
+	idbuf := make([]byte, 4)
+
+	binary.BigEndian.PutUint32(idbuf, uint32(id))
+	hash := auth.To60(binary.BigEndian.Uint64(append(buf[:4], idbuf...)))
 
 	storePath := strconv.Itoa(id/100) + "/" + strconv.Itoa(id) + "/" + string(hash[0]) + "/"
-	url := auth.To60(uint64(id)) + "/" + hash
+	url := hash
 	finalFilename := storePath + hash[1:]
 
 	if ext == "" {
@@ -52,6 +84,23 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 			return
 		}
 	}
+
+	uploadDeamon.Lock()
+	uploadDeamon.Map[u.ID]++
+
+	if uploadDeamon.MapThreshold[u.ID] == 0 {
+		uploadDeamon.MapThreshold[u.ID] = conf.GlobalServerConfig.ImagePointsThreshold
+	}
+
+	if uploadDeamon.Map[u.ID] > uploadDeamon.MapThreshold[u.ID] && u.Group != "admin" {
+		uploadDeamon.MapThreshold[u.ID] = 1
+		Return(w, `{"Error": true, "R": "Over_Quota"}`)
+		uploadDeamon.Unlock()
+
+		return
+	}
+
+	uploadDeamon.Unlock()
 
 	var payload struct {
 		Error     bool
@@ -105,8 +154,8 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		alreadyUploaded = true
 	}
 
-	payload.Link = "/img/" + url
-	payload.Thumbnail = "/timg/" + url
+	payload.Link = conf.GlobalServerConfig.ImageHost + "/" + url
+	payload.Thumbnail = conf.GlobalServerConfig.ImageHost + "/small-" + url
 
 	if err := auth.ResizeImage(hashBuf, "./thumbs/"+path,
 		250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
@@ -150,7 +199,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 }
 
-func ServeImage(w http.ResponseWriter, ps httprouter.Params, prefix string) {
+func ServeImage(w http.ResponseWriter, r *http.Request) {
 	write := func(mime string, buf []byte) {
 		w.Header().Add("Content-Type", mime)
 		w.Header().Add("Cache-Control", "public, max-age=7200")
@@ -158,9 +207,24 @@ func ServeImage(w http.ResponseWriter, ps httprouter.Params, prefix string) {
 		w.Write(buf)
 	}
 
-	id := auth.From60(ps.ByName("user"))
-	img := ps.ByName("image")
-	path := prefix + strconv.Itoa(id/100) + "/" + strconv.Itoa(id) + "/" + string(img[0]) + "/" + img[1:]
+	imageDots := strings.Split(r.URL.RequestURI()[1:], ".")
+	cookie := imageDots[0]
+
+	if len(imageDots) != 2 || len(cookie) < 10 {
+		Return(w, 404)
+		return
+	}
+
+	prefix := "./images/"
+	if cookie[:6] == "small-" {
+		cookie = cookie[6:]
+		prefix = "./thumbs/"
+	}
+
+	id := int(auth.From60(cookie) & 4294967295)
+
+	path := prefix + strconv.Itoa(id/100) + "/" +
+		strconv.Itoa(id) + "/" + string(cookie[0]) + "/" + cookie[1:] + "." + imageDots[1]
 
 	if _image, e := auth.Gimage.Get(path); e {
 		image := _image.([]interface{})
@@ -184,14 +248,6 @@ func ServeImage(w http.ResponseWriter, ps httprouter.Params, prefix string) {
 
 	write(mime, buf)
 	auth.Gimage.Add(path, []interface{}{mime, buf}, conf.GlobalServerConfig.CacheLifetime)
-}
-
-func (th ModelHandler) GET_img_USER_IMAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ServeImage(w, ps, "./images/")
-}
-
-func (th ModelHandler) GET_timg_USER_IMAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ServeImage(w, ps, "./thumbs/")
 }
 
 func (th ModelHandler) POST_delete_images(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

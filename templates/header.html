@@ -90,6 +90,32 @@
         }
 
         etc.onload(function() { i18n(); });
+
+        function buildPager(IsIndexPage, IsLastPage, 
+            IndexPage, LastPage, PrevPage, NextPage, 
+            LastWeekPage, LastMonthPage, LastYearPage) {
+            var html = ['<div class="pager">'];
+
+            if (IsIndexPage)
+                html.push('[ <b>[[First page]]</b> ] ');
+            else
+                html.push('[ <a href="' + IndexPage + 
+                    '">[[First page]]</a> | <a href="' + PrevPage + '">[[Prev Page]]</a> ] ');
+
+            if (IsLastPage)
+                html.push('[ <b>[[Last page]]</b> ]');
+            else {
+                html.push('[ <a href="' + NextPage + '">[[Next Page]]</a> | ');
+                html.push('<a href="' + LastWeekPage + '">[[Week]]</a> | ');
+                html.push('<a href="' + LastMonthPage + '">[[Month]]</a> | ');
+                if (LastYearPage)
+                    html.push('<a href="' + LastYearPage + '">[[Year]]</a> | ');
+                html.push('<a href="' + LastPage + '">[[Last page]]</a> ]');
+            }
+            
+            html.push('</div>');
+            return html.join('');
+        }
     </script>
 </div>
 

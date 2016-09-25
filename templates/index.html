@@ -175,20 +175,16 @@
 
 	function goUploading(files) {
 		Animation.start("uploading-sign");
-    	var uploaded = {};
-
-    	etc.editor.uploadImage(files, function() {
-			Animation.stop();
-			var imgs = (uploaded["uploaded"]);
-			for (var i in imgs) {
+    	var uploaded = {
+    		"uploaded_callback": function(thumb, full) {
 				var a = document.createElement("a");
 				var img = document.createElement("img");
 
 				img.style.maxWidth = "100px";
 				img.style.maxHeight = "100px";
-				img.src = imgs[i][0];
+				img.src = thumb;
 
-				a.href = imgs[i][1];
+				a.href = full;
 				a.target = "_blank";
 
 				a.appendChild(img);
@@ -196,17 +192,23 @@
 
 				window.UploadedImages = window.UploadedImages || {};
 
-				etc.id("image-full-url").value += location.origin + imgs[i][1] + "\n";
-				etc.id("image-thumb-url").value += location.origin + imgs[i][0] + "\n";
+				etc.id("image-full-url").value += full + "\n";
+				etc.id("image-thumb-url").value += thumb + "\n";
 
-				etc.id("image-full-bbcode").value += "[img]" + location.origin + imgs[i][1] + "[/img]\n";
-				etc.id("image-thumb-bbcode").value += "[url=" + location.origin + imgs[i][1] + "][img]" + 
-					location.origin + imgs[i][0] + "[/img][/url]\n";
+				etc.id("image-full-bbcode").value += "[img]" + full + "[/img]\n";
+				etc.id("image-thumb-bbcode").value += "[url=" + full + "][img]" + thumb + "[/img][/url]\n";
 
-				etc.id("image-full-md").value += "![](" + location.origin + imgs[i][1] + ")\n";
-				etc.id("image-thumb-md").value += "![](" + location.origin + imgs[i][0] + ")\n";
+				etc.id("image-full-md").value += "![](" + full + ")\n";
+				etc.id("image-thumb-md").value += "![](" + thumb + ")\n";
 
 				etc.let.show("select-code");
+    		}
+    	};
+
+    	etc.editor.uploadImage(files, function(err) {
+			Animation.stop();
+			if (err) {
+				etc.id("uploading-sign").html(err);
 			}
 		}, uploaded);
 	}
