@@ -23,7 +23,7 @@
 		<a href="/user/{{.Article.Tag}}">{{.Article.Tag}}</a> |
 
 		<span class='fai'>&#xe123;</span>
-		<a data-onclick="tryDeleteRestore()">[[Delete]]</a>
+		<a data-onclick="tryDeleteRestore(true)">[[Delete]]</a>
 	{{else}}
 		<span data-dropdown="article-function">
 			<span class='fai'>&#xe0bf;</span>
@@ -95,9 +95,12 @@
 				{{end}}
 
 				<li><span class='fai'>&#xe123;</span>
-				<a data-onclick="tryDeleteRestore()">
+				<a data-onclick="tryDeleteRestore(true)">
 					{{if .Article.Deleted}}[[Restore]]{{else}}[[Delete]]{{end}}
 				</a></li>
+
+				<li><span class='fai'>&#xe123;</span>
+				<a data-onclick="tryDeleteRestore(false)">[[Delete all images]]</a></li>
 			{{end}}
 
 			{{if .CanMakeLocked}}
@@ -192,8 +195,15 @@
 		return etc.wait.on(this);
 	}
 
-	function tryDeleteRestore(){
-		etc.util.ajax.post("/delete/article/{{.Article.ID}}/true", {
+	function tryDeleteRestore(article){
+		if (!article) {
+			if (!confirm("[[Confirm to delete all images in this article]]")) 
+				return etc.wait.on(this).done();
+		}
+
+		etc.util.ajax.post(article ? 
+			"/delete/article/{{.Article.ID}}/true" : 
+			"/delete/images/{{.Article.ID}}", {
 			"csrf": etc.util.CSRF()
 		}).then(function(error, text, xhr) {
 			etc.wait.on(this).done();
@@ -238,8 +248,6 @@
 				el.innerHTML = "[[Gallery mode]]";
 				Gallery._Normal();
 			}
-
-			hideFunction();
 		})
 	}
 </script>

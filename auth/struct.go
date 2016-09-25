@@ -52,6 +52,21 @@ type Image struct {
 	ThumbPath  string
 	Timestamp  int
 }
+type AuthUser struct {
+	ID            int
+	Name          string
+	NickName      string
+	LastLoginDate int
+	SignUpDate    int
+	LastLoginIP   string
+	Status        string
+	Group         string
+	Comment       string
+	Avatar        string
+	AvatarThumb   string
+	ImageUsage    int
+	SessionID     string
+}
 
 type BackForth struct {
 	NextPage string

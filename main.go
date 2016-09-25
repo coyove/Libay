@@ -116,18 +116,18 @@ Disallow: /tag/`))
 
 	for i := 0; i < mhd.NumMethod(); i++ {
 		methodName := mhd.Method(i).Name
+		hs := strings.Split(methodName, "_")
+		method := hs[0]
 		handler := mhv.MethodByName(methodName).Interface().(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params))
-		method := strings.Split(methodName, "_")[0]
 
-		routerPath := re.ReplaceAllStringFunc(methodName[len(method):],
+		routerPath := re.ReplaceAllStringFunc(strings.Join(hs[1:], "/"),
 			func(s string) string {
 				return ":" + strings.ToLower(s)
 			})
 
-		routerPath = strings.Replace(routerPath, "_", "/", -1)
+		routerPath = "/" + routerPath
 		glog.Infoln(fmt.Sprintf("%5s -> %s", method, routerPath))
 
-		// if *accessLog {
 		router.Handle(method, routerPath,
 			func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 				if conf.GlobalServerConfig.AccessLogging {
@@ -150,11 +150,13 @@ Disallow: /tag/`))
 						info = "guest." + info
 					}
 
-					if len(url) > 5 && (url[:5] == "/timg" || url[:4] == "/img") {
+					glog.Infoln(info, referer, "->", url)
+				}
 
-					} else {
-						glog.Infoln(info, referer, "->", url)
-					}
+				if r.Method == "POST" && !auth.CheckCSRF(r) {
+					w.WriteHeader(503)
+					w.Write([]byte("Err::CSRF::CSRF_Failure"))
+					return
 				}
 
 				handler(w, r, ps)

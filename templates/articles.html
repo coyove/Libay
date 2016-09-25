@@ -138,6 +138,11 @@
 
 {{if .IsReply}}
 	<table id="articles">
+	<tr>
+		<th></th>
+		<th style="text-align: left">标题</th>
+		<th class="fit last">最后修改</th>
+	</tr>
 	{{range .Articles}}
 	<tr class="darken">
 		<td class="fit header right-align"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>

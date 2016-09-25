@@ -29,16 +29,15 @@ var Gallery = (function() {
 
             var ifLarger = {};
             for (var i = 0; i < links.length; i++) {
-                var m = links[i].href.match(/images\/(\S+)/);
+                var m = links[i].href.match(/img\.tmp\.is\/(\S+)/);
                 if (m) ifLarger[m[1]] = links[i].href;
             }
 
             for (var i = 0; i < imgs.length; i++) {
                 var isrc = imgs[i].src ? imgs[i].src : imgs[i].getAttribute("data-src");
-
-                var m = isrc.match(/thumbs\/(\S+)/);
                 Gallery._Gallery.imgDOMs.push([imgs[i], imgs[i].src]);
 
+                var m = isrc.match(/\/small-(\S+)/);
                 if (m && ifLarger[m[1]]) {
                     Gallery._Gallery.imgList.push(ifLarger[m[1]]);
                 } else {

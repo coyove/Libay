@@ -107,6 +107,8 @@
 		"confirm to delete": "是否删除",
 		"delete selected": "删除选定",
 		"delete all in this page": "删除该页全部",
+		"delete all images": "删除所有图片",
+		"confirm to delete all images in this article": "是否删除此篇文章内所有你发的图片",
 		"select all": "全选",
 		"inverse selection": "反选",
 		"restore": "恢复",

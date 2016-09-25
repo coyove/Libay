@@ -207,11 +207,6 @@ func (th ModelHandler) POST_delete_article_ID_ACTION(w http.ResponseWriter, r *h
 		return
 	}
 
-	if !auth.CheckCSRF(r) {
-		Return(w, "Err::CSRF::CSRF_Failure")
-		return
-	}
-
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		Return(w, "Err::Router::Invalid_Article_Id")
@@ -251,11 +246,6 @@ func (th ModelHandler) POST_delete_messages_from_ID(w http.ResponseWriter, r *ht
 
 	u := auth.GetUser(r)
 
-	if !auth.CheckCSRF(r) {
-		Return(w, "Err::CSRF::CSRF_Failure")
-		return
-	}
-
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil || id < 0 || u.ID == 0 {
 		Return(w, "Err::Router::Invalid_User_Id")
@@ -279,11 +269,6 @@ func (th ModelHandler) POST_lock_article_ID(w http.ResponseWriter, r *http.Reque
 	u := auth.GetUser(r)
 	if !u.CanPost() {
 		Return(w, "Err::Privil::Post_Action_Denied")
-		return
-	}
-
-	if !auth.CheckCSRF(r) {
-		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 
@@ -311,11 +296,6 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 	u := auth.GetUser(r)
 	if !u.CanPost() {
 		Return(w, "Err::Privil::Post_Action_Denied")
-		return
-	}
-
-	if !auth.CheckCSRF(r) {
-		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 

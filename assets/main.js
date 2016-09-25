@@ -784,10 +784,14 @@
                         onError("AJAX");
                         return;
                     }
+
                     try {
                         var D = options["imgur"] ? JSON.parse(rt).data : JSON.parse(rt);
                     } catch (E) {
-                        return onError("JSON");
+                        if (rt == "Err::CSRF::CSRF_Failure")
+                            return onError("Err::CSRF::CSRF_Failure");
+                        else
+                            return onError("JSON");
                     }
 
                     if (D.Error || D.error) {

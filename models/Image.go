@@ -15,11 +15,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
+
+var deleteRe = regexp.MustCompile(`(?i)https:\/\/img\.tmp\.is\/(\S+?)\.(jpg|jpeg|png|gif)`)
 
 var uploadDeamon struct {
 	sync.Mutex
@@ -71,10 +74,10 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	u := auth.GetUser(r)
 	ava := r.FormValue("avatar")
 
-	if !auth.CheckCSRF(r) {
-		Return(w, `{"Error": true, "R": "CSRF"}`)
-		return
-	}
+	// if !auth.CheckCSRF(r) {
+	// 	Return(w, `{"Error": true, "R": "CSRF"}`)
+	// 	return
+	// }
 
 	if !u.CanPostImages() {
 		if ava == "true" && u.ID > 0 {
@@ -199,20 +202,12 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 }
 
-func ServeImage(w http.ResponseWriter, r *http.Request) {
-	write := func(mime string, buf []byte) {
-		w.Header().Add("Content-Type", mime)
-		w.Header().Add("Cache-Control", "public, max-age=7200")
-		w.Header().Add("Expires", time.Now().Add(2*time.Hour).Format(time.RFC1123))
-		w.Write(buf)
-	}
-
-	imageDots := strings.Split(r.URL.RequestURI()[1:], ".")
+func getRealPath(url string) (string, int) {
+	imageDots := strings.Split(url, ".")
 	cookie := imageDots[0]
 
-	if len(imageDots) != 2 || len(cookie) < 10 {
-		Return(w, 404)
-		return
+	if len(imageDots) != 2 || len(cookie) < 6 {
+		return "", 0
 	}
 
 	prefix := "./images/"
@@ -223,8 +218,23 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 
 	id := int(auth.From60(cookie) & 4294967295)
 
-	path := prefix + strconv.Itoa(id/100) + "/" +
-		strconv.Itoa(id) + "/" + string(cookie[0]) + "/" + cookie[1:] + "." + imageDots[1]
+	return prefix + strconv.Itoa(id/100) + "/" +
+		strconv.Itoa(id) + "/" + string(cookie[0]) + "/" + cookie[1:] + "." + imageDots[1], id
+}
+
+func ServeImage(w http.ResponseWriter, r *http.Request) {
+	write := func(mime string, buf []byte) {
+		w.Header().Add("Content-Type", mime)
+		w.Header().Add("Cache-Control", "public, max-age=7200")
+		w.Header().Add("Expires", time.Now().Add(2*time.Hour).Format(time.RFC1123))
+		w.Write(buf)
+	}
+
+	path, _ := getRealPath(r.URL.RequestURI()[1:])
+	if path == "" {
+		Return(w, 404)
+		return
+	}
 
 	if _image, e := auth.Gimage.Get(path); e {
 		image := _image.([]interface{})
@@ -254,11 +264,6 @@ func (th ModelHandler) POST_delete_images(w http.ResponseWriter, r *http.Request
 	u := auth.GetUser(r)
 	if u.ID == 0 {
 		Return(w, "Err::Post::Invalid_User")
-		return
-	}
-
-	if !auth.CheckCSRF(r) {
-		Return(w, "Err::CSRF::CSRF_Failure")
 		return
 	}
 
@@ -304,4 +309,29 @@ func (th ModelHandler) POST_delete_images(w http.ResponseWriter, r *http.Request
 		glog.Errorln("Database:", err)
 		Return(w, "Err:DB::Delete_Failure")
 	}
+}
+
+func (th ModelHandler) POST_delete_images_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	u := auth.GetUser(r)
+	id, err := strconv.Atoi(ps.ByName("id"))
+
+	if u.ID == 0 || err != nil {
+		Return(w, "Err::Post::Invalid_User")
+		return
+	}
+
+	article := auth.GetArticle(r, auth.DummyUsers[0], id, true)
+	for _, m := range deleteRe.FindAllStringSubmatch(article.Raw, -1) {
+		if len(m) >= 3 {
+			path, iid := getRealPath(m[1] + "." + m[2])
+			if path != "" {
+				if iid == u.ID || conf.GlobalServerConfig.GetPrivilege(u.Group, "DeleteOthers") {
+					auth.Gimage.Remove(path)
+					os.Remove(path)
+				}
+			}
+		}
+	}
+
+	Return(w, "ok")
 }

@@ -13,21 +13,6 @@ import (
 	"time"
 )
 
-type AuthUser struct {
-	ID            int
-	Name          string
-	NickName      string
-	LastLoginDate int
-	SignUpDate    int
-	LastLoginIP   string
-	Status        string
-	Group         string
-	Comment       string
-	Avatar        string
-	ImageUsage    int
-	SessionID     string
-}
-
 var DummyUsers = []AuthUser{
 	AuthUser{ID: 1, Group: "admin"},
 	AuthUser{ID: 2, Group: "user"},
@@ -232,30 +217,33 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-		&username,
-		&session_id,
-		&nickname,
-		&date,
-		&ip,
-		&signupDate,
-		&status,
-		&group,
-		&comment,
-		&avatar,
-		&usage); err == nil {
+			&username,
+			&session_id,
+			&nickname,
+			&date,
+			&ip,
+			&signupDate,
+			&status,
+			&group,
+			&comment,
+			&avatar,
+			&usage); err == nil {
 
-		ret = AuthUser{_id,
-			username,
-			nickname,
-			int(date.Unix()),
-			int(signupDate.Unix()),
-			ip,
-			strings.Trim(status, " "),
-			strings.Trim(group, " "),
-			Unescape(comment),
-			avatar,
-			usage,
-			session_id}
+		ret = AuthUser{
+			ID:            _id,
+			Name:          username,
+			NickName:      nickname,
+			LastLoginDate: int(date.Unix()),
+			SignUpDate:    int(signupDate.Unix()),
+			LastLoginIP:   ip,
+			Status:        strings.Trim(status, " "),
+			Group:         strings.Trim(group, " "),
+			Comment:       Unescape(comment),
+			Avatar:        conf.GlobalServerConfig.ImageHost + "/" + avatar,
+			AvatarThumb:   conf.GlobalServerConfig.ImageHost + "/small-" + avatar,
+			ImageUsage:    usage,
+			SessionID:     session_id,
+		}
 
 		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)
 

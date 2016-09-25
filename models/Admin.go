@@ -71,7 +71,7 @@ func (th ModelHandler) GET_database_TABLE_page_PAGE(w http.ResponseWriter, r *ht
 func (th ModelHandler) POST_database_TABLE_delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 
-	if u.Group != "admin" || !auth.CheckCSRF(r) {
+	if u.Group != "admin" {
 		Return(w, 503)
 		return
 	}
@@ -92,7 +92,7 @@ func (th ModelHandler) POST_database_TABLE_delete(w http.ResponseWriter, r *http
 func (th ModelHandler) POST_database_TABLE_exec(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 
-	if u.Group != "admin" || !auth.CheckCSRF(r) {
+	if u.Group != "admin" {
 		Return(w, 503)
 		return
 	}
@@ -137,7 +137,7 @@ func (th ModelHandler) GET_gc(w http.ResponseWriter, r *http.Request, ps httprou
 func (th ModelHandler) POST_config_update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 
-	if u.Group != "admin" || !auth.CheckCSRF(r) {
+	if u.Group != "admin" {
 		Return(w, 503)
 		return
 	}
@@ -173,7 +173,7 @@ func (th ModelHandler) POST_config_update(w http.ResponseWriter, r *http.Request
 func (th ModelHandler) POST_tags_update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 
-	if u.Group != "admin" || !auth.CheckCSRF(r) {
+	if u.Group != "admin" {
 		Return(w, 503)
 		return
 	}
@@ -233,7 +233,7 @@ func (th ModelHandler) GET_bootstrap_FILE(w http.ResponseWriter, r *http.Request
 func (th ModelHandler) POST_bootstrap_FILE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 
-	if u.Group != "admin" || !auth.CheckCSRF(r) {
+	if u.Group != "admin" {
 		Return(w, 503)
 		return
 	}

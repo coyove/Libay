@@ -167,6 +167,11 @@ td.fit, th.fit{
     padding: 4px;
 }
 
+#article-content > #gallery {
+    border: none;
+    padding: 0;
+}
+
 #gallery div.image {
     padding: 2px;
     margin: 2px;
@@ -542,9 +547,29 @@ hr {
 }
 
 .pager {
-    margin: 5px 0; 
-    word-spacing: -0.1em; 
+    margin: 5px 0;
+    border-collapse: collapse;
+    border-spacing: 0;
 }
+
+.pager td {
+    border: solid 1px #bababa;
+    padding: 2px 6px;
+}
+
+.pager td.l:before { 
+    content: '\e01b'; 
+    font-family: typicons; 
+    margin-right: 4px; 
+    color: #aaa;
+}
+
+.pager td.c { cursor: pointer; }
+.pager td.n { border-right: none; }
+.pager td.l { border-left: none; }
+.pager td.t { font-size: 80%; }
+.pager td.c:hover, .pager td.nc { background-color: #eee; }
+.pager td a:hover { text-decoration: none; }
 
 input.simple-check {
     display: none;

@@ -94,26 +94,27 @@
         function buildPager(IsIndexPage, IsLastPage, 
             IndexPage, LastPage, PrevPage, NextPage, 
             LastWeekPage, LastMonthPage, LastYearPage) {
-            var html = ['<div class="pager">'];
+            var html = ['<table class="pager"><tr>'];
 
             if (IsIndexPage)
-                html.push('[ <b>[[First page]]</b> ] ');
-            else
-                html.push('[ <a href="' + IndexPage + 
-                    '">[[First page]]</a> | <a href="' + PrevPage + '">[[Prev Page]]</a> ] ');
+                html.push('<td class="nc"><b>[[First page]]</b></td>');
+            else {
+                html.push('<td class="c"><a href="' + IndexPage +  '">[[First page]]</a></td>');
+                html.push('<td class="c"><a href="' + PrevPage + '">[[Prev Page]]</a></td>');
+            }
 
             if (IsLastPage)
-                html.push('[ <b>[[Last page]]</b> ]');
+                html.push('<td class="nc"><b>[[Last page]]</b></td>');
             else {
-                html.push('[ <a href="' + NextPage + '">[[Next Page]]</a> | ');
-                html.push('<a href="' + LastWeekPage + '">[[Week]]</a> | ');
-                html.push('<a href="' + LastMonthPage + '">[[Month]]</a> | ');
+                html.push('<td class="c n next"><a href="' + NextPage + '">[[Next Page]]</a></td>');
+                html.push('<td class="c n l t"><a href="' + LastWeekPage + '">[[Week]]</a></td>');
+                html.push('<td class="c n l t"><a href="' + LastMonthPage + '">[[Month]]</a></td>');
                 if (LastYearPage)
-                    html.push('<a href="' + LastYearPage + '">[[Year]]</a> | ');
-                html.push('<a href="' + LastPage + '">[[Last page]]</a> ]');
+                    html.push('<td class="c l t"><a href="' + LastYearPage + '">[[Year]]</a></td>');
+                html.push('<td class="c"><a href="' + LastPage + '">[[Last page]]</a></td>');
             }
             
-            html.push('</div>');
+            html.push('</tr></table>');
             return html.join('');
         }
     </script>
