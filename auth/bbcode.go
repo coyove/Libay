@@ -13,6 +13,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"io/ioutil"
 )
 
 // [color=#ff0000]...[/color]
@@ -76,6 +78,7 @@ type Tokenizer struct {
 }
 
 func TokenizeString(bbcode string, maxTags int) *Tokenizer {
+	// bbcode = strings.Replace(bbcode, "\t", "    ", -1)
 	hits := reBBCodeTokens.FindAllStringSubmatchIndex(bbcode, maxTags)
 	inCode := ""
 	h := 0
@@ -324,15 +327,20 @@ func buildTable(table [][]string) string {
 
 func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 	bits := make([]string, 0, 32)
+	_ = ioutil.ReadFile
 	var errors []error = nil
 	inLink := false
+
+	escape := func(s string) string {
+		return html.EscapeString(s)
+	}
 
 	for t := tok.Next(); t != nil; t = tok.Next() {
 		// fmt.Println(t.Text)
 		if t.Tag == "" {
 			lines := strings.Split(t.Text, "\n")
 			if len(lines) == 1 {
-				bits = append(bits, html.EscapeString(t.Text))
+				bits = append(bits, escape(t.Text))
 			} else if t.Text == "\n" {
 				bits = append(bits, "</td></tr><tr class='zebra-"+tok.Zebra()+"'><td>")
 			} else {
@@ -342,7 +350,7 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 					break
 				}
 
-				bits = append(bits, html.EscapeString(lines[0])+end+
+				bits = append(bits, escape(lines[0])+end+
 					"</td></tr><tr class='zebra-"+tok.Zebra()+"'><td>")
 
 				for i := 1; i < len(lines)-1; i++ {
@@ -353,7 +361,7 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 					bits = append(bits, start+text+end+"</td></tr><tr class='zebra-"+tok.Zebra()+"'><td>")
 				}
 
-				bits = append(bits, start+html.EscapeString(lines[len(lines)-1]))
+				bits = append(bits, start+escape(lines[len(lines)-1]))
 			}
 		} else {
 			switch t.Tag {

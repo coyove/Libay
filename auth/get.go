@@ -78,7 +78,8 @@ func GetArticles(enc string,
 	// searchPattern escaping should be done elsewhere
 	searchStat := "1 = 1"
 	if searchPattern != "" {
-		searchStat = "vector @@ to_tsquery('" + conf.GlobalServerConfig.Zhparser + "', '" + searchPattern + "')"
+		searchStat = "(vector @@ to_tsquery('" + conf.GlobalServerConfig.Zhparser + "', '" + searchPattern + `')
+			OR title LIKE '%` + searchPattern + `%' OR raw LIKE '%` + searchPattern + `%')`
 	}
 
 	onlyTag := "articles.deleted = false"
@@ -154,7 +155,7 @@ func GetArticles(enc string,
 	}
 
 	_start := time.Now()
-	rows, err := Gdb.Query(`
+	sql := `
         SELECT
             articles.id, 
             articles.title, 
@@ -176,8 +177,9 @@ func GetArticles(enc string,
             (` + onlyTag + `)
         ORDER BY
             ` + orderBy + ` 
-        LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage))
+        LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage)
 
+	rows, err := Gdb.Query(sql)
 	if err != nil {
 		glog.Errorln("Database:", err)
 		return

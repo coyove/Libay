@@ -97,21 +97,21 @@
             var html = ['<table class="pager"><tr>'];
 
             if (IsIndexPage)
-                html.push('<td class="nc"><b>[[First page]]</b></td>');
+                html.push('<td class="nc"><b>[[Index]]</b></td>');
             else {
-                html.push('<td class="c"><a href="' + IndexPage +  '">[[First page]]</a></td>');
-                html.push('<td class="c"><a href="' + PrevPage + '">[[Prev Page]]</a></td>');
+                html.push('<td class="c"><a href="' + IndexPage +  '">[[Index]]</a></td>');
+                html.push('<td class="c"><a href="' + PrevPage + '">[[Prev]]</a></td>');
             }
 
             if (IsLastPage)
-                html.push('<td class="nc"><b>[[Last page]]</b></td>');
+                html.push('<td class="nc"><b>[[Last]]</b></td>');
             else {
-                html.push('<td class="c n next"><a href="' + NextPage + '">[[Next Page]]</a></td>');
+                html.push('<td class="c n next"><a href="' + NextPage + '">[[Next]]</a></td>');
                 html.push('<td class="c n l t"><a href="' + LastWeekPage + '">[[Week]]</a></td>');
                 html.push('<td class="c n l t"><a href="' + LastMonthPage + '">[[Month]]</a></td>');
                 if (LastYearPage)
                     html.push('<td class="c l t"><a href="' + LastYearPage + '">[[Year]]</a></td>');
-                html.push('<td class="c"><a href="' + LastPage + '">[[Last page]]</a></td>');
+                html.push('<td class="c"><a href="' + LastPage + '">[[Last]]</a></td>');
             }
             
             html.push('</tr></table>');

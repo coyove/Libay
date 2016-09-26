@@ -31,6 +31,20 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
 --
+-- Name: pg_bigm; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_bigm WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_bigm; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pg_bigm IS 'text similarity measurement and index searching based on bigrams';
+
+
+--
 -- Name: zhparser; Type: EXTENSION; Schema: -; Owner: 
 --
 
@@ -67,8 +81,8 @@ BEGIN
 
     if sec >= Pcooldown * 1000 or Pcooldown = 0 then
 
-        insert into articles ("title", "tag", "content", "raw", "preview", "created_at", "modified_at", "author", "original_author", "parent") 
-                    values   (Ptitle , Ptag , Pcontent , Praw,  Ppreview , Pcreated_at , Pmodified_at , Pauthor , Pauthor, Pparent);
+        insert into articles ("title", "tag", "content", "raw", "preview", "created_at", "modified_at", "author", "original_author", "parent", "vector") 
+                    values   (Ptitle , Ptag , Pcontent , Praw,  Ppreview , Pcreated_at , Pmodified_at , Pauthor , Pauthor, Pparent, to_tsvector('testzhcfg', Ptitle || ' ' || Praw));
         update articles set "modified_at" = Pmodified_at, "children" = "children" + 1 where "id" = Pparent;
         return 0;
     else
@@ -116,8 +130,9 @@ BEGIN
         );
 
     if sec >= Pcooldown * 1000 or Pcooldown = 0 then
-        update articles set ("title", "tag", "author", "content", "raw", "preview", "modified_at", "rev") 
-                            = (Ptitle, Ptag, Pauthor, Pcontent, Praw, Ppreview, Pmodified_at, "rev" + 1) where "id" = Pid;
+        update articles set ("title", "tag", "author", "content", "raw", "preview", "modified_at", "rev", "vector") 
+                            = (Ptitle, Ptag, Pauthor, Pcontent, Praw, Ppreview, Pmodified_at, "rev" + 1, to_tsvector('testzhcfg', Ptitle || ' ' || Praw)) 
+                        where "id" = Pid;
         insert into history ("article_id", "date", "title", "content", "raw", "user_id") 
                         values (Pid, Pold_modified_at, Pold_title, Pold_content, Pold_raw, Pold_author);
         return 0;
@@ -270,35 +285,6 @@ CREATE TABLE images (
 ALTER TABLE images OWNER TO postgres;
 
 --
--- Name: subtag_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE subtag_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE subtag_id_seq OWNER TO postgres;
-
---
--- Name: subtags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE subtags (
-    id integer DEFAULT nextval('subtag_id_seq'::regclass) NOT NULL,
-    name character varying(32) DEFAULT ''::character varying,
-    alias character varying(32) DEFAULT ''::character varying,
-    description text DEFAULT ''::text,
-    children integer DEFAULT 0
-);
-
-
-ALTER TABLE subtags OWNER TO postgres;
-
---
 -- Name: tags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -402,14 +388,6 @@ ALTER TABLE ONLY history
 
 
 --
--- Name: subtags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY subtags
-    ADD CONSTRAINT subtags_pkey PRIMARY KEY (id);
-
-
---
 -- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -456,6 +434,13 @@ CREATE INDEX articles_modified_at_index ON articles USING btree (modified_at);
 
 
 --
+-- Name: articles_raw_bigm_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
+--
+
+CREATE INDEX articles_raw_bigm_index ON articles USING gin (raw gin_bigm_ops);
+
+
+--
 -- Name: articles_tag_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
 --
 
@@ -463,24 +448,17 @@ CREATE INDEX articles_tag_index ON articles USING btree (tag);
 
 
 --
+-- Name: articles_title_bigm_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
+--
+
+CREATE INDEX articles_title_bigm_index ON articles USING gin (title gin_bigm_ops);
+
+
+--
 -- Name: history_article_id_index; Type: INDEX; Schema: public; Owner: coyove; Tablespace: 
 --
 
 CREATE INDEX history_article_id_index ON history USING btree (article_id);
-
-
---
--- Name: subtags_alias_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX subtags_alias_index ON subtags USING btree (alias);
-
-
---
--- Name: subtags_name_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX subtags_name_index ON subtags USING btree (name);
 
 
 --

@@ -109,9 +109,9 @@
 	{{range .Messages}}
 	<tr class="darken">
 		<td class="fit smaller header center">
-		{{if .Sentout}}你{{else}}<a href="/user/{{.SenderID}}">{{.SenderName}}</a>{{end}}
+		{{if .Sentout}}你{{else}}<a target="_blank" href="/user/{{.SenderID}}">{{.SenderName}}</a>{{end}}
 		→
-		{{if .Sentout}}<a href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a>{{else}}你{{end}}
+		{{if .Sentout}}<a target="_blank" href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a>{{else}}你{{end}}
 		</td>
 		<td class="title">
 			<span data-dropdown="m{{.ID}}" class="fai">{{if .Sentout}}&#xe126;{{else}}&#xe065;{{end}}</span>
@@ -125,7 +125,7 @@
 					{{if .Sentout}}
 					{{else}}
 					<li><span class="fai">&#xe00b;</span>
-					<a href="/new/message/{{.SenderID}}">回复私信</a></li>
+					<a target="_blank" href="/new/message/{{.SenderID}}">回复私信</a></li>
 
 					<li><span class="fai">&#xe123;</span>
 					<a data-onclick="tryDelete({{.SenderID}}, false)">删除其发来的全部私信</a></li>
@@ -141,7 +141,7 @@
 					<span class="fai" title='未读消息'>&#xe09a;</span>
 				{{end}}
 			{{end}}
-			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+			<a target="_blank" class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
 			<span class="time">
 				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}));</script>
 			</span>
