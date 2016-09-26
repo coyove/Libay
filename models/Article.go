@@ -333,7 +333,7 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 
 func (th ModelHandler) GET_feed_TYPE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Add("Content-Type", "text/xml; charset=utf-8")
-	a, _ := auth.GetArticles("1", "", "")
+	a, _ := auth.GetArticles("1", "", "", "")
 
 	if ps.ByName("type") == "rss" {
 		Return(w, auth.GenerateRSS(a))

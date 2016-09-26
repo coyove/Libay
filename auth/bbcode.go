@@ -156,8 +156,8 @@ func (t *Tokenizer) Next() *Token {
 			if idx[2] >= 0 {
 				// [tag] or [/tag]
 				tok.Tag = strings.ToLower(t.bbcode[idx[4]:idx[5]])
-				if tok.Tag == "hr" {
-					// hr doesn't have an ending tag
+				if tok.Tag == "hr" || tok.Tag == "gallery" {
+					// hr and gallery don't have an ending tag
 					if t.lastToken != nil {
 						tok.stackTokens = append(tok.stackTokens, t.lastToken)
 						tok.stackTokens = append(tok.stackTokens, t.lastToken.stackTokens...)
@@ -362,6 +362,10 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 			case "hr":
 				if !t.End {
 					bits = append(bits, "<hr>")
+				}
+			case "gallery":
+				if !t.End {
+					bits = append(bits, `<script type="text/javascript">switchView()</script>`)
 				}
 			case "url":
 				if t.End {

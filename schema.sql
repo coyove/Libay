@@ -30,6 +30,20 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
+--
+-- Name: zhparser; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS zhparser WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION zhparser; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION zhparser IS 'a parser for full-text search of Chinese';
+
+
 SET search_path = public, pg_catalog;
 
 --
@@ -117,6 +131,37 @@ $$;
 ALTER FUNCTION public.update_article(pid integer, ptitle text, ptag integer, pauthor integer, pcontent text, praw text, ppreview text, pmodified_at bigint, pold_title text, pold_author integer, pold_content text, pold_raw text, pold_modified_at bigint, pcooldown integer) OWNER TO postgres;
 
 --
+-- Name: testzhcfg; Type: TEXT SEARCH CONFIGURATION; Schema: public; Owner: postgres
+--
+
+CREATE TEXT SEARCH CONFIGURATION testzhcfg (
+    PARSER = zhparser );
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR a WITH simple;
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR e WITH simple;
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR i WITH simple;
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR j WITH simple;
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR l WITH simple;
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR n WITH simple;
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg
+    ADD MAPPING FOR v WITH simple;
+
+
+ALTER TEXT SEARCH CONFIGURATION testzhcfg OWNER TO postgres;
+
+--
 -- Name: article_id_seq; Type: SEQUENCE; Schema: public; Owner: coyove
 --
 
@@ -155,7 +200,8 @@ CREATE TABLE articles (
     rev integer DEFAULT 0,
     original_author integer,
     read boolean DEFAULT false,
-    raw text DEFAULT ''::text NOT NULL
+    raw text DEFAULT ''::text NOT NULL,
+    vector tsvector
 );
 
 
@@ -222,6 +268,35 @@ CREATE TABLE images (
 
 
 ALTER TABLE images OWNER TO postgres;
+
+--
+-- Name: subtag_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE subtag_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE subtag_id_seq OWNER TO postgres;
+
+--
+-- Name: subtags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE subtags (
+    id integer DEFAULT nextval('subtag_id_seq'::regclass) NOT NULL,
+    name character varying(32) DEFAULT ''::character varying,
+    alias character varying(32) DEFAULT ''::character varying,
+    description text DEFAULT ''::text,
+    children integer DEFAULT 0
+);
+
+
+ALTER TABLE subtags OWNER TO postgres;
 
 --
 -- Name: tags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -327,6 +402,14 @@ ALTER TABLE ONLY history
 
 
 --
+-- Name: subtags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY subtags
+    ADD CONSTRAINT subtags_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -384,6 +467,20 @@ CREATE INDEX articles_tag_index ON articles USING btree (tag);
 --
 
 CREATE INDEX history_article_id_index ON history USING btree (article_id);
+
+
+--
+-- Name: subtags_alias_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX subtags_alias_index ON subtags USING btree (alias);
+
+
+--
+-- Name: subtags_name_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX subtags_name_index ON subtags USING btree (name);
 
 
 --

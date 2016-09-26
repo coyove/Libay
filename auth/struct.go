@@ -52,6 +52,7 @@ type Image struct {
 	ThumbPath  string
 	Timestamp  int
 }
+
 type AuthUser struct {
 	ID            int
 	Name          string
@@ -66,6 +67,14 @@ type AuthUser struct {
 	AvatarThumb   string
 	ImageUsage    int
 	SessionID     string
+}
+
+type SubTag struct {
+	ID          int
+	Name        string
+	Alias       string
+	Description string
+	Children    int
 }
 
 type BackForth struct {

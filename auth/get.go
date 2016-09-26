@@ -51,7 +51,11 @@ func ArticleCounter() {
 	}
 }
 
-func GetArticles(enc string, filter string, filterType string) (ret []Article, nav BackForth) {
+func GetArticles(enc string,
+	filter string,
+	filterType string,
+	searchPattern string) (ret []Article, nav BackForth) {
+
 	ret = make([]Article, 0)
 
 	direction, compare, ts, invalid := ExtractTS(enc)
@@ -61,7 +65,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 
 	nav.Set(ts, ts)
 
-	cacheKey := fmt.Sprintf("%s-%s-%s", enc, filter, filterType)
+	cacheKey := fmt.Sprintf("%s-%s-%s%s", enc, filter, filterType, searchPattern)
 	if v, e := Gcache.Get(cacheKey); e {
 		_v := v.([]interface{})
 		return _v[0].([]Article), _v[1].(BackForth)
@@ -70,6 +74,12 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
 	defer func() {
 		Gcache.Add(cacheKey, []interface{}{ret, nav}, conf.GlobalServerConfig.CacheLifetime)
 	}()
+
+	// searchPattern escaping should be done elsewhere
+	searchStat := "1 = 1"
+	if searchPattern != "" {
+		searchStat = "vector @@ to_tsquery('" + conf.GlobalServerConfig.Zhparser + "', '" + searchPattern + "')"
+	}
 
 	onlyTag := "articles.deleted = false"
 	orderByDate := "modified_at"
@@ -162,7 +172,7 @@ func GetArticles(enc string, filter string, filterType string) (ret []Article, n
         LEFT JOIN 
             users ON users.id = articles.author
         WHERE
-            ` + orderByDate + compare + itoa(ts) + ` AND
+            ` + orderByDate + compare + itoa(ts) + ` AND ` + searchStat + ` AND
             (` + onlyTag + `)
         ORDER BY
             ` + orderBy + ` 

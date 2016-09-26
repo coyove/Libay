@@ -39,6 +39,9 @@ type PageStruct struct {
 	IsTag   bool
 	IsUA    bool
 
+	IsSearch      bool
+	SearchPattern string
+
 	OWA struct {
 		IsViewingGlobal  bool
 		IsViewingOther   bool
@@ -75,8 +78,17 @@ type GalleryStruct struct {
 	IsSelf       bool
 }
 
-func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func PageHandler(filterType string, search bool, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page := ps.ByName("page")
+	searchPattern := ""
+	if search {
+		searchPattern = ps.ByName("search")
+		user := auth.GetUser(r)
+		if user.ID == 0 {
+			ServePage(w, r, "404", nil)
+			return
+		}
+	}
 
 	_startRender := time.Now().UnixNano()
 	defer func() {
@@ -98,8 +110,18 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 
 	payload.IsLastPage = page == "last"
 	payload.IsIndexPage = page == "1"
-	payload.IndexPage = strings.Replace("/"+filterType+"/"+filter+"/page/1", "/"+filterType+"//", "/", -1)
+	payload.IndexPage = ""
+	if filterType != "" {
+		payload.IndexPage += "/" + filterType + "/" + filter
+	}
+	if search {
+		payload.IndexPage += "/search/" + searchPattern
+	}
+	payload.IndexPage += "/page/1"
 	payload.LastPage = payload.IndexPage[:len(payload.IndexPage)-1] + "last"
+
+	payload.IsSearch = search
+	payload.SearchPattern = auth.Escape(searchPattern)
 
 	if payload.IsReply {
 		// You cannot view replies under an invalid article
@@ -163,7 +185,12 @@ func PageHandler(filterType string, w http.ResponseWriter, r *http.Request, ps h
 		payload.UA.UserNickName = auth.GetUserByID(userID).NickName
 	}
 
-	payload.Articles, payload.Nav = auth.GetArticles(page, filter, filterType)
+	filteredPattern := strings.Replace(strings.Replace(searchPattern, "'", "", -1), " ", "|", -1)
+	if len(filteredPattern) > 32 {
+		filteredPattern = filteredPattern[:32]
+	}
+
+	payload.Articles, payload.Nav = auth.GetArticles(page, filter, filterType, filteredPattern)
 
 	if page == "1" {
 		id := 0
@@ -267,23 +294,43 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 }
 
 func (th ModelHandler) GET_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler("", w, r, ps)
+	PageHandler("", false, w, r, ps)
 }
 
 func (th ModelHandler) GET_tag_TAG_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler("tag", w, r, ps)
+	PageHandler("tag", false, w, r, ps)
 }
 
 func (th ModelHandler) GET_ua_UA_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler("ua", w, r, ps)
+	PageHandler("ua", false, w, r, ps)
 }
 
 func (th ModelHandler) GET_reply_REPLY_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler("reply", w, r, ps)
+	PageHandler("reply", false, w, r, ps)
 }
 
 func (th ModelHandler) GET_owa_OWA_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	PageHandler("owa", w, r, ps)
+	PageHandler("owa", false, w, r, ps)
+}
+
+func (th ModelHandler) GET_search_SEARCH_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	PageHandler("", true, w, r, ps)
+}
+
+func (th ModelHandler) GET_tag_TAG_search_SEARCH_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	PageHandler("tag", true, w, r, ps)
+}
+
+func (th ModelHandler) GET_ua_UA_search_SEARCH_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	PageHandler("ua", true, w, r, ps)
+}
+
+func (th ModelHandler) GET_reply_REPLY_search_SEARCH_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	PageHandler("reply", true, w, r, ps)
+}
+
+func (th ModelHandler) GET_owa_OWA_search_SEARCH_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	PageHandler("owa", true, w, r, ps)
 }
 
 func (th ModelHandler) GET_message_MESSAGE_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

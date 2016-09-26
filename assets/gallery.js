@@ -1,7 +1,7 @@
 var Gallery = (function() {
     return {
         "_Normal": function() {
-        	etc.id("gallery").style.display = "none";
+        	etc.id("gallery-content").style.display = "none";
             etc.id("article-content").style.display = "block";
 
             var doms = Gallery._Gallery.imgDOMs;
@@ -14,7 +14,7 @@ var Gallery = (function() {
         	var ac = etc.id("article-content");
             var imgs = etc.get("#article-content img");
             var links = etc.get("#article-content a");
-            var div = etc.id("gallery");
+            var div = etc.id("gallery-content");
             ac.style.display = "none";
 
             if (div.id) {
@@ -30,7 +30,12 @@ var Gallery = (function() {
             var ifLarger = {};
             for (var i = 0; i < links.length; i++) {
                 var m = links[i].href.match(/img\.tmp\.is\/(\S+)/);
-                if (m) ifLarger[m[1]] = links[i].href;
+                if (m) {
+                    ifLarger[m[1]] = links[i].href;
+                } else {
+                    m = links[i].href.match(/images\/(\S+)/);
+                    if (m) ifLarger[m[1]] = links[i].href;
+                }
             }
 
             for (var i = 0; i < imgs.length; i++) {
@@ -41,7 +46,12 @@ var Gallery = (function() {
                 if (m && ifLarger[m[1]]) {
                     Gallery._Gallery.imgList.push(ifLarger[m[1]]);
                 } else {
-                    Gallery._Gallery.imgList.push(isrc);
+                    m = isrc.match(/thumbs\/(\S+)/);
+                    if (m && ifLarger[m[1]]) {
+                        Gallery._Gallery.imgList.push(ifLarger[m[1]]);
+                    } else {
+                        Gallery._Gallery.imgList.push(isrc);
+                    }
                 }
 
                 imgs[i].src = "about:blank";
@@ -49,7 +59,7 @@ var Gallery = (function() {
             
 
             div = document.createElement("div");
-            div.id = "gallery";
+            div.id = "gallery-content";
             ac.parentNode.appendChild(div);
             div.style.display = "block";
 
@@ -72,16 +82,22 @@ var Gallery = (function() {
                     "-ms-transform: rotate(270deg) translateX(-100%);",
                 "}",
                 "</style>",
-                "<div class='pager'>",
-                    "[ <a href='javascript:Gallery._Gallery_Prev()'>上一张</a> ]",
-                    "<select class='gallery-pager'></select>",
-                    "[ <a href='javascript:Gallery._Gallery_Next()'>下一张</a> ]",
-                    "[ <a href='javascript:Gallery._Gallery_Goto(true)'>刷新</a> |",
-                    "<a href='javascript:Gallery._Gallery_Rotate(90)'>90<sup>o</sup></a> |",
-                    "<a href='javascript:Gallery._Gallery_Rotate(180)'>180<sup>o</sup></a> |",
-                    "<a href='javascript:Gallery._Gallery_Rotate(270)'>270<sup>o</sup></a> ]",
-                "</div>",
-            ].join(' ');                
+                "<table class='pager'>",
+                    "<td class='c'><a href='javascript:Gallery._Gallery_Prev()'>",
+                    "<span class='fai'>&nbsp;&#xe046;&nbsp;</span></a></td>",
+                    "<td class='nc'><select class='gallery-pager'></select></td>",
+                    "<td class='c'><a href='javascript:Gallery._Gallery_Next()'>",
+                    "<span class='fai'>&nbsp;&#xe048;&nbsp;</span></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Gallery_Goto(true)'>",
+                    "<span class='fai'>&nbsp;&#xe01f;&nbsp;</span></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Gallery_Rotate(90)'>",
+                    "<span class='fai'>&#xe0d9;</span> 90<sup>o</sup></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Gallery_Rotate(180)'>",
+                    "<span class='fai'>&#xe0d9;</span> 180<sup>o</sup></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Gallery_Rotate(270)'>",
+                    "<span class='fai'>&#xe0d9;</span> 270<sup>o</sup></a></td>",
+                "</table>",
+            ].join('');                
 
             div.innerHTML = paging + [
                     "<div id='gallery-container'>",
@@ -104,7 +120,7 @@ var Gallery = (function() {
                 var html = [];
 
                 for (var j = 0; j < Gallery._Gallery.imgList.length; j++) {
-                    html.push("<option value='" + j + "'>第 " + (j + 1) + " 张</option>");
+                    html.push("<option value='" + j + "'>&nbsp;" + (j + 1) + "&nbsp;</option>");
                 }
 
                 pager[i].innerHTML = html.join('');

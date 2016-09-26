@@ -855,6 +855,16 @@
                         dd.style.display = "none";
                         dd.parentNode.removeChild(underlay);
                     };
+
+                    var inputs = dd.querySelectorAll("input");
+                    for (var i = 0; i < inputs.length; i++) {
+                        inputs[i].onclick = function(e) {
+                            if (!e) e = window.event;
+                            
+                            e.cancelBubble = true;
+                            e.stopPropagation();
+                        }
+                    }
                 };
             })(i);
         }

@@ -319,9 +319,9 @@ func (th ModelHandler) GET_cache(w http.ResponseWriter, r *http.Request, ps http
 		_, sec, hits := auth.Gcache.Info(v)
 
 		if sec < 0 {
-			caches = append(caches, fmt.Sprintf("Hits: %5d, waits purging: %s %s", hits, makehref(url[0]), makehref(url[1])))
+			caches = append(caches, fmt.Sprintf("Hits: %5d, waits purging: %s %s %s", hits, makehref(url[0]), makehref(url[1]), name))
 		} else {
-			caches = append(caches, fmt.Sprintf("Hits: %5d, expire in %2ds: %s %s", hits, sec, makehref(url[0]), makehref(url[1])))
+			caches = append(caches, fmt.Sprintf("Hits: %5d, expire in %2ds: %s %s %s", hits, sec, makehref(url[0]), makehref(url[1]), name))
 		}
 	}
 

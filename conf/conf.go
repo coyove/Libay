@@ -65,6 +65,8 @@ type ServerConfig struct {
 
 	ConfigPath string
 
+	Zhparser string
+
 	sortedTags        map[int]string
 	sortedTagsReverse map[string]int
 	sortedTags2       map[int]Tag

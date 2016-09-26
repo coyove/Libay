@@ -18,8 +18,8 @@
 </p>
 
 <div id="gallery-function" class="dropdown">
-	<div style="padding: 2px">
-		<input id="search-url" placeholder="[[Search by URL]]" style="width: 100%">
+	<div>
+		<input id="search-url" placeholder="[[Search by URL]]">
 	</div>
 	<ul>
 		<li><a data-onclick="searchImage()">[[Search]]</a></li>
@@ -37,13 +37,6 @@
 </script>
 
 <script type="text/javascript">
-	etc.id("search-url").onclick = function(e) {
-		if (!e) e = window.event;
-
-		e.cancelBubble = true;
-		e.stopPropagation();
-	}
-
 	function selectAll() {
 		var checks = etc.get(".simple-check");
 

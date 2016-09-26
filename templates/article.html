@@ -179,7 +179,7 @@
 
 			etc.id("article-title").html(j.Title);
 			etc.id("article-content").html(etc.string.unescape(j.Content));
-			var g = etc.id("gallery");
+			var g = etc.id("gallery-content");
 			if (g && g.parentNode) g.parentNode.removeChild(g);
 
 			var el = etc.id("switch-mode");

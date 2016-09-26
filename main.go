@@ -163,6 +163,10 @@ Disallow: /tag/`))
 			})
 	}
 
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		models.ServePage(w, r, "404", nil)
+	})
+
 	mux.Handle("/", router)
 	glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
 

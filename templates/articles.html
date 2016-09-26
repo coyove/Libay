@@ -46,12 +46,58 @@
 	<title>[[All Articles]]</title>
 	<p id="breadcrumbs"><span class='fai'>&#xe0bf;</span> [[All Articles]]
 {{end}}
+
+| <span data-dropdown="search-dropdown" data-dropdown-onload="focusSearch()">
+<span class='fai'>&#xe14f;</span>
+<span class="nc">[[Search]]{{if .IsSearch}} "{{.SearchPattern}}"{{end}}</span>
+</span>
+
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
 	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
 	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
 </script>
 </p>
+
+<div id="search-dropdown" class="dropdown">
+	<div>
+		<input id="search-url" placeholder="[[Search]]" value="{{.SearchPattern}}">
+	</div>
+	<ul>
+		<li><a href="javascript:doSearch()">[[Search]]</a></li>
+		{{if .IsSearch}}
+		<li><a href="javascript:goBack()">[[Back]]</a></li>
+		{{end}}
+	</ul>
+	<script type="text/javascript">
+		function doSearch() {
+			var pat = encodeURIComponent(etc.id("search-url").value);
+			{{if .CurType}}
+				location.href = "/{{.CurType}}/{{.CurTag}}/search/" + pat + "/page/1";
+			{{else}}
+				location.href = "/search/" + pat + "/page/1";
+			{{end}}
+		}
+
+		function goBack() {
+			{{if .CurType}}
+				location.href = "/{{.CurType}}/{{.CurTag}}/page/1";
+			{{else}}
+				location.href = "/page/1";
+			{{end}}
+		}
+
+		function focusSearch() {
+			etc.id("search-url").focus();
+			etc.id("search-url").select();
+		}
+
+		etc.id("search-url").onkeydown = function(e) {
+			e = (e) ? e : window.event;
+			if (e.which == 13 || e.keyCode == 13) doSearch();
+		}
+	</script>
+</div>
 
 {{if .IsOWA}}
 	{{range $key, $value := .Tags}}
@@ -138,11 +184,11 @@
 
 {{if .IsReply}}
 	<table id="articles">
-	<tr>
+	<!-- <tr>
 		<th></th>
 		<th style="text-align: left">标题</th>
 		<th class="fit last">最后修改</th>
-	</tr>
+	</tr> -->
 	{{range .Articles}}
 	<tr class="darken">
 		<td class="fit header right-align"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
