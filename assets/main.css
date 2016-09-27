@@ -1,5 +1,5 @@
 /*
-    This css file contains some codes from the Debian and the Moinmoin's offical websites
+    Some code are borrowed from Debian and Moinmoin's offical stylesheets
 */
 
 @charset 'UTF-8';
@@ -21,7 +21,10 @@
 }
 
 * {
-    box-sizing: border-box;
+    -ms-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box; 
+    box-sizing:border-box; 
 }
 
 body {
@@ -43,13 +46,6 @@ img {
 
 #container {
     margin: 0 10px 0 10px;
-}
-
-input, select, textarea {
-    -ms-box-sizing:border-box;
-    -moz-box-sizing:border-box;
-    -webkit-box-sizing:border-box; 
-    box-sizing:border-box; 
 }
 
 div.article:hover {
@@ -193,13 +189,13 @@ td.fit, th.fit{
     font-size: 80%;
     margin: 2px;
     padding: 0 4px;
-    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=75)";
-    filter: alpha(opacity=75);
-    -moz-opacity: 0.55;
-    -khtml-opacity: 0.75;
-    opacity: 0.75;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=85)";
+    filter: alpha(opacity=85);
+    -moz-opacity: 0.85;
+    -khtml-opacity: 0.85;
+    opacity: 0.85;
     background-color: white;
-    border: dashed 1px #666;
+    border: solid 1px #666;
 }
 
 #article-content {
@@ -757,6 +753,7 @@ span.right-block {
 
 #editor-panel a { 
     font-family: typicons; 
+    font-size: 120%;
 }
 
 #editor-panel span {
@@ -777,7 +774,12 @@ span.right-block {
     color: #0F6080;
 }
 
-#tr-edit div { width: 100%; box-sizing: border-box; }
+#editor-panel input[type=file] {
+    visibility: collapse; 
+    width: 0px;
+}
+
+#tr-edit div { width: 100%; }
 
 .CodeMirror {
     height: auto;

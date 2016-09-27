@@ -23,10 +23,12 @@
 	</div>
 	<ul>
 		<li data-onclick="searchImage()"><span>[[Search]]</span></li>
-		<li data-onclick="deleteImages()"><span class='fai'>&#xe123;</span>
+		<li data-onclick="alterImages('delete')"><span class='fai'>&#xe123;</span>
 		<span>[[Delete selected]]</span></li>
-		<li data-onclick="deleteImages(true)"><span class='fai'>&#xe123;</span>
+		<li data-onclick="alterImages('delete', true)"><span class='fai'>&#xe123;</span>
 		<span>[[Delete all in this page]]</span></li>
+		<li data-onclick="alterImages('showhide')"><span class='fai'>&#xe06f;</span>
+		<span>[[Show/Hide selected]]</span></li>
 		<li onclick="selectAll()"><span class='fai'>&#xe072;</span>
 		<span>[[Select all]]</span></li>
 		<li onclick="invertSelection()"><span class='fai'>&#xe072;</span>
@@ -57,7 +59,7 @@
 		}
 	}
 
-	function deleteImages(all) {
+	function alterImages(action, all) {
 		var checks = etc.get(".simple-check");
 		var ids = [];
 
@@ -68,10 +70,13 @@
 		}
 
 		if (ids.length == 0) return etc.wait.on(this).done();
-		if (!confirm("[[Confirm to delete]]: " + ids.join(","))) return etc.wait.on(this).done();
+		if (action == "delete" && !confirm("[[Confirm to delete]]: " + ids.join(","))) 
+			return etc.wait.on(this).done();
 
-		etc.util.ajax.post("/delete/images", { 
+		etc.util.ajax.post("/alter/images", { 
 			"ids": ids.join(","),
+			"id": "{{.GalleryUserID}}",
+			"action": action,
 			"csrf": etc.util.CSRF() 
 		}).then(function(e, text) {
 			etc.wait.on(this).done();
@@ -112,7 +117,9 @@
 	{{range .Images}}
 		<div class="image">
 			<div>
-				<span class="img-id">{{.ID}}</span>
+				<span class="img-id">{{.ID}}
+					{{if .Hide}}<span class="fai">&#xe137;</span> [[Hide]]{{end}}
+				</span>
 				<a href="{{.Path}}" target="_blank"><img src="{{.ThumbPath}}"></a>
 			</div>
 

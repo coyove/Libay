@@ -773,11 +773,16 @@
                 var onError = function(A) {
                     if (callback) callback("Err::Upload::" + A);
                 };
+
+                var payload = { "image": file };
+                if (options["additional_form"]) {
+                    for (var k in options["additional_form"])
+                        payload[k] = options["additional_form"][k];
+                }
  
-                etc.util.ajax.$post(options["imgur"] ? "https://api.imgur.com/3/image" : "/upload",
-                {
-                    "image": file,
-                }, {
+                etc.util.ajax.$post(options["type"] == "imgur" ? 
+                    "https://api.imgur.com/3/image" : "/upload",
+                    payload, {
                     'Authorization': 'Client-ID c37fc05199a05b7'
                 }).then(function(e, rt, x) {
                     if (e) {

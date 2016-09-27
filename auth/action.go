@@ -206,7 +206,7 @@ func InvertArticleState(user AuthUser, id int, state string) string {
 	_, err = Gdb.Exec(fmt.Sprintf(`UPDATE articles SET %s = NOT %s WHERE id = %d;`, state, state, id))
 
 	if err == nil {
-		pattern := fmt.Sprintf(`(\d+-(%s)-tag|\d+-(%d|%d)-ua|\d+-(%d|0).*-owa|\d+-(%d|0).*-owa|\d+--|\d+-%d-(true|false))`,
+		pattern := fmt.Sprintf(`(\S+-(%s)-tag|\S+-(%d|%d)-ua|\S+-(%d|0).*-owa|\S+-(%d|0).*-owa|\S+--|\d+-%d-(true|false))`,
 			regexp.QuoteMeta(tag),
 			author, oauthor,
 			author, oauthor,

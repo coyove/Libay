@@ -72,12 +72,9 @@ func calcImagePath(fn string, ext string, id int) (string, string, string) {
 
 func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
+	uid := strconv.Itoa(u.ID)
 	ava := r.FormValue("avatar")
-
-	// if !auth.CheckCSRF(r) {
-	// 	Return(w, `{"Error": true, "R": "CSRF"}`)
-	// 	return
-	// }
+	hide := r.FormValue("hide")
 
 	if !u.CanPostImages() {
 		if ava == "true" && u.ID > 0 {
@@ -143,47 +140,49 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 	os.MkdirAll("./images/"+dir, 0777)
 	os.MkdirAll("./thumbs/"+dir, 0777)
+	payload.Link = conf.GlobalServerConfig.ImageHost + "/" + url
+	payload.Thumbnail = conf.GlobalServerConfig.ImageHost + "/small-" + url
 
 	alreadyUploaded := false
 	if _, err := os.Stat("./images/" + path); os.IsNotExist(err) {
 		out, err := os.Create("./images/" + path)
 		if err != nil {
+			os.Remove("./images/" + path)
 			Return(w, `{"Error": true, "R": "IO_Failure"}`)
 			return
 		}
 		out.Write(hashBuf)
 		out.Close()
+
+		if err := auth.ResizeImage(hashBuf, "./thumbs/"+path,
+			250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
+			glog.Errorln("Generating thumbnail failed: "+path, err)
+			Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
+			return
+		}
 	} else {
 		alreadyUploaded = true
 	}
 
-	payload.Link = conf.GlobalServerConfig.ImageHost + "/" + url
-	payload.Thumbnail = conf.GlobalServerConfig.ImageHost + "/small-" + url
+	if !alreadyUploaded {
+		imageSize := strconv.Itoa(len(hashBuf))
 
-	if err := auth.ResizeImage(hashBuf, "./thumbs/"+path,
-		250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
-		glog.Errorln("Generating thumbnail failed: "+path, err)
-		Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
-		return
-	}
-
-	imageSize := strconv.Itoa(len(hashBuf))
-	if alreadyUploaded {
-		imageSize = "0"
-	}
-
-	uid := strconv.Itoa(u.ID)
-
-	_, err = auth.Gdb.Exec(`
-		INSERT INTO images (image, path, uploader, ts) 
-		VALUES 
-			('` + url + `', '` + path + `', ` + uid + `, ` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `);
+		_, err = auth.Gdb.Exec(`
+		INSERT INTO images (image, path, uploader, ts, hide) 
+		VALUES (
+			'` + url + `', 
+			'` + path + `', 
+			` + uid + `, 
+			` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `,
+			` + strconv.FormatBool(hide == "true") + `
+		);
 		UPDATE user_info SET image_usage = image_usage + ` + imageSize + ` WHERE id = ` + uid)
 
-	payload.Error = err != nil
+		payload.Error = err != nil
 
-	if err != nil {
-		glog.Errorln("Database:", err)
+		if err != nil {
+			glog.Errorln("Database:", err)
+		}
 	}
 
 	if ava == "true" {
@@ -196,6 +195,8 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 			payload.Avatar = "error"
 		}
 	}
+
+	auth.Gcache.Remove(`\S+-` + uid + `-img(true|false)`)
 
 	if r.FormValue("direct") != "direct" {
 		Return(w, payload)
@@ -262,9 +263,11 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 	auth.Gimage.Add(path, []interface{}{mime, buf}, conf.GlobalServerConfig.CacheLifetime)
 }
 
-func (th ModelHandler) POST_delete_images(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
-	if u.ID == 0 {
+	id, err := strconv.Atoi(r.FormValue("id"))
+
+	if u.ID == 0 || err != nil || id <= 0 {
 		Return(w, "Err::Post::Invalid_User")
 		return
 	}
@@ -282,34 +285,55 @@ func (th ModelHandler) POST_delete_images(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	rows, err := auth.Gdb.Query("SELECT id, path FROM images WHERE uploader = " + strconv.Itoa(u.ID) +
-		" AND id IN (" + strings.Join(ids, ",") + ")")
-
-	if err != nil {
-		Return(w, "Err:DB::Select_Failure")
-		return
+	tester := "uploader = " + strconv.Itoa(u.ID)
+	if conf.GlobalServerConfig.GetPrivilege(u.Group, "EditOthers") &&
+		conf.GlobalServerConfig.GetPrivilege(u.Group, "DeleteOthers") {
+		tester = "1 = 1"
 	}
 
-	for rows.Next() {
-		var id int
-		var path string
+	switch r.FormValue("action") {
+	case "delete":
+		rows, err := auth.Gdb.Query("SELECT path FROM images WHERE " + tester +
+			" AND id IN (" + strings.Join(ids, ",") + ")")
 
-		rows.Scan(&id, &path)
+		if err != nil {
+			Return(w, "Err:DB::Select_Failure")
+			return
+		}
 
-		os.Remove("./images/" + path)
-		os.Remove("./thumbs/" + path)
-		auth.Gimage.Remove("./images/" + path)
-		auth.Gimage.Remove("./thumbs/" + path)
-	}
+		for rows.Next() {
+			var path string
+			rows.Scan(&path)
 
-	sql := "DELETE FROM images WHERE uploader = " + strconv.Itoa(u.ID) +
-		" AND id IN (" + strings.Join(ids, ",") + ")"
+			os.Remove("./images/" + path)
+			os.Remove("./thumbs/" + path)
+			auth.Gimage.Remove("./images/" + path)
+			auth.Gimage.Remove("./thumbs/" + path)
+		}
 
-	if _, err := auth.Gdb.Exec(sql); err == nil {
+		sql := "DELETE FROM images WHERE " + tester + " AND id IN (" + strings.Join(ids, ",") + ")"
+
+		if _, err := auth.Gdb.Exec(sql); err == nil {
+			Return(w, "ok")
+			auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
+		} else {
+			glog.Errorln("Database:", err)
+			Return(w, "Err:DB::Delete_Failure")
+		}
+	case "showhide":
+		_, err := auth.Gdb.Exec("UPDATE images SET hide = NOT hide WHERE " + tester +
+			" AND id IN (" + strings.Join(ids, ",") + ")")
+
+		if err != nil {
+			Return(w, "Err:DB::Update_Failure")
+			return
+		}
+
 		Return(w, "ok")
-	} else {
-		glog.Errorln("Database:", err)
-		Return(w, "Err:DB::Delete_Failure")
+		auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
+
+	default:
+		Return(w, 503)
 	}
 }
 

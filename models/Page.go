@@ -73,9 +73,10 @@ type MessageStruct struct {
 type GalleryStruct struct {
 	BasePage
 
-	Images       []auth.Image
-	UploaderName string
-	IsSelf       bool
+	Images        []auth.Image
+	UploaderName  string
+	GalleryUserID int
+	IsSelf        bool
 }
 
 func PageHandler(filterType string, search bool, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -275,15 +276,17 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	payload.IndexPage = "/gallery/" + filter + "/page/1"
 	payload.LastPage = "/gallery/" + filter + "/page/last"
 
-	userID, err := strconv.Atoi(filter)
-	if err != nil || userID < 0 {
+	galleryUserID, err := strconv.Atoi(filter)
+	if err != nil || galleryUserID < 0 {
 		ServePage(w, r, "404", nil)
 		return
 	}
 
-	payload.Images, payload.Nav = auth.GetGallery(page, userID)
-	payload.UploaderName = auth.GetUserByID(userID).NickName
-	payload.IsSelf = userID == user.ID
+	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUserID)
+	payload.UploaderName = auth.GetUserByID(galleryUserID).NickName
+	payload.GalleryUserID = galleryUserID
+	payload.IsSelf = galleryUserID == user.ID || (conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") &&
+		conf.GlobalServerConfig.GetPrivilege(user.Group, "DeleteOthers"))
 
 	if len(payload.Images) == 0 && page != "1" {
 		http.Redirect(w, r, payload.IndexPage, http.StatusFound)

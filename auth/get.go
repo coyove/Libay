@@ -51,10 +51,7 @@ func ArticleCounter() {
 	}
 }
 
-func GetArticles(enc string,
-	filter string,
-	filterType string,
-	searchPattern string) (ret []Article, nav BackForth) {
+func GetArticles(enc, filter, filterType, searchPattern string) (ret []Article, nav BackForth) {
 
 	ret = make([]Article, 0)
 
@@ -242,7 +239,7 @@ func GetArticles(enc string,
 	return
 }
 
-func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackForth) {
+func GetMessages(enc string, userID, lookupID int) (ret []Message, nav BackForth) {
 	ret = make([]Message, 0)
 
 	direction, compare, ts, invalid := ExtractTS(enc)
@@ -326,7 +323,7 @@ func GetMessages(enc string, userID int, lookupID int) (ret []Message, nav BackF
 	return
 }
 
-func GetGallery(enc string, userID int) (ret []Image, nav BackForth) {
+func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav BackForth) {
 	ret = make([]Image, 0)
 
 	direction, compare, ts, invalid := ExtractTS(enc)
@@ -336,14 +333,31 @@ func GetGallery(enc string, userID int) (ret []Image, nav BackForth) {
 
 	nav.Set(ts, ts)
 
+	isSelf := user.ID == galleryUserID || conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOthers")
+
+	cacheKey := fmt.Sprintf("%s-%d-img%v", enc, galleryUserID, isSelf)
+	if v, e := Gcache.Get(cacheKey); e {
+		_v := v.([]interface{})
+		return _v[0].([]Image), _v[1].(BackForth)
+	}
+
+	defer func() {
+		Gcache.Add(cacheKey, []interface{}{ret, nav}, conf.GlobalServerConfig.CacheLifetime)
+	}()
+
+	showHidden := " AND hide = false"
+	if isSelf {
+		showHidden = " AND 1 = 1"
+	}
+
 	_start := time.Now()
 	rows, err := Gdb.Query(`
         SELECT
-            id, image, uploader, ts
+            id, image, uploader, ts, hide
         FROM
             images
         WHERE 
-            ts ` + compare + itoa(ts) + ` AND uploader = ` + itoa(userID) + `
+            ts ` + compare + itoa(ts) + ` AND uploader = ` + itoa(galleryUserID) + showHidden + `
         ORDER BY
             ts ` + direction + ` 
         LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage))
@@ -353,21 +367,23 @@ func GetGallery(enc string, userID int) (ret []Image, nav BackForth) {
 		return
 	}
 
-	GmessageTimer.Push(time.Now().Sub(_start).Nanoseconds())
+	GarticleTimer.Push(time.Now().Sub(_start).Nanoseconds())
 
 	defer rows.Close()
 
 	for rows.Next() {
 		var id, uploaderID, timestamp int
 		var path string
+		var hide bool
 
-		rows.Scan(&id, &path, &uploaderID, &timestamp)
+		rows.Scan(&id, &path, &uploaderID, &timestamp, &hide)
 		ret = append(ret, Image{
 			id,
 			uploaderID,
 			conf.GlobalServerConfig.ImageHost + "/" + path,
 			conf.GlobalServerConfig.ImageHost + "/small-" + path,
 			timestamp,
+			hide,
 		})
 	}
 

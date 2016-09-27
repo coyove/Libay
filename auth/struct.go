@@ -51,6 +51,7 @@ type Image struct {
 	Path       string
 	ThumbPath  string
 	Timestamp  int
+	Hide       bool
 }
 
 type AuthUser struct {

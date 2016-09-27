@@ -288,12 +288,14 @@
 				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
 					<span><span id="uploading-sign"></span>
 					<a href="javascript:etc.id('file-uploader').click()" title="[[Upload image]]">&#xe04b;</a>
+					<a href="javascript:etc.id('file-uploader-hide').click()" title="[[Upload image]], [[Hide in my gallery]]">&#xe054;</a>
 					<a href="javascript:etc.id('file-uploader-imgur').click()" title="[[Upload image to imgur.com]]">&#xe08d;</a>
 					<a href="javascript:insertLink()" title="[[Insert link]]">&#xe09b;</a>
 					<a href="javascript:clearContent()" title="[[Clear content]]">&#xe122;</a>
 					
-					<input style="visibility: collapse; width: 0px;" id="file-uploader-imgur" type="file" multiple>
-					<input style="visibility: collapse; width: 0px;" id="file-uploader" type="file" multiple>
+					<input id="file-uploader-imgur" type="file" multiple onchange="tryUploadImage('imgur', event)">
+					<input id="file-uploader-hide" type="file" multiple onchange="tryUploadImage('hide', event)">
+					<input id="file-uploader" type="file" multiple onchange="tryUploadImage('', event)">
 
 					<script type="text/javascript">
 						function clearContent() {
@@ -312,16 +314,20 @@
 							etc.editor.insertText(etc.id("thread-content"), bb);
 						}
 
-						etc.id("file-uploader").onchange = function(e) { tryUploadImage('', e); }
-
-						etc.id("file-uploader-imgur").onchange = function(e) { tryUploadImage('-imgur', e); }
-
-						function tryUploadImage(imgur, e) {
+						function tryUploadImage(t, e) {
 							Animation.start("uploading-sign");
-							etc.editor.uploadImage(etc.file('file-uploader' + imgur, e), function() {
-								etc.id("file-uploader" + imgur).value = "";
+							var payload = {
+								"additional_form": { "hide": t == "hide" },
+								"editor": "thread-content", 
+								"type": t
+							};
+
+							etc.editor.uploadImage(etc.file('file-uploader-' + t, e), function(e) {
+								etc.id("file-uploader-" + t).value = "";
+								
 								Animation.stop();
-							}, {"editor": "thread-content", "imgur": imgur});
+								if (e) etc.id("uploading-sign").html(e);
+							}, payload);
 						}
 						
 					    window.ondragover = function(e) { 
@@ -332,8 +338,9 @@
 					    	e.preventDefault(); 
 
 					    	Animation.start("uploading-sign");
-					    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function() {
+					    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function(e) {
 								Animation.stop();
+								if (e) etc.id("uploading-sign").html(e);
 							}, {"editor": "thread-content"});
 					    }
 					</script>

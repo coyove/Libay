@@ -87,39 +87,45 @@
 			</div>
 			{{if .IsLoggedIn}}
 				{{if .CanPostImages}}
+				<input style="display: none" id="select-file" type="file" multiple>
+				<div id="upload-area">
+					<div onclick='etc.id("select-file").click()'>
+						[[Select or drag'n drop images to upload]] 
+						<span id="uploading-sign"></span>
+					</div>
+					<div id="select-code">
+						<div>
+							<select id="select-code-type">
+								<option value="image-full-url">[[Full Images URL]]</option>
+								<option value="image-thumb-url">[[Thumb Images URL]]</option>
+								<option value="image-full-bbcode" selected>[[Full Images BBCode]]</option>
+								<option value="image-thumb-bbcode">[[Thumb Images BBCode]]</option>
+								<option value="image-full-md">[[Full Images Markdown]]</option>
+								<option value="image-thumb-md">[[Thumb Images Markdown]]</option>
+							</select>
+							<a class="title block inline-block" href="javascript:copy()">
+								<span class='fai'>&#xe04a;</span>
+							</a>
+						</div>
+						<textarea style="display:none" class="image-code" id="image-full-url" readonly></textarea>
+						<textarea style="display:none" class="image-code" id="image-thumb-url" readonly></textarea>
+						<textarea class="image-code" id="image-full-bbcode" readonly></textarea>
+						<textarea style="display:none" class="image-code" id="image-thumb-bbcode" readonly></textarea>
+						<textarea style="display:none" class="image-code" id="image-full-md" readonly></textarea>
+						<textarea style="display:none" class="image-code" id="image-thumb-md" readonly></textarea>
+					</div>
+				</div>
+
+				<div>
+					<input type="checkbox" class="simple-check" id="hide-image">
+					<label for="hide-image">[[Hide in my gallery]]</label>
+				</div>
 				{{else}}
 					<div>您所在的用户组无法上传图片</div>
 				{{end}}
 			{{else}}
 				<div>[[To upload images, please ]]<a href="/account">[[sign in]]</a></div>
 			{{end}}
-			<input style="display: none" id="select-file" type="file" multiple>
-			<div id="upload-area">
-				<div onclick='etc.id("select-file").click()'>
-					[[Select or drag'n drop images to upload]] <span id="uploading-sign"></span>
-				</div>
-				<div id="select-code">
-					<div>
-						<select id="select-code-type">
-							<option value="image-full-url">[[Full Images URL]]</option>
-							<option value="image-thumb-url">[[Thumb Images URL]]</option>
-							<option value="image-full-bbcode" selected>[[Full Images BBCode]]</option>
-							<option value="image-thumb-bbcode">[[Thumb Images BBCode]]</option>
-							<option value="image-full-md">[[Full Images Markdown]]</option>
-							<option value="image-thumb-md">[[Thumb Images Markdown]]</option>
-						</select>
-						<a class="title block inline-block" href="javascript:copy()">
-							<span class='fai'>&#xe04a;</span>
-						</a>
-					</div>
-					<textarea style="display:none" class="image-code" id="image-full-url" readonly></textarea>
-					<textarea style="display:none" class="image-code" id="image-thumb-url" readonly></textarea>
-					<textarea class="image-code" id="image-full-bbcode" readonly></textarea>
-					<textarea style="display:none" class="image-code" id="image-thumb-bbcode" readonly></textarea>
-					<textarea style="display:none" class="image-code" id="image-full-md" readonly></textarea>
-					<textarea style="display:none" class="image-code" id="image-thumb-md" readonly></textarea>
-				</div>
-			</div>
 		</div>
 	</td>
 	</tr></table>
@@ -176,6 +182,9 @@
 	function goUploading(files) {
 		Animation.start("uploading-sign");
     	var uploaded = {
+    		"additional_form": {
+    			"hide": etc.id("hide-image").checked
+    		},
     		"uploaded_callback": function(thumb, full) {
 				var a = document.createElement("a");
 				var img = document.createElement("img");
