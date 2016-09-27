@@ -791,7 +791,7 @@
                     }
 
                     try {
-                        var D = options["imgur"] ? JSON.parse(rt).data : JSON.parse(rt);
+                        var D = options["type"] == "imgur" ? JSON.parse(rt).data : JSON.parse(rt);
                     } catch (E) {
                         if (rt == "Err::CSRF::CSRF_Failure")
                             return onError("Err::CSRF::CSRF_Failure");
@@ -802,6 +802,8 @@
                     if (D.Error || D.error) {
                         return onError("Server_Failure_" + D.R);
                     }
+
+                    console.log(D);
 
                     var _link = (D.Link || D.link).replace("http://", "https://");
                     var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");

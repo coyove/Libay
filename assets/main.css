@@ -195,7 +195,7 @@ td.fit, th.fit{
     -khtml-opacity: 0.85;
     opacity: 0.85;
     background-color: white;
-    border: solid 1px #666;
+    border: solide 1px #666;
 }
 
 #article-content {
@@ -581,7 +581,7 @@ hr {
 .pager td.c { cursor: pointer; }
 .pager td.n { border-right: none; }
 .pager td.l { border-left: none; }
-.pager td.t { font-size: 80%; }
+.pager td.t { border-left: dashed 1px #aaa; }
 .pager td.c:hover, .pager td.nc { background-color: #eee; }
 .pager td a:hover { text-decoration: none; }
 .pager td a { display:inline-block; }

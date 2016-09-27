@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -157,8 +158,14 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		if err := auth.ResizeImage(hashBuf, "./thumbs/"+path,
 			250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
 			glog.Errorln("Generating thumbnail failed: "+path, err)
-			Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
-			return
+
+			cmd := exec.Command("sh", "-c", "convert ./images/"+path+" -thumbnail '250x250>' ./thumbs/"+path)
+			err = cmd.Start()
+
+			if err != nil {
+				Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
+				return
+			}
 		}
 	} else {
 		alreadyUploaded = true
