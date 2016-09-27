@@ -837,8 +837,6 @@
                     var ddol = ddelems[idx].getAttribute("data-dropdown-onload");
                     var rect = ddelems[idx].getBoundingClientRect();
 
-                    if (ddol) eval(ddol);
-
                     dd.style.left = (rect.left - 10) + "px";
                     dd.style.top = (rect.bottom + 10) + "px";
                     dd.style.display = "block";
@@ -865,6 +863,8 @@
                             e.stopPropagation();
                         }
                     }
+
+                    if (ddol) eval(ddol);
                 };
             })(i);
         }

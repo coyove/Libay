@@ -64,9 +64,9 @@
 		<input id="search-url" placeholder="[[Search]]" value="{{.SearchPattern}}">
 	</div>
 	<ul>
-		<li><a href="javascript:doSearch()">[[Search it]]</a></li>
+		<li onclick="doSearch()"><span>[[Search it]]</span></li>
 		{{if .IsSearch}}
-		<li><a href="javascript:goBack()">[[Back]]</a></li>
+		<li onclick="goBack()"><span>[[Back]]</span></li>
 		{{end}}
 	</ul>
 	<script type="text/javascript">
@@ -159,21 +159,25 @@
 	</div>
 
 	<script type="text/javascript">
-		function foldAnnouncement() {
-			etc.util.cookie.write("fold-{{.Announce.AuthorID}}", "1", 3600 * 24 * 1000 * 30);
+	(function(){
+		var foldCookie = "fold-{{.Announce.ID}}-{{.Announce.Revision}}";
+
+		window.foldAnnouncement = function() {
+			etc.util.cookie.write(foldCookie, "1", 3600 * 24 * 1000 * 30);
 			hideAnnouncement();
 		}
 
-		function unfoldAnnouncement() {
-			etc.util.cookie.remove("fold-{{.Announce.AuthorID}}");
+		window.unfoldAnnouncement = function() {
+			etc.util.cookie.remove(foldCookie);
 			etc.let.show("announcement-content").show("fold-announcement").hide("unfold-announcement");
 		}
 
-		function hideAnnouncement() {
+		window.hideAnnouncement = function() {
 			etc.let.hide("announcement-content").hide("fold-announcement").show("unfold-announcement");
 		}
 
-		if (etc.util.cookie.read("fold-{{.Announce.AuthorID}}") == "1") hideAnnouncement();
+		if (etc.util.cookie.read(foldCookie) == "1") hideAnnouncement();
+	}())
 	</script>
 {{end}}
 
@@ -189,7 +193,7 @@
 	<tr class="darken">
 		<td class="fit header right-align"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
 		<td class="title">
-			<a target="_blank" class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
 			<span class="time">
 			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>
@@ -220,7 +224,7 @@
 		</td>
 
 		<td class="title">
-			<a target="_blank" href="/article/{{.ID}}" class="title">
+			<a href="/article/{{.ID}}" class="title">
 			{{if .Deleted}}
 				<del>{{.Title}}</del>
 			{{else}}

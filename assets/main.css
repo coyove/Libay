@@ -26,7 +26,7 @@
 
 body {
     margin: 0;
-    font: normal 100% Arial,"Helvetica Neue",Helvetica,sans-serif;
+    font: normal 14px Arial,"Helvetica Neue",Helvetica,sans-serif;
     line-height: 1.5;
     color: #222;
     background-color: white;
@@ -321,16 +321,18 @@ td.fit, th.fit{
 
 .dropdown ul {
     list-style-type: none;
+    cursor: pointer;
     margin: 0;
     padding: 0;
 }
 
 .dropdown li {
     padding: 1px 5px;
+    color: #333;
     border-bottom: dotted 1px #ccc;
 }
 
-.dropdown li:hover {
+.dropdown li:hover, .dropdown li[selected=selected] {
     background-color: #bddfe8;
 }
 
@@ -338,6 +340,17 @@ td.fit, th.fit{
     display: inline-block;
     width: 20px;
     text-align: center;
+    color: #222;
+}
+
+.dropdown span.date {
+    font-size: 80%;
+    color: #888;
+    margin-left: 12px;
+}
+
+.dropdown span {
+    color: #54638c;
 }
 
 .dropdown div {
@@ -437,6 +450,7 @@ p {
 }
 
 #breadcrumbs {
+    color: #333;
     margin: 0;
     margin-bottom: 5px;
     padding: 3px 10px;
@@ -484,7 +498,7 @@ a.badge {
     display: block;
     margin: 0;
     padding: 0 10px;
-    font-size: 0.82em;
+    font-size: 0.9em;
     zoom: 1; /* for avoiding a gap between navibar and pageline on IE */
 }
 

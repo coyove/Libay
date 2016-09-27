@@ -35,11 +35,8 @@
 
 <div id="message-function" class="dropdown">
 	<ul>
-		<li><span class='fai'>&#xe073;</span>
-		<a data-onclick="tryReadAll(0)">所有为已读</a></li>
-
-		<li><span class='fai'>&#xe073;</span>
-		<a data-onclick="tryReadAll(-1)">所有系统消息为已读</a></li>
+		<li data-onclick="tryReadAll(0)"><span class='fai'>&#xe073;</span> <span>所有为已读</span></li>
+		<li data-onclick="tryReadAll(-1)"><span class='fai'>&#xe073;</span> <span>所有系统消息为已读</span></li>
 	</ul>
 </div>
 
@@ -141,7 +138,7 @@
 					<span class="fai" title='未读消息'>&#xe09a;</span>
 				{{end}}
 			{{end}}
-			<a target="_blank" class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
 			<span class="time">
 				<script type="text/javascript">document.write(etc.date.format({{.Timestamp}}));</script>
 			</span>

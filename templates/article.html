@@ -75,39 +75,37 @@
 	{{end}}
 </p>
 
-<div id="article-history" class="dropdown"><span id="article-history-loading"></span></div>
+<div id="article-history" class="dropdown" data-version="-1"><span id="article-history-loading"></span></div>
 
 <div id="article-function" class="dropdown">
 	<ul>
-		<li><span class='fai'>&#xe08d;</span> 
-		<a href="javascript:switchView()" id="switch-mode" data-mode="normal">[[Gallery mode]]</a>
+		<li onclick="switchView()"><span class='fai'>&#xe08d;</span> 
+			<span id="switch-mode" data-mode="normal">[[Gallery mode]]</span>
 		</li>
 
-		<li><span class='fai'>&#xe0d4;</span> 
-		<a href="javascript:gotoRaw()" id="goto-raw" data-raw="0">[[Raw]]</a>
+		<li onclick="gotoRaw()"><span class='fai'>&#xe0d4;</span> 
+			<span id="goto-raw" data-raw="0">[[Raw]]</span>
 		</li>
 		
 		{{if .IsLoggedIn}}
 			{{if .IsAuthorSelf}}
 				{{if .Article.IsMessage}}{{else}}
-					<li><span class='fai'>&#xe067;</span>
-					<a href='javascript:goEdit()'>[[Edit]]</a></li>
+					<li onclick="goEdit()"><span class='fai'>&#xe067;</span> <span>[[Edit]]</span></li>
 				{{end}}
 
-				<li><span class='fai'>&#xe123;</span>
-				<a data-onclick="tryDeleteRestore(true)">
-					{{if .Article.Deleted}}[[Restore]]{{else}}[[Delete]]{{end}}
-				</a></li>
+				<li data-onclick="tryDeleteRestore(true)"><span class='fai'>&#xe123;</span>
+					<span>{{if .Article.Deleted}}[[Restore]]{{else}}[[Delete]]{{end}}</span>
+				</li>
 
-				<li><span class='fai'>&#xe123;</span>
-				<a data-onclick="tryDeleteRestore(false)">[[Delete article's images]]</a></li>
+				<li data-onclick="tryDeleteRestore(false)"><span class='fai'>&#xe123;</span>
+					<span>[[Delete article's images]]</span>
+				</li>
 			{{end}}
 
 			{{if .CanMakeLocked}}
-				<li><span class='fai'>&#xe0a2;</span>
-				<a data-onclick="goLock()">
-					{{if .Article.Locked}}[[Unlock]]{{else}}[[Lock]]{{end}}
-				</a></li>
+				<li data-onclick="goLock()"><span class='fai'>&#xe0a2;</span>
+					<span>{{if .Article.Locked}}[[Unlock]]{{else}}[[Lock]]{{end}}</span>
+				</li>
 			{{end}}	
 		{{end}}
 	</ul>
@@ -140,24 +138,40 @@
 	}
 
 	function getHistory() {
-		if (etc.id("article-history-loading")) {
+		if (etc.id("article-history-loading").id) {
 			Animation.start("article-history-loading");
 		} else {
 			return;
 		}
 
 		etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
+			var formatDate = function(d) {
+				var hrs = (new Date().getTime() - d) / 1000 / 3600;
+				if (hrs <= 24) {
+					return parseInt(hrs) + "[[hour(s) ago]]";
+				} else if (hrs <= 24 * 30) {
+					return parseInt(hrs / 24) + "[[day(s) ago]]";
+				} else {
+					return etc.date.format(d, true);
+				}
+			};
+
 			getHistory.history = JSON.parse(d);
 			var has = false;
 			var _html = ["</ul>"];
 			for(var k in getHistory.history) {
 				has = true;
-				_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
-					getHistory.history[k].User + " - " + 
-					etc.date.format(getHistory.history[k].Date, true) + "</li>");
+				_html.push("<li id='eye-ver-" + k + "' data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" +
+					"<span class='fai'>&#xe06f;</span> " +
+					"<span>#" + k + " - " + getHistory.history[k].User + "<span class='date'>" + 
+					formatDate(getHistory.history[k].Date) + "</span></span></li>");
 			}
-			if (!has) _html.push("<li>[[No history version]]</li>");
-			_html.push("<ul style='cursor: pointer'>");
+			if (!has) _html.push("<li><span class='fai'>&#xe06e;</span> [[No history version]]</li>");
+
+			_html.push("<li onclick='getHistoryVersion(-1)' id='eye-ver--1' selected='selected'>" +
+				"<span class='fai'>&#xe06f;</span> " +
+				"<span>[[Current version]] - {{.Article.Author}}</span></li>");
+			_html.push("<ul>");
 
 			Animation.stop();
 			etc.id("article-history").html(_html.reverse().join(''));
@@ -165,6 +179,16 @@
 	}
 
 	function getHistoryVersion(rev) {
+		if (rev == -1) {
+			location.reload();
+			return etc.wait.on(this).done();
+		}
+
+		var lastVer = etc.id("article-history").attr("data-version");
+		etc.id("eye-ver-" + lastVer).attr("selected", "false");
+		etc.id("eye-ver-" + rev).attr("selected", "selected");
+		etc.id("article-history").attr("data-version", rev);
+
 		etc.util.ajax.get("/article/{{.Article.ID}}/history/" + rev).then(function(e, d, x){
 			etc.wait.on(this).done();
 

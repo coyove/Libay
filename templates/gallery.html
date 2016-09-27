@@ -22,11 +22,15 @@
 		<input id="search-url" placeholder="[[Search by URL]]">
 	</div>
 	<ul>
-		<li><a data-onclick="searchImage()">[[Search]]</a></li>
-		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages()">[[Delete selected]]</a></li>
-		<li><span class='fai'>&#xe123;</span> <a data-onclick="deleteImages(true)">[[Delete all in this page]]</a></li>
-		<li><span class='fai'>&#xe072;</span> <a href="javascript:selectAll()">[[Select all]]</a></li>
-		<li><span class='fai'>&#xe072;</span> <a href="javascript:invertSelection()">[[Inverse selection]]</a></li>
+		<li data-onclick="searchImage()"><span>[[Search]]</span></li>
+		<li data-onclick="deleteImages()"><span class='fai'>&#xe123;</span>
+		<span>[[Delete selected]]</span></li>
+		<li data-onclick="deleteImages(true)"><span class='fai'>&#xe123;</span>
+		<span>[[Delete all in this page]]</span></li>
+		<li onclick="selectAll()"><span class='fai'>&#xe072;</span>
+		<span>[[Select all]]</span></li>
+		<li onclick="invertSelection()"><span class='fai'>&#xe072;</span>
+		<span>[[Inverse selection]]</span></li>
 	</ul>
 </div>
 
@@ -84,8 +88,11 @@
 	}
 
 	function searchImage() {
+		var url = etc.id("search-url").value;
+		if (url == "") return etc.wait.on(this).done();
+
 		etc.util.ajax.post("/search/image", { 
-			"url": etc.id("search-url").value,
+			"url": url,
 			"csrf": etc.util.CSRF() 
 		}).then(function(e, text) {
 			etc.wait.on(this).done();
