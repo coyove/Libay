@@ -3,35 +3,41 @@
 		<title>[[Article Replies]]</title>
 		<p id="breadcrumbs">
 
-		<span class='fai'>&#xe00b;</span> 
-		<a href="/new/article/{{.CurTag}}">[[Reply this article]]</a> |
+		<span><span class='fai'>&#xe00b;</span> 
+		<a href="/new/article/{{.CurTag}}">[[Reply this article]]</a></span>
 
-		<span class='fai'>&#xe023;</span>
-		<a href="/article/{{.CurTag}}">[[Back to article]]</a>
+		<span><span class='fai'>&#xe023;</span>
+		<a href="/article/{{.CurTag}}">[[Back to article]]</a></span>
 	{{end}}
 
 	{{if .IsUA}}
 		<title>[[User Articles]]</title>
-		<p id="breadcrumbs"><span class='fai'>&#xe12b;</span> "{{.UA.UserNickName}}" [[Article]]
+		<p id="breadcrumbs">
+
+		<span><span class='fai'>&#xe12b;</span> "{{.UA.UserNickName}}" [[Article]]</span>
 	{{end}}
 
 	{{if .IsOWA}}
 		<title>[[Iceberg]]</title>
 		<p id="breadcrumbs">
+
 		{{if .OWA.IsViewingGlobal}}
-			<span class='fai'>&#xe0bf;</span> [[Global Articles]]
+			<span><span class='fai'>&#xe0bf;</span> [[Global Articles]]</span>
 		{{else}}
 			{{if .OWA.IsViewingOther}}
-				<span class='fai'>&#xe12b;</span> "{{.OWA.ViewingOtherName}}" [[Article]]
+				<span><span class='fai'>&#xe12b;</span> "{{.OWA.ViewingOtherName}}" [[Article]]</span>
 			{{else}}
-				<span class='fai'>&#xe12c;</span> [[My Articles]]
+				<span><span class='fai'>&#xe12c;</span> [[My Articles]]</span>
 			{{end}}
 		{{end}}
 	{{end}}
 
 	{{if .IsTag}}
 		<title>{{.CurTag}}</title>
-		<p id="breadcrumbs"><span class='fai'>&#xe10f;</span> "{{.CurTag}}" [[Article]] |
+		<p id="breadcrumbs">
+
+		<span><span class='fai'>&#xe10f;</span> "{{.CurTag}}" [[Article]]</span>
+
 		<script type="text/javascript">
 			function postUnderThisTag() {
 				etc.util.cookie.write("default-tag", "{{.CurTag}}", 60000);
@@ -39,23 +45,22 @@
 			}
 		</script>
 	
-		<span class='fai'>&#xe0b7;</span>
-		<a href="javascript:postUnderThisTag()">[[Post new article]]</a>
+		<span><span class='fai'>&#xe0b7;</span>
+		<a href="javascript:postUnderThisTag()">[[Post new article]]</a></span>
 	{{end}}
 {{else}}
 	<title>[[All Articles]]</title>
 	<p id="breadcrumbs"><span class='fai'>&#xe0bf;</span> [[All Articles]]
 {{end}}
 
-| <span data-dropdown="search-dropdown" data-dropdown-onload="focusSearch()">
-<span class='fai'>&#xe14f;</span>
-<span class="nc">[[Search]]{{if .IsSearch}} "{{.SearchPattern}}"{{end}}</span>
+<span data-dropdown="search-dropdown" data-dropdown-onload="focusSearch()">
+	<span class='fai'>&#xe14f;</span>
+	<span class="nc">[[Search]]{{if .IsSearch}} "{{.SearchPattern}}"{{end}}</span>
 </span>
 
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
-	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
+	document.write(buildTime({{.Nav.Range.Start}}, {{.Nav.Range.End}}));
 </script>
 </p>
 

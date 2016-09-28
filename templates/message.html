@@ -1,29 +1,27 @@
-<title>私信</title>
+<title>[[Private Message]]</title>
 
 <p id="breadcrumbs">
 {{if .Message.IsViewingAll}}
-	<span class='fai'>&#xe0a5;</span> 所有私信
+	<span><span class='fai'>&#xe0a5;</span> 所有私信</span>
 {{else}}
 	{{if .Message.ViewingOtherName}}
-		<span class='fai'>&#xe12b;</span> {{.Message.ViewingOtherName}}的私信
+		<span><span class='fai'>&#xe12b;</span> "{{.Message.ViewingOtherName}}" [[Private Message]]</span>
 	{{else}}
-		<span class='fai'>&#xe149;</span> 系统消息
+		<span><span class='fai'>&#xe149;</span> 系统消息</span>
 	{{end}}
 {{end}}
-|
 
 <span data-dropdown="message-function">
 	<span class='fai'>&#xe074;</span>
 	<span class='nc'>标记</span>
-</span> |
+</span>
 
-<input type="checkbox" id="ask-before-delete" class="simple-check" checked="true"/>
-<label for="ask-before-delete"><span class='nc'>删除前询问</span></label>
+<span><input type="checkbox" id="ask-before-delete" class="simple-check" checked="true"/>
+<label for="ask-before-delete"><span class='nc'>删除前询问</span></label></span>
 
 <script type="text/javascript">
 	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
-	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
+	document.write(buildTime({{.Nav.Range.Start}}, {{.Nav.Range.End}}));
 
 	var nad = etc.util.cookie.read("nad");
 	etc.id("ask-before-delete").checked = (nad == "0" || nad == "");
@@ -114,21 +112,28 @@
 			<span data-dropdown="m{{.ID}}" class="fai">{{if .Sentout}}&#xe126;{{else}}&#xe065;{{end}}</span>
 			<div id="m{{.ID}}" class="dropdown">
 				<ul>
-					<li><span class="fai">&#xe0b9;</span>
-					<a href="/message/{{if .Sentout}}{{.ReceiverID}}{{else}}{{.SenderID}}{{end}}/page/1">
-						查看与其对话记录
-					</a></li>
+					{{if .Sentout}}
+					<li onclick="location.href='/message/{{.ReceiverID}}/page/1'">
+					{{else}}
+					<li onclick="location.href='/message/{{.SenderID}}/page/1'">
+					{{end}}
+					<span class="fai">&#xe0b9;</span>
+					<span>查看与其对话记录</span></li>
 
 					{{if .Sentout}}
 					{{else}}
-					<li><span class="fai">&#xe00b;</span>
-					<a target="_blank" href="/new/message/{{.SenderID}}">回复私信</a></li>
+						<li onclick="window.open('/new/message/{{.SenderID}}')">
+						<span class="fai">&#xe00b;</span>
+						<span>回复私信</span></li>
 
-					<li><span class="fai">&#xe123;</span>
-					<a data-onclick="tryDelete({{.SenderID}}, false)">删除其发来的全部私信</a></li>
+						<li data-onclick="tryDelete({{.SenderID}}, false)">
+						<span class="fai">&#xe123;</span> 
+						<span>删除其发来的全部私信</span></li>
 					{{end}}
-					<li><span class="fai">&#xe123;</span>
-					<a data-onclick="tryDelete({{.ID}}, true)">删除该条</a></li>
+
+					<li data-onclick="tryDelete({{.ID}}, true)">
+					<span class="fai">&#xe123;</span> 
+					<span>删除该条</span></li>
 				</ul>
 			</div>
 			{{if .Sentout}}

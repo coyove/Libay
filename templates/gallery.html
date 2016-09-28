@@ -1,20 +1,19 @@
 <title>[[Gallery]]</title>
 
 <p id="breadcrumbs">
-	<span class='fai'>&#xe08d;</span> "{{.UploaderName}}" [[Gallery]]
+	<span><span class='fai'>&#xe08d;</span> "{{.UploaderName}}" [[Gallery]]</span>
 
 	{{if .IsSelf}}
-	| <span data-dropdown="gallery-function">
+	<span data-dropdown="gallery-function">
 		<span class='fai'>&#xe072;</span> 
 		<span class="nc">[[Images]]</span>
 	</span>
 	{{end}}
 
-<script type="text/javascript">
-	document.title += " -- " + etc.date.format({{.Nav.Range.End}});
-	document.write(' | <span class="fai">&#xe0b0;</span> ' + etc.date.format({{.Nav.Range.Start}}) + 
-	' | <span class="fai">&#xe0b6;</span> ' + etc.date.format({{.Nav.Range.End}}));
-</script>
+	<script type="text/javascript">
+		document.title += " -- " + etc.date.format({{.Nav.Range.End}});
+		document.write(buildTime({{.Nav.Range.Start}}, {{.Nav.Range.End}}));
+	</script>
 </p>
 
 <div id="gallery-function" class="dropdown">

@@ -1,77 +1,80 @@
 <title>[{{.Article.Tag}}] {{.Article.Title}}</title>
 <p id="breadcrumbs">
 	{{if .Article.IsMessage}}
-		<span class='fai'>&#xe0a5;</span> [[Private Message]] |
+		<span><span class='fai'>&#xe0a5;</span> [[Private Message]]</span>
 
-		<span class='fai' title="[[Last modified date]]">&#xe120;</span>
+		<span><span class='fai' title="[[Last modified date]]">&#xe120;</span>
 		<script type="text/javascript">
 			document.write(etc.date.format({{.Article.ModTimestamp}}, true));
-		</script> |
+		</script></span>
 
 		{{if .Article.IsMessageSentout}}
 		{{else}}
-		<span class='fai'>&#xe00b;</span>
-		<a href="/new/message/{{.Article.AuthorID}}">[[Reply]]</a> |
+			<span><span class='fai'>&#xe00b;</span>
+			<a href="/new/message/{{.Article.AuthorID}}">[[Reply]]</a></span>
 
-		<span class='fai'>&#xe073;</span>
-		<a data-onclick="tryUnread()">[[Mark as unread]]</a> |
+			<span><span class='fai'>&#xe073;</span>
+			<a data-onclick="tryUnread()">[[Mark as unread]]</a></span>
 		{{end}}
 
-		<span class='fai'>&#xe12b;</span>
+		<span><span class='fai'>&#xe12b;</span>
 		<a href="/user/{{.Article.AuthorID}}">{{.Article.Author}}</a> 
 		→ 
-		<a href="/user/{{.Article.Tag}}">{{.Article.Tag}}</a> |
+		<a href="/user/{{.Article.Tag}}">{{.Article.Tag}}</a></span>
 
-		<span class='fai'>&#xe123;</span>
-		<a data-onclick="tryDeleteRestore(true)">[[Delete]]</a>
+		<span><span class='fai'>&#xe123;</span>
+		<a data-onclick="tryDeleteRestore(true)">[[Delete]]</a></span>
 	{{else}}
 		<span data-dropdown="article-function">
 			<span class='fai'>&#xe0bf;</span>
 			<span class='nc'>[[Article]]</span>
-		</span> |
+		</span>
 
 		<span data-dropdown="article-history" data-dropdown-onload="getHistory()">
 			<span class='fai' title="[[Last modified date]]">&#xe120;</span>
 			<span id="article-revision" class='nc'><script type="text/javascript">
 				document.write(etc.date.format({{.Article.ModTimestamp}}, true));
 			</script>{{if .Article.Revision}} (r{{.Article.Revision}}){{end}}</span>
-		</span> |
+		</span>
 		
-		<span class='fai'>&#xe12c;</span>
-		<a href="/user/{{.Article.AuthorID}}" title="[[Author]]">{{.Article.Author}}</a> |
+		<span><span class='fai'>&#xe12c;</span>
+		<a href="/user/{{.Article.AuthorID}}" title="[[Author]]">{{.Article.Author}}</a></span>
 
 		{{if .IsEditedByOthers}}
-		<span class='fai'>&#xe12b;</span>
-		<a href="/user/{{.Article.OriginalAuthorID}}" title="[[Original author]]">{{.Article.OriginalAuthor}}</a> |
+		<span><span class='fai'>&#xe12b;</span>
+		<a href="/user/{{.Article.OriginalAuthorID}}" title="[[Original author]]">{{.Article.OriginalAuthor}}</a>
+		</span>
 		{{end}}
 
-		<span class='fai'>&#xe10f;</span>
-		<a href="/tag/{{.Article.Tag}}/page/1" title="[[Tag]]">{{.Article.Tag}}</a> |
+		<span><span class='fai'>&#xe10f;</span>
+		<a href="/tag/{{.Article.Tag}}/page/1" title="[[Tag]]">{{.Article.Tag}}</a></span>
 
 		{{if .Article.ParentID}}
-			<span class='fai'>&#xe00b;</span>
-			<a href="/article/{{.Article.ParentID}}" title="[[Parent article]]">{{.Article.ParentTitle}}</a> |
+			<span><span class='fai'>&#xe00b;</span>
+			<a href="/article/{{.Article.ParentID}}" title="[[Parent article]]">{{.Article.ParentTitle}}</a>
+			</span>
 		{{else}}
 			{{if .Article.Children}}
-			<span class='fai'>&#xe0b8;</span>
-			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}} [[reply(s)]]</a> |
+			<span><span class='fai'>&#xe0b8;</span>
+			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}} [[reply(s)]]</a></span>
 			{{end}}
 
-			<span class='fai'>&#xe0b7;</span>
-			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">[[Reply this article]]</a> |
+			<span><span class='fai'>&#xe0b7;</span>
+			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">[[Reply this article]]</a>
+			</span>
 		{{end}}
 
-		<span class='fai'>&#xe06e;</span> <span title="[[Views]]">{{.Article.Hits}}</span>
+		<span><span class='fai'>&#xe06e;</span> <span title="[[Views]]">{{.Article.Hits}}</span></span>
 	{{end}}
 
 	{{if .Article.Deleted}}
-		| <span class='fai' title="[[This article has been deleted]]">&#xe058;</span>
+		<span class='fai' title="[[This article has been deleted]]">&#xe058;</span>
 	{{end}}
 
 	{{if .Article.Locked}}
-		| <span class='fai' title="[[This article has been locked]]">&#xe0a2;</span>
+		<span class='fai' title="[[This article has been locked]]">&#xe0a2;</span>
 	{{else}}
-		| <span class='fai'>&#xe0a4;</span>
+		<span class='fai'>&#xe0a4;</span>
 	{{end}}
 </p>
 

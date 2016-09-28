@@ -452,7 +452,7 @@ p {
     padding: 3px 10px;
     font-size: 90%;
     line-height: 2;
-    word-spacing: 2px;
+    word-spacing: 4px;
     background-color: transparent;
     background-color: #f5f6f7;
     border-bottom: 1px solid #d2d3d7 ;
@@ -473,6 +473,17 @@ p {
 
 #breadcrumbs .nc:active, #breadcrumbs a:active {
     color: #c2c3c7; 
+}
+
+#breadcrumbs > span {
+    margin-right: 4px;
+    padding-left: 10px;
+    border-left: solid 1px #aaa;
+}
+
+#breadcrumbs > span:first-child {
+    padding-left: 0;
+    border-left: none;
 }
 
 a.badge {

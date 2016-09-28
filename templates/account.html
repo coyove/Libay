@@ -7,23 +7,23 @@
 <p id="breadcrumbs">
 	<span class="account-{{.Group}}" data-dropdown="admin-nav" style="display: none">
     	<span class='fai'>&#xe103;</span> 
-        <span class='nc'>管理员</span> |
+        <span class='nc'>管理员</span>
     </span>
     
-    <span class='fai'>&#xe0bf;</span>
-    <a href="/ua/{{.ID}}/page/1">[[User Articles]]</a> |
+    <span><span class='fai'>&#xe0bf;</span>
+    <a href="/ua/{{.ID}}/page/1">[[User Articles]]</a></span>
 
-    <span class='fai'>&#xe04f;</span>
-    <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a> |
+    <span><span class='fai'>&#xe04f;</span>
+    <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a></span>
 
-    <span class='fai'>&#xe0a5;</span>
-    <a id="message-box-count" href="/message/{{.ID}}/page/1">[[Private Message]]</a> |
+    <span><span class='fai'>&#xe0a5;</span>
+    <a id="message-box-count" href="/message/{{.ID}}/page/1">[[Private Message]]</a></span>
 
-    <span class='fai'>&#xe08d;</span>
-    <a href="/gallery/{{.ID}}/page/1">[[Gallery]]</a> |
+    <span><span class='fai'>&#xe08d;</span>
+    <a href="/gallery/{{.ID}}/page/1">[[Gallery]]</a></span>
 
-    <span class='fai'>&#xe069;</span>
-    <a data-onclick="tryLogout()">[[Log Out]]</a>
+    <span><span class='fai'>&#xe069;</span>
+    <a data-onclick="tryLogout()">[[Log Out]]</a></span>
 </p>
 
 <div class="dropdown" id="admin-nav">
@@ -40,8 +40,9 @@
 {{else}}
 <title>[[Sign in]]</title>
 <p id="breadcrumbs">
-<span class='fai'>&#xe083;</span> [[Sign in]] | 
-<span class='fai'>&#xe128;</span> <a href="/account/register">[[Sign up]]</a></p>
+<span><span class='fai'>&#xe083;</span> [[Sign in]]</span>
+<span><span class='fai'>&#xe128;</span> <a href="/account/register">[[Sign up]]</a></span>
+</p>
 {{end}}
 
 <script type="text/javascript">

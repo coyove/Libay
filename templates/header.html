@@ -117,6 +117,35 @@
             html.push('</tr></table>');
             return html.join('');
         }
+
+        function buildTime(Start, End) {
+            var d1 = new Date(Start);
+            var d2 = new Date(End);
+            var pad = function(num) { return (num < 10) ? ("0" + String(num)) : String(num); }
+
+            var stack = [
+                [d1.getFullYear(), d2.getFullYear()],
+                [pad(d1.getMonth() + 1), pad(d2.getMonth() + 1)],
+                [pad(d1.getDate()), pad(d2.getDate())],
+                [pad(d1.getHours()), pad(d2.getHours())],
+                [pad(d1.getMinutes()), pad(d2.getMinutes())]
+            ];
+            
+            var html1 = [], html2 = [];
+            for (var i = 0; i < 5; i++) {
+                var delim = ['/', '/', ' ', ':', ''][i];
+                var color = ['ccc', 'aaa', '888', '333', '222'][i];
+                if (stack[i][0] == stack[i][1] && i < 3) {
+                    html1.push("<span style='color: #" + color + "'>" + stack[i][0] + delim + "</span>");
+                    html2.push("<span style='color: #" + color + "'>" + stack[i][1] + delim + "</span>");
+                } else {
+                    html1.push("<span>" + stack[i][0] + "</span>" + delim);
+                    html2.push("<span>" + stack[i][1] + "</span>" + delim);
+                }
+            }
+
+            return '<span>'+html1.join('')+' <span class="fai">&#xe01b;</span> '+html2.join('')+'</span>';
+        }
     </script>
 </div>
 

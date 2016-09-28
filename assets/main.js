@@ -842,7 +842,8 @@
                 return function() { 
                     var dd = g.etc.id(ddelems[idx].getAttribute("data-dropdown"));
                     var ddol = ddelems[idx].getAttribute("data-dropdown-onload");
-                    var rect = ddelems[idx].getBoundingClientRect();
+                    var rect = (ddelems[idx].children && ddelems[idx].children[0] ? 
+                        ddelems[idx].children[0] : ddelems[idx]).getBoundingClientRect();
 
                     dd.style.left = (rect.left - 10) + "px";
                     dd.style.top = (rect.bottom + 10) + "px";

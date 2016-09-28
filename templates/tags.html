@@ -1,13 +1,14 @@
 <title>标签组</title>
 <p id="breadcrumbs">
-<span class='fai'>&#xe077;</span>
-{{.TotalTags}}个标签 |
+	<span><span class='fai'>&#xe077;</span>
+	{{.TotalTags}}个标签</span>
 
-<span class='fai'>&#xe110;</span>
-最近更新:
-{{range .HotTags}}
-	<span class='fai'>&#xe10f;</span> <a href="/tag/{{.}}/page/1">{{.}}</a>
-{{end}}
+	<span><span class='fai'>&#xe110;</span>
+	最近更新:
+	{{range .HotTags}}
+		<span class='fai'>&#xe10f;</span> <a href="/tag/{{.}}/page/1">{{.}}</a>
+	{{end}}
+	</span>
 </p>
 
 <script type="text/javascript">

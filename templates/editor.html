@@ -10,30 +10,31 @@
 
 <p id="breadcrumbs">
 	{{if .Message}}
-		[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
-		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a> | 
+		<span>[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
+		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a></span>
 	{{else}}
 		{{if .Update}}
-			[[Edit]] <span class='fai'>&#xe0bf;</span>
-			<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a> | 
+			<span>[[Edit]] <span class='fai'>&#xe0bf;</span>
+			<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
 		{{else}}
 			{{if .ReplyTo}}
-				[[Reply]] <span class='fai'>&#xe0bf;</span> 
-				<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a> | 
+				<span>[[Reply]] <span class='fai'>&#xe0bf;</span> 
+				<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
 			{{else}}
-				<span class='fai'>&#xe0bf;</span> [[Post new article]] |
+				<span><span class='fai'>&#xe0bf;</span> [[Post new article]]</span>
 			{{end}}
 		{{end}}
 	{{end}}
 
-	<span class='fai'>&#xe12c;</span>
-
-	<span title="[[Logged-in as]]">
-	{{if .IsLoggedIn}}
-		{{.Username}}
-	{{else}}
-		[[Anonymous]]
-	{{end}}
+	<span>
+		<span class='fai'>&#xe12c;</span>
+		<span title="[[Logged-in as]]">
+		{{if .IsLoggedIn}}
+			{{.Username}}
+		{{else}}
+			[[Anonymous]]
+		{{end}}
+		</span>
 	</span>
 </p>
 
