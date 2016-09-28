@@ -771,8 +771,10 @@
                 var file = files.shift();
 
                 var onError = function(A) {
-                    if (callback) callback("Err::Upload::" + A);
+                    if (callback) callback("Err::Upload::" + A, file);
                 };
+
+                console.log(file);
 
                 var payload = { "image": file };
                 if (options["additional_form"]) {
@@ -786,38 +788,33 @@
                     'Authorization': 'Client-ID c37fc05199a05b7'
                 }).then(function(e, rt, x) {
                     if (e) {
-                        onError("AJAX" + e);
-                        return;
+                        onError("AJAX");
+                    } else {
+                        try {
+                            var D = options["type"] == "imgur" ? JSON.parse(rt).data : JSON.parse(rt);
+                        } catch (E) {
+                            onError(rt == "Err::CSRF::CSRF_Failure" ? rt : "JSON");
+                            return;
+                        }
+
+                        if (D.Error || D.error) {
+                            onError("Server_Failure_" + D.R);
+                        } else {
+                            var _link = (D.Link || D.link).replace("http://", "https://");
+                            var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
+
+                            if (options["editor"]) {
+                                etc.editor.insertText(_id(options["editor"]), 
+                                    "[url=_blank;" + _link + "][img]" + _thumb + "[/img][/url]");
+                            }
+
+                            options["uploaded"] = options["uploaded"] || [];
+                            options["uploaded"].push([_thumb, _link]);
+
+                            if (options["uploaded_callback"])
+                                options["uploaded_callback"](_thumb, _link);
+                        }
                     }
-
-                    try {
-                        var D = options["type"] == "imgur" ? JSON.parse(rt).data : JSON.parse(rt);
-                    } catch (E) {
-                        if (rt == "Err::CSRF::CSRF_Failure")
-                            return onError("Err::CSRF::CSRF_Failure");
-                        else
-                            return onError("JSON");
-                    }
-
-                    if (D.Error || D.error) {
-                        return onError("Server_Failure_" + D.R);
-                    }
-
-                    console.log(D);
-
-                    var _link = (D.Link || D.link).replace("http://", "https://");
-                    var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
-
-                    if (options["editor"]) {
-                        etc.editor.insertText(_id(options["editor"]), 
-                            "[url=_blank;" + _link + "][img]" + _thumb + "[/img][/url]");
-                    }
-
-                    options["uploaded"] = options["uploaded"] || [];
-                    options["uploaded"].push([_thumb, _link]);
-
-                    if (options["uploaded_callback"])
-                        options["uploaded_callback"](_thumb, _link);
 
                     etc.editor.uploadImage(files, callback, options);
                 });
@@ -848,11 +845,11 @@
                     dd.style.left = (rect.left - 10) + "px";
                     dd.style.top = (rect.bottom + 10) + "px";
                     dd.style.display = "block";
-                    dd.style.zIndex = 99;
+                    dd.style.zIndex = 100;
 
                     var underlay = document.createElement("div");
                     underlay.className = "dropdown-underlay";
-                    underlay.style.zIndex = 98;
+                    underlay.style.zIndex = 99;
                     underlay.style.display = "block";
 
                     dd.parentNode.insertBefore(underlay, dd);

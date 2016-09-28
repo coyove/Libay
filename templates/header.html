@@ -74,10 +74,10 @@
                 etc.util.cookie.write("upl", "zh-cn", 3600 * 24 * 1000 * 365);
 
                 etc.util.lazyLoad([
-                    "/assets/tongwen/tongwen_core.js",
-                    "/assets/tongwen/tongwen_table_ps2t.js",
-                    "/assets/tongwen/tongwen_table_s2t.js",
-                    "/assets/tongwen/tongwen_table_ss2t.js",
+                    "{{.CDN}}/assets/tongwen/tongwen_core.js",
+                    "{{.CDN}}/assets/tongwen/tongwen_table_ps2t.js",
+                    "{{.CDN}}/assets/tongwen/tongwen_table_s2t.js",
+                    "{{.CDN}}/assets/tongwen/tongwen_table_ss2t.js",
                 ], function() {
                     if (TongWen) 
                         TongWen.trans2Trad(document);

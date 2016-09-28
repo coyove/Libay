@@ -76,6 +76,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	uid := strconv.Itoa(u.ID)
 	ava := r.FormValue("avatar")
 	hide := r.FormValue("hide")
+	tag := auth.CleanString(r.FormValue("tag"))
 
 	if !u.CanPostImages() {
 		if ava == "true" && u.ID > 0 {
@@ -176,12 +177,17 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	if !alreadyUploaded {
 		imageSize := strconv.Itoa(len(hashBuf))
 
+		filename := auth.CleanString(header.Filename)
+		if tag != "" {
+			filename = tag
+		}
+
 		_, err = auth.Gdb.Exec(`
 		INSERT INTO images (image, path, filename, uploader, ts, hide) 
 		VALUES (
 			'` + url + `', 
 			'` + path + `', 
-			'` + auth.Escape(header.Filename) + `',
+			'` + filename + `',
 			` + uid + `, 
 			` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `,
 			` + strconv.FormatBool(hide == "true") + `
@@ -286,7 +292,7 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 	u := auth.GetUser(r)
 	id, err := strconv.Atoi(r.FormValue("id"))
 
-	if u.ID == 0 || err != nil || id <= 0 {
+	if u.ID == 0 || err != nil || id < 0 {
 		Return(w, "Err::Post::Invalid_User")
 		return
 	}
@@ -334,10 +340,10 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 
 		if _, err := auth.Gdb.Exec(sql); err == nil {
 			Return(w, "ok")
-			auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
 		} else {
 			glog.Errorln("Database:", err)
 			Return(w, "Err:DB::Delete_Failure")
+			return
 		}
 	case "showhide":
 		_, err := auth.Gdb.Exec("UPDATE images SET hide = NOT hide WHERE " + tester +
@@ -349,10 +355,26 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		}
 
 		Return(w, "ok")
-		auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
+	case "rename":
+		filename := auth.CleanString(r.FormValue("filename"))
+		_, err := auth.Gdb.Exec("UPDATE images SET filename = '" + filename + "' WHERE " + tester +
+			" AND id IN (" + strings.Join(ids, ",") + ")")
 
+		if err != nil {
+			Return(w, "Err:DB::Update_Failure")
+			return
+		}
+
+		Return(w, "ok")
 	default:
 		Return(w, 503)
+		return
+	}
+
+	if id == 0 {
+		auth.Gcache.Remove(`\S+-\d+-img(true|false)`)
+	} else {
+		auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
 	}
 }
 
@@ -382,7 +404,13 @@ func (th ModelHandler) POST_delete_images_ID(w http.ResponseWriter, r *http.Requ
 }
 
 func (th ModelHandler) POST_search_image(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	url := strings.Split(r.FormValue("url"), "/")
+	data := r.FormValue("url")
+	if data == "" {
+		Return(w, "Err::Post::Invalid_Query")
+		return
+	}
+
+	url := strings.Split(data, "/")
 	_, id := getRealPath(url[len(url)-1])
 
 	if !auth.LogIP(r) {
@@ -391,22 +419,21 @@ func (th ModelHandler) POST_search_image(w http.ResponseWriter, r *http.Request,
 	}
 
 	if id == 0 {
-		Return(w, 503)
-		return
-	}
-
-	var ts int
-	if err := auth.Gdb.QueryRow(`
+		Return(w, fmt.Sprintf("ok::../search/%s/page/1", data))
+	} else {
+		var ts int
+		if err := auth.Gdb.QueryRow(`
 		SELECT 
 			ts 
 		FROM 
 			images 
 		WHERE 
 			uploader = ` + strconv.Itoa(id) + ` AND image = '` + url[len(url)-1] + `'`).
-		Scan(&ts); err == nil {
-		ts = ts + 1
-		Return(w, fmt.Sprintf("ok::/gallery/%d/page/before=%s_%s", id, auth.HashTS(ts), auth.To60(uint64(ts))))
-	} else {
-		Return(w, "Err::DB::Nothing_Found")
+			Scan(&ts); err == nil {
+			ts = ts + 1
+			Return(w, fmt.Sprintf("ok::/gallery/%d/page/before=%s_%s", id, auth.HashTS(ts), auth.To60(uint64(ts))))
+		} else {
+			Return(w, "Err::DB::Nothing_Found")
+		}
 	}
 }

@@ -76,8 +76,12 @@ type GalleryStruct struct {
 	Images        []auth.Image
 	UploaderName  string
 	GalleryUserID int
-	IsSelf        bool
-	IsGlobal      bool
+
+	IsSearch      bool
+	SearchPattern string
+
+	IsSelf   bool
+	IsGlobal bool
 }
 
 func PageHandler(filterType string, search bool, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -257,7 +261,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	ServePage(w, r, "message", payload)
 }
 
-func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func GalleryHandler(search bool, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	_startRender := time.Now().UnixNano()
 	defer func() {
@@ -271,11 +275,20 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	user := auth.GetUser(r)
 	page := ps.ByName("page")
 	filter := ps.ByName("gallery")
+	searchPattern := ps.ByName("search")
 
 	payload.IsLastPage = page == "last"
 	payload.IsIndexPage = page == "1"
-	payload.IndexPage = "/gallery/" + filter + "/page/1"
-	payload.LastPage = "/gallery/" + filter + "/page/last"
+	payload.IsSearch = search
+
+	if search {
+		payload.SearchPattern = auth.CleanString(searchPattern)
+		payload.IndexPage = "/gallery/" + filter + "/search/" + searchPattern + "/page/1"
+		payload.LastPage = "/gallery/" + filter + "/search/" + searchPattern + "/page/last"
+	} else {
+		payload.IndexPage = "/gallery/" + filter + "/page/1"
+		payload.LastPage = "/gallery/" + filter + "/page/last"
+	}
 
 	galleryUserID, err := strconv.Atoi(filter)
 	if err != nil || galleryUserID < 0 {
@@ -288,7 +301,7 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 		return
 	}
 
-	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUserID)
+	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUserID, searchPattern)
 	payload.UploaderName = auth.GetUserByID(galleryUserID).NickName
 	payload.GalleryUserID = galleryUserID
 	payload.IsSelf = galleryUserID == user.ID || (conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") &&
@@ -348,5 +361,9 @@ func (th ModelHandler) GET_message_MESSAGE_page_PAGE(w http.ResponseWriter, r *h
 }
 
 func (th ModelHandler) GET_gallery_GALLERY_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	GalleryHandler(w, r, ps)
+	GalleryHandler(false, w, r, ps)
+}
+
+func (th ModelHandler) GET_gallery_GALLERY_search_SEARCH_page_PAGE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	GalleryHandler(true, w, r, ps)
 }

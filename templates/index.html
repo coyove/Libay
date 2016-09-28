@@ -49,8 +49,23 @@
 		width: 100%;
 	}
 
-	#upload-area > div { cursor: pointer; }
-	#upload-area > div:hover { color: steelblue; }
+	#upload-errors {
+		border-collapse: collapse;
+    	border-spacing: 0;
+    	width: 100%;
+    	margin: 4px 0;
+	}
+
+	#upload-errors td {
+		padding: 0.2em;
+    	border: solid 1px #f44336;
+    	word-wrap: break-word;
+    	word-break: break-word;
+	}
+
+
+	#select-file-div { cursor: pointer; }
+	#select-file-div:hover { color: steelblue; }
 
 	#select-code {
 		display: none;
@@ -63,11 +78,6 @@
 	#select-code > div * {
 		height: 100%;
 		vertical-align: top;
-	}
-
-	.image-code {
-		width: 100%;
-		resize: vertical;
 	}
 </style>
 
@@ -90,10 +100,18 @@
 				{{if .CanPostImages}}
 				<input style="display: none" id="select-file" type="file" multiple>
 				<div id="upload-area">
-					<div onclick='etc.id("select-file").click()'>
+					<div id="select-file-div" onclick='etc.id("select-file").click()'>
 						[[Select or drag'n drop images to upload]] 
 						<span id="uploading-sign"></span>
 					</div>
+
+					<div id="upload-errors-div" style="display: none">
+						<button onclick="hideErrors()">
+							<span class='fai'>&#xe122;</span> [[Clear errors]]
+						</button>
+						<table id="upload-errors" class="csv"></table>
+					</div>
+
 					<div id="select-code">
 						<div>
 							<select id="select-code-type">
@@ -105,11 +123,9 @@
 								<option value="image-thumb-md">[[Thumb Images Markdown]]</option>
 								<option value="image-data-image">[[Data Images]]</option>
 							</select>
-							<a class="none block inline-block" href="javascript:copy()">
-								<span class='fai'>&#xe04a;</span>
-							</a>
+							<button onclick="copy()"><span class='fai'>&#xe04a;</span></button>
 						</div>
-						<textarea style="display:none" class="image-code" id="image-data-image" value="[gallery]" readonly></textarea>
+						<textarea style="display:none" class="image-code" id="image-data-image" readonly>[gallery]</textarea>
 						<textarea style="display:none" class="image-code" id="image-full-url" readonly></textarea>
 						<textarea style="display:none" class="image-code" id="image-thumb-url" readonly></textarea>
 						<textarea class="image-code" id="image-full-bbcode" readonly></textarea>
@@ -121,8 +137,13 @@
 
 				<div>
 					<input type="checkbox" class="simple-check" id="hide-image">
-					<label for="hide-image">[[Hide in my gallery]]</label>
-					<br>(<b>[[Note]]</b>: [[Hiding will not prevent anyone accessing it through url]])
+					<label for="hide-image">[[Hide in my gallery]]
+					(<b>[[Note]]</b>: [[Hiding will not prevent anyone accessing it through url]])</label>
+				</div>
+				<div>
+					<input type="checkbox" class="simple-check" id="rename-image">
+					<label for="rename-image">[[Rename it when uploaded]]: 
+					<input type="textbox" id="upload-filename" placeholder="[[Keep original filename]]"></label>
 				</div>
 				{{else}}
 					<div>您所在的用户组无法上传图片</div>
@@ -183,11 +204,17 @@
 		document.execCommand('copy');
 	}
 
+	function hideErrors() {
+		etc.let.hide("upload-errors-div");
+		etc.id("upload-errors").innerHTML = "";
+	}
+
 	function goUploading(files) {
 		Animation.start("uploading-sign");
     	var uploaded = {
     		"additional_form": {
-    			"hide": etc.id("hide-image").checked
+    			"hide": etc.id("hide-image").checked,
+    			"tag": etc.id("rename-image").checked ? etc.id("upload-filename").value : ""
     		},
     		"uploaded_callback": function(thumb, full) {
 				var a = document.createElement("a");
@@ -220,11 +247,14 @@
     		}
     	};
 
-    	etc.editor.uploadImage(files, function(err) {
-			Animation.stop();
+    	etc.editor.uploadImage(files, function(err, file) {
 			if (err) {
-				etc.id("uploading-sign").html(err);
-			}
+				var row = etc.let.show("upload-errors-div").show("upload-errors").$.insertRow(0);
+				row.insertCell(0).innerHTML = file.name;
+				row.insertCell(1).innerHTML = err;
+			} 
+
+			Animation.stop();
 		}, uploaded);
 	}
 </script>

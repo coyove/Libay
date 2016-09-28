@@ -65,12 +65,11 @@ func main() {
 	}()
 
 	go func() {
-		re := regexp.MustCompile(`((\d|\.)+)\,\s((\d|\.)+)\,\s((\d|\.)+)`)
-
 		for {
 
 			buf, _ := exec.Command("uptime").Output()
-			models.ServerLoad = (re.FindAllStringSubmatch(string(buf), -1)[0][1])
+			tmp := strings.Split(string(buf), ",")
+			models.ServerLoad = tmp[len(tmp)-1]
 			time.Sleep(1 * time.Minute)
 		}
 	}()

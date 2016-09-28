@@ -335,7 +335,7 @@ func GetMessages(enc string, userID, lookupID int) (ret []Message, nav BackForth
 	return
 }
 
-func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav BackForth) {
+func GetGallery(enc string, user AuthUser, galleryUserID int, searchPattern string) (ret []Image, nav BackForth) {
 	ret = make([]Image, 0)
 
 	direction, compare, ts, invalid := ExtractTS(enc)
@@ -347,7 +347,7 @@ func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav 
 
 	isSelf := user.ID == galleryUserID || conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOthers")
 
-	cacheKey := fmt.Sprintf("%s-%d-img%v", enc, galleryUserID, isSelf)
+	cacheKey := fmt.Sprintf("%s-%d-img%v%s", enc, galleryUserID, isSelf, searchPattern)
 	if v, e := Gcache.Get(cacheKey); e {
 		_v := v.([]interface{})
 		return _v[0].([]Image), _v[1].(BackForth)
@@ -367,6 +367,11 @@ func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav 
 		tester = ""
 	}
 
+	searcher := ""
+	if searchPattern != "" {
+		searcher = " AND filename = '" + CleanString(searchPattern) + "'"
+	}
+
 	_start := time.Now()
 	rows, err := Gdb.Query(`
         SELECT
@@ -374,7 +379,7 @@ func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav 
         FROM
             images
         WHERE 
-            ts ` + compare + itoa(ts) + tester + showHidden + `
+            ts ` + compare + itoa(ts) + tester + showHidden + searcher + `
         ORDER BY
             ts ` + direction + ` 
         LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage))

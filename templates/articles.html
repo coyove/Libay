@@ -73,9 +73,13 @@
 		<input id="search-url" placeholder="[[Search]]" value="{{.SearchPattern}}">
 	</div>
 	<ul>
-		<li onclick="doSearch()"><span>[[Search it]]</span></li>
+		<li onclick="doSearch()"><span class='fai'>&#xe14f;</span> 
+		<span>[[Search it]]</span></li>
+
 		{{if .IsSearch}}
-		<li onclick="goBack()"><span>[[Back]]</span></li>
+			<li onclick="goBack()">
+			<span class='fai'>&#xe006;</span>
+			<span>[[Back]]</span></li>
 		{{end}}
 	</ul>
 	<script type="text/javascript">
@@ -115,8 +119,8 @@
 		<li onclick="reverseTag()"><span class='fai'>&#xe0e6;</span> [[Inverse]]</li>
 		<li onclick="selectAll()"><span class='fai'>&#xe0e6;</span> [[Select all]]</li>
 		{{range $key, $value := .Tags}}
-		<li>
-			<input class="simple-check" type="checkbox" id="check-{{$key}}" onclick="updateTag({{$key}})" checked/>
+		<li onclick="this.children[0].checked = !this.children[0].checked; updateTag({{$key}})">
+			<input class="simple-check" type="checkbox" id="check-{{$key}}" checked/>
 			<label for="check-{{$key}}">{{$value}}</label>
 		</li>
 		{{end}}

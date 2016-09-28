@@ -255,7 +255,7 @@ func GetUserByID(id int) (ret AuthUser) {
 		nicknameReverseLookup.Map[nickname] = _id
 		nicknameReverseLookup.Unlock()
 	} else {
-		glog.Errorln("Database:", err)
+		// glog.Errorln("Database:", err)
 	}
 
 	return

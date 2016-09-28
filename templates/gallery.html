@@ -3,17 +3,26 @@
 <p id="breadcrumbs">
 	<span><span class='fai'>&#xe08d;</span>
 	{{if .IsGlobal}}
-	[[Global Gallery]]
+		[[Global Gallery]]
 	{{else}}
-	"{{.UploaderName}}" [[Gallery]]
+		"{{.UploaderName}}" [[Gallery]]
 	{{end}}
 	</span>
 
-	{{if .IsSelf}}
-	<span data-dropdown="gallery-function">
-		<span class='fai'>&#xe072;</span> 
-		<span class="nc">[[Images]]</span>
+	<span data-dropdown="gallery-function" data-dropdown-onload="focusSearch()">
+		{{if .IsSearch}}
+		<span class='fai'>&#xe14f;</span> [[Search]] "{{.SearchPattern}}"
+		{{else}}
+		<span class='fai'>&#xe08c;</span> <span class="nc">[[Images]]</span>
+		{{end}}
 	</span>
+
+	{{if .IsSelf}}
+		<span onclick="selectAll()"><span class='fai'>&#xe072;</span>
+		<span class="nc">[[Select all]]</span></span>
+
+		<span onclick="invertSelection()"><span class='fai'>&#xe072;</span>
+		<span class="nc">[[Inverse selection]]</span></span>
 	{{end}}
 
 	<script type="text/javascript">
@@ -24,30 +33,70 @@
 
 <div id="gallery-function" class="dropdown">
 	<div>
-		<input id="search-url" placeholder="[[Search by URL]]">
+		<input id="search-url" placeholder="[[Search]]">
 	</div>
 	<ul>
-		<li data-onclick="searchImage()"><span>[[Search]]</span></li>
+		<li data-onclick="searchImage()">
+		<span class='fai'>&#xe14f;</span> 
+		<span>[[Search]]</span></li>
+
+		{{if .IsSearch}}
+		<li onclick="location.href='../../../page/1'">
+		<span class='fai'>&#xe006;</span>
+		<span>[[Back]]</span></li>
+		{{end}}
+
+		{{if .IsSelf}}
+	</ul>
+		<div>
+			<input id="rename-images" placeholder="[[Rename selected]]">
+		</div>
+	<ul>
+		<li data-onclick="alterImages('rename')"><span class='fai'>&#xe0c3;</span>
+		<span>[[Rename selected]]</span></li>
 		<li data-onclick="alterImages('delete')"><span class='fai'>&#xe123;</span>
 		<span>[[Delete selected]]</span></li>
+
 		<li data-onclick="alterImages('delete', true)"><span class='fai'>&#xe123;</span>
 		<span>[[Delete all in this page]]</span></li>
+
 		<li data-onclick="alterImages('showhide')"><span class='fai'>&#xe06f;</span>
 		<span>[[Show/Hide selected]]</span></li>
-		<li onclick="selectAll()"><span class='fai'>&#xe072;</span>
-		<span>[[Select all]]</span></li>
-		<li onclick="invertSelection()"><span class='fai'>&#xe072;</span>
-		<span>[[Inverse selection]]</span></li>
+
+		<li data-dropdown="copy-function"><span class='fai'>&#xe04a;</span>
+		<span>[[Copy selected]]</span></li>
+		{{end}}
 	</ul>
 </div>
+
+<div id="copy-function" class="dropdown">
+	<ul>
+		<li onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
+		<span>[[full images url]]</span></li>
+
+		<li onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
+		<span>[[full images bbcode]]</span></li>
+
+		<li onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>
+		<span>[[full images markdown]]</span></li>
+
+		<li onclick="copyImageCode('data')"><span class='fai'>&#xe04a;</span>
+		<span>[[data images]]</span></li>
+	</ul>
+</div>
+
+<textarea id="copy-code" style="display: none" class="image-code" rows="10"></textarea>
 
 <script type="text/javascript">
 	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
 		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
 		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}"));
-</script>
 
-<script type="text/javascript">
+	function focusSearch() {
+		etc.id("search-url").focus();
+		etc.id("search-url").select();
+	}
+
 	function selectAll() {
 		var checks = etc.get(".simple-check");
 
@@ -74,13 +123,19 @@
 			}
 		}
 
-		if (ids.length == 0) return etc.wait.on(this).done();
+		if (ids.length == 0) 
+			return etc.wait.on(this).done();
+
 		if (action == "delete" && !confirm("[[Confirm to delete]]: " + ids.join(","))) 
+			return etc.wait.on(this).done();
+
+		if (action == "rename" && etc.id("rename-images").value == "")
 			return etc.wait.on(this).done();
 
 		etc.util.ajax.post("/alter/images", { 
 			"ids": ids.join(","),
 			"id": "{{.GalleryUserID}}",
+			"filename": etc.id("rename-images").value,
 			"action": action,
 			"csrf": etc.util.CSRF() 
 		}).then(function(e, text) {
@@ -116,25 +171,56 @@
 
 		return etc.wait.on(this);
 	}
+
+	function copyImageCode(type) {
+		var checks = etc.get(".simple-check");
+		var code = [];
+
+		for (var i = 0; i < checks.length; i++) {
+			if (checks[i].checked) {
+				var full = checks[i].getAttribute("data-full");
+
+				switch (type) {
+					case "url": code.push(full); break;
+					case "bbcode": code.push("[img]" + full + "[/img]"); break;
+					case "data": code.push("[img=data]" + full + "[/img]"); break;
+					case "md": code.push("![](" + full + ")"); break;
+				}
+			}
+		}
+
+		etc.let.show("copy-code").$.value = code.join("\n");
+	}
+
+	etc.id("search-url").onkeydown = function(e) {
+		e = (e) ? e : window.event;
+		if (e.which == 13 || e.keyCode == 13) searchImage();
+	}
 </script>
+
+<style type="text/css">
+	.simple-check:checked + label { font-weight: bold; color: green; }
+	a.fai { font-size: 150%; }
+</style>
 
 <div id="gallery">
 	{{range .Images}}
 		<div class="image">
 			<div>
 				<span class="img-id">
+					<a href="{{.Path}}" target="_blank" class="fai">&#xe00b;</a>&nbsp;&nbsp;
 					<span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span>
 					{{if .Hide}}<span class="fai">&#xe137;</span> [[Hide]]{{end}}
 				</span>
-				<a href="{{.Path}}" target="_blank"><img src="{{.ThumbPath}}"></a>
+				<img onclick="etc.id('img-{{.ID}}').click()" src="{{.ThumbPath}}">
 			</div>
 
 			<div class="date">
-				<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}">
+				<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}">
 				<label for="img-{{.ID}}">#{{.ID}} - {{.Filename}}
-					<div><span class="date"><script type="text/javascript">
+					<div><script type="text/javascript">
 					document.write(etc.date.format({{.Timestamp}}));
-					</script></span></div>
+					</script></div>
 				</label>
 			</div>
 		</div>
