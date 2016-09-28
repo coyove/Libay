@@ -77,6 +77,7 @@ type GalleryStruct struct {
 	UploaderName  string
 	GalleryUserID int
 	IsSelf        bool
+	IsGlobal      bool
 }
 
 func PageHandler(filterType string, search bool, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -282,11 +283,17 @@ func GalleryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 		return
 	}
 
+	if galleryUserID == 0 && !conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOthers") {
+		ServePage(w, r, "404", nil)
+		return
+	}
+
 	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUserID)
 	payload.UploaderName = auth.GetUserByID(galleryUserID).NickName
 	payload.GalleryUserID = galleryUserID
 	payload.IsSelf = galleryUserID == user.ID || (conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") &&
 		conf.GlobalServerConfig.GetPrivilege(user.Group, "DeleteOthers"))
+	payload.IsGlobal = galleryUserID == 0
 
 	if len(payload.Images) == 0 && page != "1" {
 		http.Redirect(w, r, payload.IndexPage, http.StatusFound)

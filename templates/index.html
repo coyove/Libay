@@ -103,11 +103,13 @@
 								<option value="image-thumb-bbcode">[[Thumb Images BBCode]]</option>
 								<option value="image-full-md">[[Full Images Markdown]]</option>
 								<option value="image-thumb-md">[[Thumb Images Markdown]]</option>
+								<option value="image-data-image">[[Data Images]]</option>
 							</select>
-							<a class="title block inline-block" href="javascript:copy()">
+							<a class="none block inline-block" href="javascript:copy()">
 								<span class='fai'>&#xe04a;</span>
 							</a>
 						</div>
+						<textarea style="display:none" class="image-code" id="image-data-image" value="[gallery]" readonly></textarea>
 						<textarea style="display:none" class="image-code" id="image-full-url" readonly></textarea>
 						<textarea style="display:none" class="image-code" id="image-thumb-url" readonly></textarea>
 						<textarea class="image-code" id="image-full-bbcode" readonly></textarea>
@@ -120,6 +122,7 @@
 				<div>
 					<input type="checkbox" class="simple-check" id="hide-image">
 					<label for="hide-image">[[Hide in my gallery]]</label>
+					<br>(<b>[[Note]]</b>: [[Hiding will not prevent anyone accessing it through url]])
 				</div>
 				{{else}}
 					<div>您所在的用户组无法上传图片</div>
@@ -210,6 +213,8 @@
 
 				etc.id("image-full-md").value += "![](" + full + ")\n";
 				etc.id("image-thumb-md").value += "![](" + thumb + ")\n";
+
+				etc.id("image-data-image").value += "\n[img=data]" + full + "[/img]";
 
 				etc.let.show("select-code");
     		}

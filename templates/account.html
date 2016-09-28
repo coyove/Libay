@@ -4,12 +4,7 @@
     .account-admin { display: inline !important; }
 </style>
 
-<p id="breadcrumbs">
-	<span class="account-{{.Group}}" data-dropdown="admin-nav" style="display: none">
-    	<span class='fai'>&#xe103;</span> 
-        <span class='nc'>管理员</span>
-    </span>
-    
+<p id="breadcrumbs">    
     <span><span class='fai'>&#xe0bf;</span>
     <a href="/ua/{{.ID}}/page/1">[[User Articles]]</a></span>
 
@@ -24,6 +19,11 @@
 
     <span><span class='fai'>&#xe069;</span>
     <a data-onclick="tryLogout()">[[Log Out]]</a></span>
+
+    <span class="account-{{.Group}}" data-dropdown="admin-nav" style="display: none">
+        <span class='fai'>&#xe103;</span> 
+        <span class='nc'>管理员</span>
+    </span>
 </p>
 
 <div class="dropdown" id="admin-nav">

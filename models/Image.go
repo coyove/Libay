@@ -154,7 +154,11 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		}
 		out.Write(hashBuf)
 		out.Close()
+	} else {
+		alreadyUploaded = true
+	}
 
+	if _, err := os.Stat("./thumbs/" + path); os.IsNotExist(err) {
 		if err := auth.ResizeImage(hashBuf, "./thumbs/"+path,
 			250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
 			glog.Errorln("Generating thumbnail failed: "+path, err)
@@ -167,18 +171,17 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 				return
 			}
 		}
-	} else {
-		alreadyUploaded = true
 	}
 
 	if !alreadyUploaded {
 		imageSize := strconv.Itoa(len(hashBuf))
 
 		_, err = auth.Gdb.Exec(`
-		INSERT INTO images (image, path, uploader, ts, hide) 
+		INSERT INTO images (image, path, filename, uploader, ts, hide) 
 		VALUES (
 			'` + url + `', 
 			'` + path + `', 
+			'` + auth.Escape(header.Filename) + `',
 			` + uid + `, 
 			` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `,
 			` + strconv.FormatBool(hide == "true") + `
@@ -240,10 +243,19 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		w.Write(buf)
 	}
 
-	path, _ := getRealPath(r.URL.RequestURI()[1:])
+	url := r.URL.RequestURI()[1:]
+	path, _ := getRealPath(url)
 	if path == "" {
 		Return(w, 404)
 		return
+	}
+
+	if auth.LogIPnv(r) {
+		if len(url) > 6 && url[:6] == "small-" {
+
+		} else {
+			auth.IncrImageCounter(url)
+		}
 	}
 
 	if _image, e := auth.Gimage.Get(path); e {

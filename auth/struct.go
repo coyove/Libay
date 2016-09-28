@@ -50,7 +50,9 @@ type Image struct {
 	UploaderID int
 	Path       string
 	ThumbPath  string
+	Filename   string
 	Timestamp  int
+	Hits       int
 	Hide       bool
 }
 

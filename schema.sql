@@ -275,10 +275,11 @@ CREATE TABLE images (
     id integer DEFAULT nextval('image_id_seq'::regclass) NOT NULL,
     image text,
     uploader integer,
-    date timestamp with time zone DEFAULT now(),
     ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000) NOT NULL,
     hits integer DEFAULT 0 NOT NULL,
-    path text DEFAULT ''::text NOT NULL
+    path text DEFAULT ''::text NOT NULL,
+    hide boolean DEFAULT false,
+    filename text DEFAULT ''::text
 );
 
 
@@ -459,6 +460,13 @@ CREATE INDEX articles_title_bigm_index ON articles USING gin (title gin_bigm_ops
 --
 
 CREATE INDEX history_article_id_index ON history USING btree (article_id);
+
+
+--
+-- Name: image_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX image_index ON images USING btree (image);
 
 
 --

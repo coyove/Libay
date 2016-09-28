@@ -18,17 +18,25 @@ import (
 var articleCounter struct {
 	sync.RWMutex
 	articles map[int]int
+	images   map[string]int
 }
 
-func incrCounter(id int) {
+func IncrArticleCounter(id int) {
 	articleCounter.Lock()
 	articleCounter.articles[id]++
+	articleCounter.Unlock()
+}
+
+func IncrImageCounter(img string) {
+	articleCounter.Lock()
+	articleCounter.images[img]++
 	articleCounter.Unlock()
 }
 
 func ArticleCounter() {
 	ticker := time.NewTicker(5 * time.Minute)
 	articleCounter.articles = make(map[int]int)
+	articleCounter.images = make(map[string]int)
 
 	defer ticker.Stop()
 	for {
@@ -37,12 +45,16 @@ func ArticleCounter() {
 			articleCounter.Lock()
 			var query string = ""
 			for id, c := range articleCounter.articles {
-				query += "UPDATE articles SET hits = hits + " + itoa(c) + " WHERE id=" + itoa(id) + ";"
+				query += "UPDATE articles SET hits = hits + " + itoa(c) + " WHERE id = " + itoa(id) + ";"
 				delete(articleCounter.articles, id)
 			}
 
-			_, err := Gdb.Exec(query)
-			if err != nil {
+			for img, c := range articleCounter.images {
+				query += "UPDATE images SET hits = hits + " + itoa(c) + " WHERE image = '" + img + "';"
+				delete(articleCounter.images, img)
+			}
+
+			if _, err := Gdb.Exec(query); err != nil {
 				glog.Errorln("Database:", err)
 			}
 
@@ -347,17 +359,22 @@ func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav 
 
 	showHidden := " AND hide = false"
 	if isSelf {
-		showHidden = " AND 1 = 1"
+		showHidden = ""
+	}
+
+	tester := ` AND uploader = ` + itoa(galleryUserID)
+	if galleryUserID == 0 {
+		tester = ""
 	}
 
 	_start := time.Now()
 	rows, err := Gdb.Query(`
         SELECT
-            id, image, uploader, ts, hide
+            id, image, filename, uploader, ts, hits, hide
         FROM
             images
         WHERE 
-            ts ` + compare + itoa(ts) + ` AND uploader = ` + itoa(galleryUserID) + showHidden + `
+            ts ` + compare + itoa(ts) + tester + showHidden + `
         ORDER BY
             ts ` + direction + ` 
         LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage))
@@ -372,17 +389,19 @@ func GetGallery(enc string, user AuthUser, galleryUserID int) (ret []Image, nav 
 	defer rows.Close()
 
 	for rows.Next() {
-		var id, uploaderID, timestamp int
-		var path string
+		var id, uploaderID, timestamp, hits int
+		var path, filename string
 		var hide bool
 
-		rows.Scan(&id, &path, &uploaderID, &timestamp, &hide)
+		rows.Scan(&id, &path, &filename, &uploaderID, &timestamp, &hits, &hide)
 		ret = append(ret, Image{
 			id,
 			uploaderID,
 			conf.GlobalServerConfig.ImageHost + "/" + path,
 			conf.GlobalServerConfig.ImageHost + "/small-" + path,
+			filename,
 			timestamp,
+			hits,
 			hide,
 		})
 	}
@@ -413,7 +432,7 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	}()
 
 	if r != nil && LogIPnv(r) {
-		incrCounter(id)
+		IncrArticleCounter(id)
 	}
 
 	rows, err := Gdb.Query(`

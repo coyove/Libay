@@ -288,7 +288,7 @@
 			<div id="editor-outter-panel" unselectable="on">
 				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
 					<span><span id="uploading-sign"></span>
-					<a href="javascript:etc.id('file-uploader').click()" title="[[Upload image]]">&#xe04b;</a>
+					<a href="javascript:etc.id('file-uploader-').click()" title="[[Upload image]]">&#xe04b;</a>
 					<a href="javascript:etc.id('file-uploader-hide').click()" title="[[Upload image]], [[Hide in my gallery]]">&#xe054;</a>
 					<a href="javascript:etc.id('file-uploader-imgur').click()" title="[[Upload image to imgur.com]]">&#xe08d;</a>
 					<a href="javascript:insertLink()" title="[[Insert link]]">&#xe09b;</a>
@@ -296,7 +296,7 @@
 					
 					<input id="file-uploader-imgur" type="file" multiple onchange="tryUploadImage('imgur', event)">
 					<input id="file-uploader-hide" type="file" multiple onchange="tryUploadImage('hide', event)">
-					<input id="file-uploader" type="file" multiple onchange="tryUploadImage('', event)">
+					<input id="file-uploader-" type="file" multiple onchange="tryUploadImage('', event)">
 
 					<script type="text/javascript">
 						function clearContent() {

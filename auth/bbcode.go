@@ -428,7 +428,11 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 					} else {
 						tok.Commit()
 						url := html.EscapeString(t.Text)
-						bits = append(bits, "<img class='image' style='", style, "' alt='", url, "' src='", url, "'>")
+						if style == "data" {
+							bits = append(bits, "<img data-src='", url, "'>")
+						} else {
+							bits = append(bits, "<img class='image' style='", style, "' alt='", url, "' src='", url, "'>")
+						}
 					}
 				}
 			case "code", "html", "csv":

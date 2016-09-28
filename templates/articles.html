@@ -4,10 +4,10 @@
 		<p id="breadcrumbs">
 
 		<span><span class='fai'>&#xe00b;</span> 
-		<a href="/new/article/{{.CurTag}}">[[Reply this article]]</a></span>
+		<a href="/new/article/{{.CurTag}}">[[Reply Article]]</a></span>
 
 		<span><span class='fai'>&#xe023;</span>
-		<a href="/article/{{.CurTag}}">[[Back to article]]</a></span>
+		<a href="/article/{{.CurTag}}">[[Back to Article]]</a></span>
 	{{end}}
 
 	{{if .IsUA}}
@@ -30,6 +30,10 @@
 				<span><span class='fai'>&#xe12c;</span> [[My Articles]]</span>
 			{{end}}
 		{{end}}
+
+		<span data-dropdown="owa-dropdown">
+		<span class='fai'>&#xe12c;</span> 
+		<span class="nc">[[Tag Filter]]</span></span>
 	{{end}}
 
 	{{if .IsTag}}
@@ -46,7 +50,7 @@
 		</script>
 	
 		<span><span class='fai'>&#xe0b7;</span>
-		<a href="javascript:postUnderThisTag()">[[Post new article]]</a></span>
+		<a href="javascript:postUnderThisTag()">[[Post New Article]]</a></span>
 	{{end}}
 {{else}}
 	<title>[[All Articles]]</title>
@@ -77,7 +81,7 @@
 	<script type="text/javascript">
 		function doSearch() {
 			var pat = encodeURIComponent(etc.id("search-url").value);
-			if (pat == "") return;
+			if (pat == "") goBack();
 			{{if .CurType}}
 				location.href = "/{{.CurType}}/{{.CurTag}}/search/" + pat + "/page/1";
 			{{else}}
@@ -106,10 +110,19 @@
 </div>
 
 {{if .IsOWA}}
-	{{range $key, $value := .Tags}}
-	   <input class="simple-check" type="checkbox" id="check-{{$key}}" onclick="updateTag({{$key}})" checked/>
-	   <label for="check-{{$key}}">{{$value}}</label>
-	{{end}}
+	<div id="owa-dropdown" class="dropdown">
+		<ul>
+		<li onclick="reverseTag()"><span class='fai'>&#xe0e6;</span> [[Inverse]]</li>
+		<li onclick="selectAll()"><span class='fai'>&#xe0e6;</span> [[Select all]]</li>
+		{{range $key, $value := .Tags}}
+		<li>
+			<input class="simple-check" type="checkbox" id="check-{{$key}}" onclick="updateTag({{$key}})" checked/>
+			<label for="check-{{$key}}">{{$value}}</label>
+		</li>
+		{{end}}
+		</ul>
+	</div>
+
 	<script type="text/javascript">
 		var omit = "{{.CurTag}}".split(":");
 		omit.shift();
@@ -143,8 +156,12 @@
 
 			window.location.href = "/owa/" + _new.join(':') + "/page/1";
 		}
+
+		function selectAll() {
+			var omit = "{{.CurTag}}".split(":");
+			window.location.href = "/owa/" + omit[0] + "/page/1";
+		}
 	</script>
-	<button onclick="reverseTag()">[[Inverse]]</button>
 {{end}}
 
 {{if .Announce.Content}}

@@ -90,17 +90,23 @@ var Gallery = (function() {
                     "<span class='fai'>&nbsp;&#xe048;&nbsp;</span></a></td>",
                     "<td class='c'><a href='javascript:Gallery._Gallery_Goto(true)'>",
                     "<span class='fai'>&nbsp;&#xe01f;&nbsp;</span></a></td>",
-                    "<td class='c'><a href='javascript:Gallery._Gallery_Rotate(90)'>",
-                    "<span class='fai'>&#xe0d9;</span> 90<sup>o</sup></a></td>",
-                    "<td class='c'><a href='javascript:Gallery._Gallery_Rotate(180)'>",
-                    "<span class='fai'>&#xe0d9;</span> 180<sup>o</sup></a></td>",
-                    "<td class='c'><a href='javascript:Gallery._Gallery_Rotate(270)'>",
-                    "<span class='fai'>&#xe0d9;</span> 270<sup>o</sup></a></td>",
                 "</table>",
             ].join('');                
 
             div.innerHTML = paging + [
                     "<div id='gallery-container'>",
+                        "<div style='",
+                            "position: absolute;",
+                            "z-index: 100;",
+                            "font-size: 150%;",
+                            "margin: 10px;",
+                            "border: solid 1px;",
+                            "line-height: 1;",
+                            "padding: 4px 8px;",
+                            "background: white;",
+                            "opacity: 0.75;'>",
+                            "<a class='none' href='javascript:Gallery._Gallery_Rotate()'><span class='fai'>&#xe0d9;</span></a>",
+                        "</div>",
                         "<div id='gallery-loading' style='",
                             "background-image:url(" + window.__cdn + "/assets/images/loading.gif);",
                             "display: none;",
@@ -170,7 +176,7 @@ var Gallery = (function() {
                 for (var i = 0; i < pager.length; i++) pager[i].value = p;
 
                 document.documentElement.scrollTop = oldTop;
-                Gallery._Gallery_Rotate(0);
+                Gallery._Gallery_Rotate(true);
 			};
 
 			img.src = (Gallery._Gallery.imgList[p]);
@@ -181,11 +187,21 @@ var Gallery = (function() {
             if (img) etc.let.show("gallery-loading");
         },
 
-        "_Gallery_Rotate": function(deg) {
+        "_Gallery_Rotate": function(init) {
             var gi = etc.id("gallery-image");
             var gc = etc.id("gallery-container");
             var gwidth = gi.clientWidth;
             var gheight = gi.clientHeight;
+            var deg;
+
+            if (init) {
+                deg = 0;
+            } else {
+                deg = parseInt(gc.attr("data-deg"));
+                deg = (deg + 90) % 360;
+            }
+
+            gc.attr("data-deg", deg);
 
             if (deg == 0) {
                 gc.className = "";

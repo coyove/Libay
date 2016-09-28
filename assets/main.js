@@ -240,7 +240,7 @@
             return e;
         }
         e.attr = function(a, b) {
-            if (b) {
+            if (typeof b !== 'undefined') {
                 e.setAttribute(a, b);
                 return e;
             } else {
@@ -864,6 +864,8 @@
 
                     var inputs = dd.querySelectorAll("input");
                     for (var i = 0; i < inputs.length; i++) {
+                        if (inputs[i].type == "checkbox") continue;
+                        
                         inputs[i].onclick = function(e) {
                             if (!e) e = window.event;
                             
