@@ -149,6 +149,8 @@ func PageHandler(filterType string, search bool, w http.ResponseWriter, r *http.
 		if strconv.Itoa(_tag) == filter {
 			payload.CurTag = conf.GlobalServerConfig.GetIndexTag(_tag)
 		}
+
+		payload.CurTag = conf.GlobalServerConfig.GetIndexTag(_tag)
 	}
 
 	if payload.IsOWA {

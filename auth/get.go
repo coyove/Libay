@@ -54,9 +54,20 @@ func ArticleCounter() {
 				delete(articleCounter.images, img)
 			}
 
+			now := time.Now()
+			if now.Hour()%2 == 0 && now.Minute() >= 7 && now.Minute() < 12 {
+				query += `
+				UPDATE tags SET children = sub.count FROM (
+					SELECT COUNT(id) AS count, MAX(tag) AS tag FROM articles 
+					WHERE tag <= 65536 GROUP BY tag) AS sub 
+				WHERE tags.id = sub.tag;`
+			}
+
 			if _, err := Gdb.Exec(query); err != nil {
 				glog.Errorln("Database:", err)
 			}
+
+			conf.GlobalServerConfig.InitTags(Gdb)
 
 			articleCounter.Unlock()
 		}

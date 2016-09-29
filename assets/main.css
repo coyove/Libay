@@ -367,12 +367,24 @@ td.fit, th.fit{
     width: 100%; 
     height: 100%; 
     z-index: 98;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=25)";
+    filter: alpha(opacity=25);
+    -moz-opacity: 0.25;
+    -khtml-opacity: 0.25;
+    opacity: 0.25;
+    background-color: white;
+}
+
+.stop-scrolling {
+    height: 100%;
+    overflow: hidden;
 }
 
 #thread-content {
 	padding: 4px;
 	line-height: 1.1;
     white-space: pre-wrap;
+    resize: vertical;
     border: none;
 }
 

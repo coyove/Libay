@@ -8,8 +8,7 @@
 			document.write(etc.date.format({{.Article.ModTimestamp}}, true));
 		</script></span>
 
-		{{if .Article.IsMessageSentout}}
-		{{else}}
+		{{if not .Article.IsMessageSentout}}
 			<span><span class='fai'>&#xe00b;</span>
 			<a href="/new/message/{{.Article.AuthorID}}">[[Reply]]</a></span>
 
@@ -92,7 +91,7 @@
 		
 		{{if .IsLoggedIn}}
 			{{if .IsAuthorSelf}}
-				{{if .Article.IsMessage}}{{else}}
+				{{if not .Article.IsMessage}}
 					<li onclick="goEdit()"><span class='fai'>&#xe067;</span> <span>[[Edit]]</span></li>
 				{{end}}
 

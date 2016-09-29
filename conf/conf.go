@@ -67,10 +67,13 @@ type ServerConfig struct {
 
 	Zhparser string
 
-	sortedTags        map[int]string
-	sortedTagsReverse map[string]int
-	sortedTags2       map[int]Tag
-	presetSqlQuery    string
+	sortedTags  map[int]string
+	sortedTags2 map[int]Tag
+
+	sortedTagsReverse      map[string]int
+	sortedTagsShortReverse map[string]int
+
+	presetSqlQuery string
 
 	sync.RWMutex
 }
@@ -83,6 +86,8 @@ type Tag struct {
 	PermittedTo []string
 	Short       string
 	AnnounceID  int
+	Children    int
+	ID          int
 }
 
 func (sc *ServerConfig) GetTags() map[int]string {
@@ -144,21 +149,15 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 	sc.Lock()
 	defer sc.Unlock()
 
-	ret := make(map[int]string)
-	retReverse := make(map[string]int)
-	ret2 := make(map[int]Tag)
-
+	sc.sortedTags = make(map[int]string)
+	sc.sortedTags2 = make(map[int]Tag)
+	sc.sortedTagsReverse = make(map[string]int)
+	sc.sortedTagsShortReverse = make(map[string]int)
 	sc.presetSqlQuery = ""
 
 	rows, err := db.Query(`
         SELECT 
-            id, 
-            name, 
-            description, 
-            restricted, 
-            hidden, 
-            short,
-            announce_id
+            id, name, description, restricted, hidden, short, announce_id, children
         FROM 
             tags`)
 
@@ -170,15 +169,16 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 
 	// for k, v := range list {
 	for rows.Next() {
-		var id, announceID int
+		var id, announceID, children int
 		var hidden bool
 		var name, description, restricted, short string
 
-		rows.Scan(&id, &name, &description, &restricted, &hidden, &short, &announceID)
+		rows.Scan(&id, &name, &description, &restricted, &hidden, &short, &announceID, &children)
 
 		t := Tag{}
-		var arr interface{}
 		t.PermittedTo = make([]string, 0)
+
+		var arr interface{}
 		json.Unmarshal([]byte(restricted), &arr)
 
 		if arr == nil {
@@ -200,22 +200,22 @@ func (sc *ServerConfig) InitTags(db *sql.DB) {
 			sc.presetSqlQuery += (" AND tag != " + strconv.Itoa(id))
 		}
 
-		ret[id] = name
-		retReverse[name] = id
-
 		t.Name = name
 		t.Description = html.UnescapeString(description)
 		t.Visible = !hidden
 		t.Short = short
 		t.AnnounceID = announceID
+		t.ID = id
+		t.Children = children
 
-		ret2[id] = t
+		sc.sortedTags[id] = name
+		sc.sortedTags2[id] = t
+
+		sc.sortedTagsReverse[name] = id
+		sc.sortedTagsShortReverse[short] = id
 	}
-	sc.presetSqlQuery += " and tag <= 65536 "
 
-	sc.sortedTags = ret
-	sc.sortedTags2 = ret2
-	sc.sortedTagsReverse = retReverse
+	sc.presetSqlQuery += " AND tag <= 65536 "
 }
 
 func (sc *ServerConfig) GetTagIndex(t string) int {
@@ -223,8 +223,10 @@ func (sc *ServerConfig) GetTagIndex(t string) int {
 	defer sc.RUnlock()
 
 	if _t, err := strconv.Atoi(t); _t >= 100000 && err == nil {
+		// Message
 		return _t
 	} else if err == nil && _t > 0 && _t <= 65536 {
+		// Tag ID
 		if _, ok := sc.sortedTags[_t]; ok {
 			return _t
 		}
@@ -232,6 +234,8 @@ func (sc *ServerConfig) GetTagIndex(t string) int {
 
 	if v, ok := sc.sortedTagsReverse[t]; ok {
 		return v
+	} else if v2, ok := sc.sortedTagsShortReverse[t]; ok {
+		return v2
 	}
 
 	return -1

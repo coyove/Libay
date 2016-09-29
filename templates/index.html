@@ -198,6 +198,10 @@
 		etc.let.show(this.value);
 	}
 
+	etc.id("upload-filename").onchange = function(e) {
+		etc.id("rename-image").checked = etc.id("upload-filename").value != "";
+	}
+
 	function copy() {
 		etc.id(etc.id("select-code-type").value).focus();
 		etc.id(etc.id("select-code-type").value).select();

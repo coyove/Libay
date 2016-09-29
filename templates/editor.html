@@ -71,19 +71,21 @@
 
 		for(var i = 0; i < selT.length; i++) {
 			var h = selT[i].innerHTML.trim();
-			if (h[0] == 
-				{{if .Message}}"m"{{else}}
-					{{if .ReplyTo}}
-						{{if .Update}}""{{else}}"r"{{end}}
-					{{else}}
-						""
-					{{end}}
-				{{end}} || selT[i].value === defaultTag
-			) {
-				selT[i].selected = true;
-				selT[i].innerHTML = h + " ([[Default tag]])";
-				etc.let.disable("thread-tag");
-				break;
+			var tester = h.substr(0, h.indexOf(':'));
+			if (tester != "") {
+				if (tester == 
+					{{if .Message}}"m"{{else}}
+						{{if .ReplyTo}}
+							{{if .Update}}""{{else}}"r"{{end}}
+						{{else}}
+							""
+						{{end}}
+					{{end}} || tester === defaultTag || selT[i].value === defaultTag) {
+					selT[i].selected = true;
+					selT[i].innerHTML = h + " ([[Default tag]])";
+					etc.let.disable("thread-tag");
+					break;
+				}
 			}
 		}
 
@@ -404,7 +406,8 @@
 
 			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
 			<li>
-				<a href="/article/870" target="_blank">BBCode语法说明</a>，使用[html][/html]时<select>
+				<a href="/article/870" target="_blank">BBCode语法说明</a>，使用[html][/html]时
+				<select>
 					<option selected>[[Allowed HTML tags]]</option>
 					<optgroup label="[[Allowed HTML tags]]">
 						{{range $key, $value := .HTMLTags}}

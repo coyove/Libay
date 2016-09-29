@@ -839,24 +839,35 @@
                 return function() { 
                     var dd = g.etc.id(ddelems[idx].getAttribute("data-dropdown"));
                     var ddol = ddelems[idx].getAttribute("data-dropdown-onload");
-                    var rect = (ddelems[idx].children && ddelems[idx].children[0] ? 
-                        ddelems[idx].children[0] : ddelems[idx]).getBoundingClientRect();
+                    var sub = ddelems[idx].getAttribute("data-subdropdown"); 
+                    var rect = ddelems[idx].getBoundingClientRect();
+                    if (ddelems[idx].children && ddelems[idx].children[0] && sub != "true")
+                        rect = ddelems[idx].children[0].getBoundingClientRect();
 
-                    dd.style.left = (rect.left - 10) + "px";
-                    dd.style.top = (rect.bottom + 10) + "px";
+                    if (sub == "true") {
+                        dd.style.left = (rect.left) + "px";
+                        dd.style.top = (rect.top) + "px";
+                    } else {
+                        dd.style.left = (rect.left - 10) + "px";
+                        dd.style.top = (rect.bottom + 10) + "px";
+                    }
+
                     dd.style.display = "block";
-                    dd.style.zIndex = 100;
+                    dd.style.zIndex = 99;
 
                     var underlay = document.createElement("div");
                     underlay.className = "dropdown-underlay";
-                    underlay.style.zIndex = 99;
+                    underlay.style.zIndex = 98;
                     underlay.style.display = "block";
 
                     dd.parentNode.insertBefore(underlay, dd);
+                    var body = document.getElementsByTagName('body')[0];
+                    body.className += " stop-scrolling";
 
                     underlay.onclick = dd.onclick = function() {
                         dd.style.display = "none";
                         dd.parentNode.removeChild(underlay);
+                        body.className = body.className.replace(" stop-scrolling", "");
                     };
 
                     var inputs = dd.querySelectorAll("input");

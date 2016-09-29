@@ -11,7 +11,7 @@
 
 	<span data-dropdown="gallery-function" data-dropdown-onload="focusSearch()">
 		{{if .IsSearch}}
-		<span class='fai'>&#xe14f;</span> [[Search]] "{{.SearchPattern}}"
+		<span class='fai'>&#xe14f;</span> <span class="nc">[[Search]] "{{.SearchPattern}}"</span>
 		{{else}}
 		<span class='fai'>&#xe08c;</span> <span class="nc">[[Images]]</span>
 		{{end}}
@@ -54,6 +54,7 @@
 	<ul>
 		<li data-onclick="alterImages('rename')"><span class='fai'>&#xe0c3;</span>
 		<span>[[Rename selected]]</span></li>
+
 		<li data-onclick="alterImages('delete')"><span class='fai'>&#xe123;</span>
 		<span>[[Delete selected]]</span></li>
 
@@ -63,7 +64,7 @@
 		<li data-onclick="alterImages('showhide')"><span class='fai'>&#xe06f;</span>
 		<span>[[Show/Hide selected]]</span></li>
 
-		<li data-dropdown="copy-function"><span class='fai'>&#xe04a;</span>
+		<li data-dropdown="copy-function" data-subdropdown="true"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy selected]]</span></li>
 		{{end}}
 	</ul>

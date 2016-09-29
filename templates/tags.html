@@ -23,28 +23,55 @@
 	}
 </script>
 
-<ul id="tags">
+<style type="text/css">
+	td.tag-name { min-width: 50px;}
+</style>
+
+<table id="articles">
+	<tr>
+		<th class="fit center">ID</th>
+		<th class="fit center"></th>
+		<th style="text-align: left">标签</th>
+		<th class="fit center"><span class="fai">&#xe06f;</span></th>
+		<th class="fit center"><span class="fai">&#xe062;</span></th>
+		<th class="fit last">限制</th>
+		<th class="fit">描述</th>
+		<th class="fit">公告</th>
+	</tr>
+
 	{{range .Tags}}
-		{{if .Visible}}
-			<li><b>{{.Short}}</b>:
-				<a href="/tag/{{.Name}}/page/1" class="title block inline-block">{{.Name}}</a><br>
-				{{if .Restricted}}<div>限制为{{range .PermittedTo}} [{{.}}]{{end}} 浏览</div>{{end}}
-				<div class="tag-description">
-					{{.Description}}
-				</div>
-			</li>
-		{{else}}
-			{{if $.IsLoggedIn}}
-			<li type="circle"><b>{{.Short}}</b>:
-				<a href="/tag/{{.Name}}/page/1" class="title block inline-block flatten">{{.Name}}</a><br>
-				
-				{{if .Restricted}}<div>限制为{{range .PermittedTo}} [{{.}}]{{end}} 浏览</div>{{end}}
-				<div class="tag-description">
-					{{.Description}}
-				</div>
-			</li>
-			{{end}}
+		{{if or .Visible $.IsLoggedIn}}
+		<tr class="darken">
+			<td class="fit header center">{{.ID}}</td>
+			<td class="fit center">{{.Short}}</td>
+			<td class="tag-name reply" onclick="window.open('/tag/{{.Name}}/page/1')">{{.Name}}</td>
+			<td class="fit center">
+				{{if .Visible}}
+				<span class="fai">&#xe11e;</span>
+				{{else}}
+				<span class="fai" style="color: #ccc">&#xe122;</span>
+				{{end}}
+			</td>
+			<td class="fit center">
+				{{.Children}}
+			</td>
+			<td class="fit last">
+				{{if .Restricted}}
+					限制为{{range .PermittedTo}} [{{.}}]{{end}} 浏览
+				{{else}}
+					-
+				{{end}}
+			</td>
+			<td class="fit">{{.Description}}</td>
+			<td class="fit center">
+				{{if .AnnounceID}}
+				<a target="_blank" href="/article/{{.AnnounceID}}">{{.AnnounceID}}</a>
+				{{else}}
+				-
+				{{end}}
+			</td>
+		</tr>
+		<tr><td colspan="8"></td></tr>
 		{{end}}
 	{{end}}
-</ul>
-<br style="clear: both">
+</table>
