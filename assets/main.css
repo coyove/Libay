@@ -333,6 +333,10 @@ td.fit, th.fit{
     background-color: #bddfe8;
 }
 
+.dropdown li[visible=hide] {
+    display: none;
+}
+
 .dropdown span.fai {
     display: inline-block;
     width: 20px;
@@ -380,6 +384,22 @@ td.fit, th.fit{
     overflow: hidden;
 }
 
+#thread-title {
+    resize: vertical;
+    border: solid 1px #aaa;
+}
+
+#thread-tag {
+    margin: 4px 0;
+    padding: 2px 6px;
+    border: solid 1px #aaa;
+    display: inline-block;
+}
+
+#thread-tag:hover {
+    color: #54638c;
+}
+
 #thread-content {
 	padding: 4px;
 	line-height: 1.1;
@@ -401,7 +421,7 @@ td.fit, th.fit{
     text-align: left;
 }
 
-#editor-outter-panel {
+#editor-container {
     overflow: hidden; 
     border: 1px solid #ccc; 
     border-bottom: 1px solid #d0d0d0;
@@ -679,10 +699,6 @@ div#editor textarea {
     width: 100%;
 }
 
-#thread-tag {
-    font-family: Consolas;
-}
-
 #footer {
     font-size: 90%;
     border: 1px solid #dfdfe0;
@@ -694,33 +710,6 @@ div#editor textarea {
     border-right: 0;
     clear: both;
 }
-
-#tags {
-    padding: 0;
-}
-
-#tags li { 
-    float: left; 
-    margin: 10px 20px;
-    border-bottom: dotted 1px #888;
-    list-style: none;
-}
-
-#tags li:before {
-    font-family: typicons;
-    margin-right: 5px;
-    content: '\e06f';
-}
-
-#tags li[type=circle]:before {
-    content: '\e06e';
-}
-
-#tags div { 
-    font-size: 80%; 
-    margin: 6px 0; 
-}
-
 
 #editor-panel a { 
     font-family: typicons; 

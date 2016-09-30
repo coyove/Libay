@@ -1,133 +1,161 @@
 {{if .Message}}
 	<title>[[Send Private Message]]</title>
-{{else}}
-	{{if .Update}}
+
+{{else}}{{if .Update}}
 	<title>[[Edit article]]</title>
-	{{else}}
+
+{{else}}
 	<title>[[Post new article]]</title>
-	{{end}}
-{{end}}
+
+{{end}}{{end}}
 
 <p id="breadcrumbs">
-	{{if .Message}}
-		<span>[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
-		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a></span>
-	{{else}}
-		{{if .Update}}
-			<span>[[Edit]] <span class='fai'>&#xe0bf;</span>
-			<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
-		{{else}}
-			{{if .ReplyTo}}
-				<span>[[Reply]] <span class='fai'>&#xe0bf;</span> 
-				<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
-			{{else}}
-				<span><span class='fai'>&#xe0bf;</span> [[Post new article]]</span>
-			{{end}}
-		{{end}}
-	{{end}}
-
 	<span>
 		<span class='fai'>&#xe12c;</span>
 		<span title="[[Logged-in as]]">
-		{{if .IsLoggedIn}}
-			{{.Username}}
-		{{else}}
-			[[Anonymous]]
-		{{end}}
+		{{if .IsLoggedIn}} {{.Username}} {{else}} [[Anonymous]] {{end}}
 		</span>
 	</span>
+
+	{{if .Message}}
+		<span>[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
+		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a></span>
+
+	{{else}}{{if .Update}}
+		<span>[[Edit]] <span class='fai'>&#xe067;</span>
+		<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
+
+		<span data-dropdown="article-history">
+			<span class='fai'>&#xe010;</span>
+			<span id="article-revision" class='nc'>[[Rollback History]]</span>
+		</span>
+
+	{{else}}{{if .ReplyTo}}
+		<span>[[Reply]] <span class='fai'>&#xe00b;</span> 
+		<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
+
+	{{else}}
+		<span><span class='fai'>&#xe067;</span> [[Post new article]]</span>
+
+	{{end}}{{end}}{{end}}
+
+	<span data-dropdown="clear-function">
+		<span class='fai'>&#xe123;</span>
+		<span id="article-revision" class='nc'>[[Clear]]</span>
+	</span>
+
+	<span>
+	<span class='fai'>&#xe10d;</span>
+	<span class="nc" data-onclick="tryPreview()" data-mode="edit" id="go-preview">[[Preview]]</span>
+	</span>
+
+	<span>
+	<span class='fai'>&#xe11e;</span>
+	<span class="nc" data-onclick="tryPost()" id="post-article">
+		{{if .Update}} [[Edit]] {{else}} [[Post]] {{end}}
+	</span></span>
 </p>
 
 {{if .Update}}
 <pre id="article-raw-content" style="display: none">{{.Article.Raw}}</pre>
+<div id="article-history" class="dropdown" data-version="-1"></div>
 {{end}}
 
+<div id="clear-function" class="dropdown">
+	<ul>
+		<li onclick="clearContent()"><span class="fai">&#xe122;</span> [[Clear content]]</li>
+		<li onclick="alterDraft('clear')"><span class="fai">&#xe122;</span> [[Clear draft]]</li>
+	</ul>
+</div>
+
+<div id="tag-list" class="dropdown">
+	<div>
+		<input type="textbox" id="search-tag" onchange="searchTag()" onkeyup="searchTag()"/>
+	</div>
+	<ul>
+	{{range .Tags}}
+		{{if or .Visible $.IsLoggedIn}}
+		<li data-tag="{{.Name}}" data-short="{{.Short}}" onclick="etc.id('thread-tag').html('{{.Name}}')">
+			{{if .Visible}}
+			<span class="fai">&#xe06f;</span>
+			{{else}}
+			<span class="fai" style="color: #ccc">&#xe06e;</span>
+			{{end}}
+			{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
+		</li>
+		{{end}}
+	{{end}}
+	</ul>
+</div>
+
 <script type="text/javascript">
-	window.onload = (function() {
-	    etc.id("thread-content").onpaste = function(event){
-			var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+	window.onload = function() {
+	    etc.id("thread-content").on("paste", function(ev){
+			var items = (ev.clipboardData || ev.originalEvent.clipboardData).items;
 
 			for (index in items) {
 			  	var item = items[index];
 			  	if (item.kind === 'file') {
 			    	var blob = item.getAsFile();
 		    		Animation.start("uploading-sign");
-					etc.editor.uploadImage([blob], function() {
+					etc.editor.uploadImage([blob], function(e) {
 						Animation.stop();
+						if (e) etc.id("uploading-sign").html(e);
 					}, {"editor": "thread-content"});
 			  	}
 			}
-		}
-
-		etc.id("thread-content").onkeydown = (function (ev) {
+		}).on("keydown", function (ev) {
 	        if (ev.keyCode == 9 || ev.which == 9) {
-	            ev.preventDefault();
+	        	try { ev.preventDefault(); } catch (e) {}
 	            etc.editor.insertText(etc.id("thread-content"), "\t");
 	        }
 		});
 
-		var selT = etc.get('#thread-tag option');
-		var defaultTag = etc.util.cookie.read("default-tag") || 1;
 
-		for(var i = 0; i < selT.length; i++) {
-			var h = selT[i].innerHTML.trim();
-			var tester = h.substr(0, h.indexOf(':'));
-			if (tester != "") {
-				if (tester == 
-					{{if .Message}}"m"{{else}}
-						{{if .ReplyTo}}
-							{{if .Update}}""{{else}}"r"{{end}}
-						{{else}}
-							""
-						{{end}}
-					{{end}} || tester === defaultTag || selT[i].value === defaultTag) {
-					selT[i].selected = true;
-					selT[i].innerHTML = h + " ([[Default tag]])";
-					etc.let.disable("thread-tag");
-					break;
-				}
-			}
-		}
+		var defaultTag = etc.util.cookie.read("default-tag") || 1;
+		if (defaultTag != 1) etc.id("thread-tag").html(defaultTag);
+
+		{{if .Message}}
+			etc.id("thread-tag").html(etc.get("li[data-short=m]")[0].getAttribute("data-tag"));
+		{{else}}
+			{{if not .Update}}{{if .ReplyTo}}
+				etc.id("thread-tag").html(etc.get("li[data-short=r]")[0].getAttribute("data-tag"));
+			{{end}}
+		{{end}}{{end}}
 
 		etc.util.cookie.remove("default-tag");
+		setInterval(function() { alterDraft('save'); }, 20000);
 
         {{if .Update}}
-        	setInterval(saveDraft, 20000);
-			var d = etc.util.read("draft-edit-{{.ReplyTo}}");
-			if (d && d.length > 1) 
-				etc.id("thread-content").value = (d);
-			else
-				etc.id("thread-content").value = (etc.string.unescape(etc.id("article-raw-content").innerHTML));
+			var lastDraft = etc.util.read("draft-edit-{{.ReplyTo}}");
+			etc.id("thread-content").value = (lastDraft && lastDraft.length > 1) ? 
+				lastDraft : etc.string.unescape(etc.id("article-raw-content").innerHTML);
 
 			etc.id("thread-title").value = etc.string.unescape("{{.Article.Title}}");
 
-			var e = etc.id("thread-tag");
-			for (var i = 0; i < e.options.length; i++) {
-				if(e.options[i].value === "{{.Article.Tag}}") {
-					e.selectedIndex = i;
-					break;
-				}
-			}
+			etc.id("thread-tag").html("{{.Article.Tag}}");
 
 			etc.util.ajax.get("/article/{{.Article.ID}}/history?" + new Date().getTime()).then(function(e, d, x){
 				var j = JSON.parse(d);
 
 				var _html = ["</ul>"];
 				for(var k in j) {
-					has = true;
-					_html.push("<li data-onclick='getHistoryVersion(" + k + ")' onclick='etc.wait.onclick(this)'>" + 
-						j[k].User + " - " + etc.date.format(j[k].Date, true) + "</li>");
+					_html.push("<li data-onclick='getHistoryVersion(" + k + 
+						")' id='eye-ver-" + k + "' onclick='etc.wait.onclick(this)'>" + 
+						"<span class='fai'>&#xe06f;</span> <span>#" + k + " - " +
+						j[k].User + "<span class='date'>" + etc.date.format(j[k].Date, true) + 
+						"</span></span></li>");
 				}
-				_html.push("<li onclick='getHistoryVersion(-1)'><b>{{.Article.Author}} - [[Current version]]</b></li>");
-				_html.push("<ul style='cursor: pointer'>");
+				_html.push("<li onclick='getHistoryVersion(-1)' id='eye-ver--1' selected='selected'>" + 
+					"<span class='fai'>&#xe06f;</span> "+
+					"<span>[[Current version]] - {{.Article.Author}}</span></li>");
+				_html.push("<ul>");
 
 				etc.id("article-history").innerHTML = _html.reverse().join('');
-				etc.id("article-history-button").style.display = "inline";
 
 				setupScroll();
 			});
 		{{else}}
-			setInterval(saveDraft, 20000);
 			var d = etc.util.read({{if .Message}}"draft-message-{{.ReplyTo}}"{{else}}"draft-{{.ReplyTo}}"{{end}});		
 			if (d && d.length > 1) etc.id("thread-content").value = (d);
 
@@ -138,7 +166,77 @@
 		te.onchange = te.onkeyup = te.onkeydown = te.onpaste = function() {
 			etc.id("title-length").innerHTML = "(" + etc.string.utf8Len(te.value) + "/512)";
 		}
-  	});
+  	}
+
+  	window.ondragover = function(e) { 
+    	e.preventDefault(); 
+    }
+    
+    window.ondrop = function(e) {
+    	e.preventDefault(); 
+
+    	Animation.start("uploading-sign");
+    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function(e) {
+			Animation.stop();
+			if (e) etc.id("uploading-sign").html(e);
+		}, {"editor": "thread-content"});
+    }
+
+    function searchTagOnload() {
+    	etc.id("search-tag").focus();
+    	etc.id("search-tag").select();
+
+    	var curTag = etc.id("thread-tag").innerHTML;
+
+    	etc.get("#tag-list li").forEach(function(e) {
+			e.setAttribute("selected", e.getAttribute("data-tag") == curTag ? "selected" : "");
+			e.setAttribute("visible", "");
+    	});
+    }
+
+    function searchTag() {
+    	var tester = etc.id("search-tag").value;
+
+    	etc.get("#tag-list li").forEach(function(e) {
+			if ((e.getAttribute("data-short") + " " + e.getAttribute("data-tag")).indexOf(tester) > -1 ||
+				tester == "")
+				e.setAttribute("visible", "");
+			else
+				e.setAttribute("visible", "hide");
+    	});
+    }
+
+  	function clearContent() {
+		if (confirm("是否清空内容")) etc.id("thread-content").value = "";
+	}
+
+	function insertLink() {
+		var url = prompt("URL:", "http://");
+		var text = prompt("Text:", url);
+		var bb = "[url"
+		if (text == url && text != "")
+			bb += "]" + url + "[/url]";
+		else 
+			bb += "=" + url + "]" + text + "[/url]";
+
+		etc.editor.insertText(etc.id("thread-content"), bb);
+	}
+
+	function tryUploadImage(t, e) {
+		Animation.start("uploading-sign");
+		var payload = {
+			"additional_form": { "hide": t == "hide" },
+			"editor": "thread-content", 
+			"type": t
+		};
+
+		etc.editor.uploadImage(etc.file('file-uploader-' + t, e), function(e) {
+			etc.id("file-uploader-" + t).value = "";
+			
+			Animation.stop();
+			if (e) etc.id("uploading-sign").html(e);
+		}, payload);
+	}
 
 	function setupScroll() {
 		var elem = etc.id("editor-container");
@@ -147,12 +245,7 @@
 		t = t - dt;
 
 		window.onscroll = function(e) {
-
-		    if (document.body.scrollTop > t) {
-		        elem.setAttribute("style", "position:fixed;left:0;top:0");
-		    } else {
-		        elem.setAttribute("style", "");
-		    }
+	        elem.attr("style", document.body.scrollTop > t ? "position:fixed;left:0;top:0" : "");
 		}
 	}
 
@@ -160,7 +253,7 @@
 		var title = etc.id("thread-title").value;
 
 		etc.util.ajax.post("/post/{{.ReplyTo}}", {
-			"tag": etc.id("thread-tag").value,
+			"tag": etc.id("thread-tag").innerHTML,
 			"title": title == "" ? "---" : title,
 			"content": etc.id("thread-content").value,
 			"update": "{{.Update}}",
@@ -169,23 +262,19 @@
 			etc.wait.on(this).done();
 
 			if (/ok::.+/.test(text)) {
-				alert("[[Operation completed]]");
-				clearDraft(true);
-				{{if .Message}}
-					location.href = "/message/{{.ReplyTo}}/page/1";
-				{{else}}
-				{{if .Update}}
-					location.href = "/article/{{.ReplyTo}}";
-				{{else}}
-					{{if .ReplyTo}}
-						location.href = "/reply/{{.ReplyTo}}/page/1";
+				alterDraft('clear-silent');
+				location.href = 
+					{{if .Message}}
+						"/message/{{.ReplyTo}}/page/1";
+					{{else}}{{if .Update}}
+						"/article/{{.ReplyTo}}";
+					{{else}}{{if .ReplyTo}}
+						"/reply/{{.ReplyTo}}/page/1";
 					{{else}}
-						location.href = "/tag/" + text.substr(4) + "/page/1";
-					{{end}}
-				{{end}}
-				{{end}}
+						"/tag/" + text.substr(4) + "/page/1";
+					{{end}}{{end}}{{end}}
 			} else {
-				alert("[[Error: ]]" + text);
+				etc.id("post-article").html("[[Error: ]]" + text);
 			}
 		});
 
@@ -193,30 +282,30 @@
 	}
 
 	function tryPreview(){
-		etc.util.ajax.post("/preview", {
-			"content": etc.id("thread-content").value
-		}).then(function(error, text, xhr) {
-			etc.wait.on(this).done();
+		var gp = etc.id("go-preview");
 
-			if (text.indexOf("Err::") == 0) {
-				alert("[[Error: ]]" + text);
-			} else {
-				etc.let.show("hide-preview").show("article-content").$.innerHTML = text;
-			}
-		});
+		if (gp.attr("data-mode") == "edit") {
+			etc.util.ajax.post("/preview", {
+				"content": etc.id("thread-content").value
+			}).then(function(error, text, xhr) {
+				etc.wait.on(this).done();
 
-		return etc.wait.on(this);
-	}
+				if (text.indexOf("Err::") == 0) {
+					alert("[[Error: ]]" + text);
+				} else {
+					etc.let.show("tr-preview").hide("tr-edit").show("article-content").$.innerHTML = text;
+					gp.attr("data-mode", "preview");
+					gp.html("[[Back]]");
+				}
+			});
 
-	function toggleHistoryList() {
-		var ah = etc.id("article-history");
-		
-		if (ah.style.display == "none") {
-			etc.let.show("article-history");
-			etc.let.show("article-history-underlay");
+			return etc.wait.on(this);
 		} else {
-			etc.let.hide("article-history");
-			etc.let.hide("article-history-underlay");
+			return etc.wait.on(this).then(function() {
+				gp.attr("data-mode", "edit");
+				etc.let.hide("tr-preview").show("tr-edit");
+				gp.innerHTML = "[[Preview]]";
+			}).done();
 		}
 	}
 
@@ -224,52 +313,46 @@
 		if (id == -1) {
 			etc.wait.on(this).done();
 			window.location.reload();
-		}
-		else
+		} else {
 			etc.util.ajax.get("/article/{{.Article.ID}}/history/" + id).then(function(e,d,x){
 				etc.wait.on(this).done();
 				var j = JSON.parse(d);
-				etc.id("thread-title").value = (etc.string.unescape(j.Title));
-				etc.id("thread-content").value = (etc.string.unescape(j.Raw));
-				
-				toggleHistoryList();
+				etc.id("thread-title").value = etc.string.unescape(j.Title);
+				etc.id("thread-content").value = etc.string.unescape(j.Raw);
+
+				etc.id("eye-ver-" + etc.id("article-history").attr("data-version")).attr("selected", "false");
+				etc.id("eye-ver-" + id).attr("selected", "selected");
+				etc.id("article-history").attr("data-version", id);
 			});
+		}
 
 		return etc.wait.on(this);
 	}
 
-	function saveDraft() {
+	function alterDraft(action) {
 		{{if .Update}}
 			var d = "draft-edit-{{.ReplyTo}}";
-		{{else}}
-		{{if .Message}}
+		{{else}}{{if .Message}}
 			var d = "draft-message-{{.ReplyTo}}";
 		{{else}}
 			var d = "draft-{{.ReplyTo}}";
-		{{end}}
-		{{end}}
+		{{end}}{{end}}
 
-		etc.util.write(d, etc.id("thread-content").value);
-		etc.id("save-draft").innerHTML = "[[Draft has been saved at]] " + etc.date.now() + " " + d;
-	}
-
-	function clearDraft(p) {
-		{{if .Update}}
-			var d = "draft-edit-{{.ReplyTo}}";
-		{{else}}
-		{{if .Message}}
-			var d = "draft-message-{{.ReplyTo}}";
-		{{else}}
-			var d = "draft-{{.ReplyTo}}";
-		{{end}}
-		{{end}}
-
-		etc.util.storage.remove(d);
-
-		if (p) return;
-
-		alert("[[Clear draft]]: " + d);
-		window.location.reload();
+		var s = false
+		switch (action) {
+		case "save":
+			etc.util.write(d, etc.id("thread-content").value);
+			etc.id("save-draft").innerHTML = "([[Draft has been saved at]] " + etc.date.now() + " " + d + ")";
+			break;
+		case "clear-silent":
+			s = true;
+		case "clear":
+			etc.util.storage.remove(d);
+			if (!s) {
+				alert("[[Clear draft]]: " + d);
+				window.location.reload();
+			}
+		}
 	}
 </script>
 
@@ -279,76 +362,30 @@
 		<span id="title-length"></span><br>
 		<textarea id="thread-title" rows="2"></textarea>
 	</div>
+
 	<div>
-		[[Content]]:
-		<a id="article-history-button" style="display: none" href="javascript:toggleHistoryList()">[[Rollback history]]</a>	
-		<div id="article-history-underlay" class="dropdown-underlay" onclick="toggleHistoryList()"></div>
-		<div id="article-history" class="dropdown" style="margin-top: 0; display: none"></div>
+		<span data-dropdown="tag-list" id="thread-tag" data-subdropdown="true" data-dropdown-onload="searchTagOnload()">
+			[[-- please select a tag --]]
+		</span>
 	</div>
+
+	<div>
+		[[Content]]: <span id="save-draft"></span>
+	</div>
+
 	<div id="tr-edit">
 		<div id="editor-container" unselectable="on">
-			<div id="editor-outter-panel" unselectable="on">
-				<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
-					<span><span id="uploading-sign"></span>
-					<a href="javascript:etc.id('file-uploader-').click()" title="[[Upload image]]">&#xe04b;</a>
-					<a href="javascript:etc.id('file-uploader-hide').click()" title="[[Upload image]], [[Hide in my gallery]]">&#xe054;</a>
-					<a href="javascript:etc.id('file-uploader-imgur').click()" title="[[Upload image to imgur.com]]">&#xe08d;</a>
-					<a href="javascript:insertLink()" title="[[Insert link]]">&#xe09b;</a>
-					<a href="javascript:clearContent()" title="[[Clear content]]">&#xe122;</a>
-					
-					<input id="file-uploader-imgur" type="file" multiple onchange="tryUploadImage('imgur', event)">
-					<input id="file-uploader-hide" type="file" multiple onchange="tryUploadImage('hide', event)">
-					<input id="file-uploader-" type="file" multiple onchange="tryUploadImage('', event)">
-
-					<script type="text/javascript">
-						function clearContent() {
-							if (confirm("是否清空内容")) etc.id("thread-content").value = "";
-						}
-
-						function insertLink() {
-							var url = prompt("URL:", "http://");
-							var text = prompt("Text:", url);
-							var bb = "[url"
-							if (text == url && text != "")
-								bb += "]" + url + "[/url]";
-							else 
-								bb += "=" + url + "]" + text + "[/url]";
-
-							etc.editor.insertText(etc.id("thread-content"), bb);
-						}
-
-						function tryUploadImage(t, e) {
-							Animation.start("uploading-sign");
-							var payload = {
-								"additional_form": { "hide": t == "hide" },
-								"editor": "thread-content", 
-								"type": t
-							};
-
-							etc.editor.uploadImage(etc.file('file-uploader-' + t, e), function(e) {
-								etc.id("file-uploader-" + t).value = "";
-								
-								Animation.stop();
-								if (e) etc.id("uploading-sign").html(e);
-							}, payload);
-						}
-						
-					    window.ondragover = function(e) { 
-					    	e.preventDefault(); 
-					    }
-					    
-					    window.ondrop = function(e) {
-					    	e.preventDefault(); 
-
-					    	Animation.start("uploading-sign");
-					    	etc.editor.uploadImage(etc.file(e.dataTransfer.files), function(e) {
-								Animation.stop();
-								if (e) etc.id("uploading-sign").html(e);
-							}, {"editor": "thread-content"});
-					    }
-					</script>
-					</span>
-				</div>
+			<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
+				<span><span id="uploading-sign"></span>
+				<a href="javascript:etc.id('file-uploader-').click()" title="[[Upload image]]">&#xe04b;</a>
+				<a href="javascript:etc.id('file-uploader-hide').click()" title="[[Upload image]], [[Hide in my gallery]]">&#xe054;</a>
+				<a href="javascript:etc.id('file-uploader-imgur').click()" title="[[Upload image to imgur.com]]">&#xe08d;</a>
+				<a href="javascript:insertLink()" title="[[Insert link]]">&#xe09b;</a>
+				
+				<input id="file-uploader-imgur" type="file" multiple onchange="tryUploadImage('imgur', event)">
+				<input id="file-uploader-hide" type="file" multiple onchange="tryUploadImage('hide', event)">
+				<input id="file-uploader-" type="file" multiple onchange="tryUploadImage('', event)">
+				</span>
 			</div>
 		</div>
 		<div id="content-container">
@@ -356,41 +393,9 @@
         </div>
 	</div>
 
-	<div style="margin-top: 5px">
-		<select id="thread-tag">
-			<option value="">[[-- please select a tag --]]</option>
-			<optgroup label="[[General tags]]">
-			{{range .Tags}}
-				{{if .Visible}}
-				<option value="{{.Name}}">
-					{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
-				</option>
-				{{end}}
-			{{end}}
-			</optgroup>
-			{{if .IsLoggedIn}}
-				<optgroup label="[[Hidden/restricted tags]]">
-				{{range .Tags}}
-					{{if .Visible}}{{else}}
-					<option value="{{.Name}}">
-						{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
-					</option>
-					{{end}}
-				{{end}}
-				</optgroup>
-			{{end}}
-		</select>
+	<div id="tr-preview" style="display: none">
+		<div id="article-content"></div>
 	</div>
-
-	<div style="margin-top: 5px">
-		<button id="post-article" data-onclick="tryPost()">{{if .Update}}[[Edit]]{{else}}[[Post]]{{end}}</button>
-		<button data-onclick="tryPreview()">[[Preview]]</button>
-		<button id="hide-preview" onclick="etc.let.hide('article-content').hide(this)" style="display:none">[[Hide]]</button>
-		<button onclick="clearDraft()">[[Clear draft]]</button>
-		<span id="save-draft"></span>
-	</div>
-
-	<div style="display: none" id="article-content"></div>
 
 	<div>
 		<ul>

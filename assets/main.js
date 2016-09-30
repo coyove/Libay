@@ -216,6 +216,16 @@
         }
     }
 
+    if (typeof Array.prototype.forEach !== 'function') {
+        Array.prototype.forEach= function(action, that /*opt*/) {
+            for (var i= 0, n= this.length; i<n; i++)
+                if (i in this) {
+                    var b = action.call(that, this[i], i, this);
+                    if (b) break;
+                }
+        };
+    }
+
     var _id = function(id) {
         var e = (typeof id === 'string' || id instanceof String) ? document.getElementById(id) : id;
         if (e == null) return {};
@@ -251,95 +261,33 @@
         return e;
     };
 
-    var _getSelected = function(isStart) {
-        var range, sel, container;
-        if (document.selection) {
-            range = document.selection.createRange();
-            range.collapse(isStart);
-            return range.parentElement();
-        } else {
-            sel = window.getSelection();
-            if (sel.getRangeAt) {
-                if (sel.rangeCount > 0) {
-                    range = sel.getRangeAt(0);
-                }
-            } else {
-                // Old WebKit
-                range = document.createRange();
-                range.setStart(sel.anchorNode, sel.anchorOffset);
-                range.setEnd(sel.focusNode, sel.focusOffset);
-
-                // Handle the case when the selection was selected backwards (from the end to the start in the document)
-                if (range.collapsed !== sel.isCollapsed) {
-                    range.setStart(sel.focusNode, sel.focusOffset);
-                    range.setEnd(sel.anchorNode, sel.anchorOffset);
-                }
-           }
-
-            if (range) {
-               container = range[isStart ? "startContainer" : "endContainer"];
-
-               // Check if the container is a text node and return its parent if so
-               return container.nodeType === 3 ? container.parentNode : container;
-            }   
-        }
-    };
-
-    var _insideEditor = function() {
-
-        var __iter = function (elem) {
-            if(elem && elem.getAttribute){
-                if (elem.getAttribute("contenteditable") == "true") return true;
-                if (elem.parentNode) {
-                    return __iter(elem.parentNode);
-                }
-            }
-            return false;
-        }
-
-        return __iter(_getSelected());
-    };
-
-    var _insertHTML = function(html) {
-        // http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div/6691294#6691294
-        var sel, range;
-        if (window.getSelection) {
-            // IE9 and non-IE
-            sel = window.getSelection();
-            if (sel.getRangeAt && sel.rangeCount) {
-                range = sel.getRangeAt(0);
-                range.deleteContents();
-
-                // Range.createContextualFragment() would be useful here but is
-                // only relatively recently standardized and is not supported in
-                // some browsers (IE9, for one)
-                var el = document.createElement("div");
-                el.innerHTML = html;
-                var frag = document.createDocumentFragment(), node, lastNode;
-                while ( (node = el.firstChild) ) {
-                    lastNode = frag.appendChild(node);
-                }
-                range.insertNode(frag);
-
-                // Preserve the selection
-                if (lastNode) {
-                    range = range.cloneRange();
-                    range.setStartAfter(lastNode);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
-            }
-        } else if (document.selection && document.selection.type != "Control") {
-            // IE < 9
-            document.selection.createRange().pasteHTML(html);
-        }
-    };
-
     function _WaitObject() { this.isDone = false; }
-    _WaitObject.prototype._call = function() { this.callback(); this.isDone = false; this.callback = null; }
-    _WaitObject.prototype.done = function() { this.isDone = true; if (this.callback) this._call(); return this; };
-    _WaitObject.prototype.wait = function(callback) { this.callback = callback; if (this.isDone) this._call(); return this; };
+    _WaitObject.prototype._call = function() { 
+        this.callback();
+        if (this.then_callback) this.then_callback();
+
+        this.isDone = false; 
+        this.callback = null; 
+        this.then_callback = null;
+    }
+
+    _WaitObject.prototype.done = function() { 
+        this.isDone = true; 
+        if (this.callback) this._call(); 
+        return this; 
+    }
+
+    _WaitObject.prototype.wait = function(callback) { 
+        this.callback = callback; 
+        if (this.isDone) this._call(); 
+        return this; 
+    }
+
+    _WaitObject.prototype.then = function(then_callback) { 
+        this.then_callback = then_callback; 
+        if (this.isDone) this._call(); 
+        return this; 
+    }
 
     g.etc = {
         "onload": function(func) {
@@ -411,7 +359,11 @@
                 return [];
         },
 
-        "get": function(selector) { return document.querySelectorAll(selector); },
+        "get": function(selector) { 
+            var doms = document.querySelectorAll(selector); 
+            if (doms.forEach) {} else { doms.forEach = Array.prototype.forEach; }
+            return doms;
+        },
 
         "let": {
             "hide": function(id) {

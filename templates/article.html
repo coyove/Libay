@@ -92,7 +92,8 @@
 		{{if .IsLoggedIn}}
 			{{if .IsAuthorSelf}}
 				{{if not .Article.IsMessage}}
-					<li onclick="goEdit()"><span class='fai'>&#xe067;</span> <span>[[Edit]]</span></li>
+					<li onclick='location.href="/edit/article/{{.Article.ID}}"'>
+					<span class='fai'>&#xe067;</span> <span>[[Edit]]</span></li>
 				{{end}}
 
 				<li data-onclick="tryDeleteRestore(true)"><span class='fai'>&#xe123;</span>
@@ -114,10 +115,6 @@
 </div>
 
 <script type="text/javascript">
-	function goEdit() {
-		window.location.href="/edit/article/{{.Article.ID}}?" + window.location.href;
-	}
-
 	function gotoRaw() {
 		var e = etc.id("goto-raw");
 		window.open("/article/{{.Article.ID}}/raw/" + e.attr("data-raw"));
@@ -152,7 +149,8 @@
 				if (hrs <= 24) {
 					return parseInt(hrs) + "[[hour(s) ago]]";
 				} else if (hrs <= 24 * 30) {
-					return parseInt(hrs / 24) + "[[day(s) ago]]";
+					var days = parseInt(hrs / 24);
+					return days + "[[day(s)]]" + parseInt(hrs - days * 24) + "[[hour(s) ago]]";
 				} else {
 					return etc.date.format(d, true);
 				}

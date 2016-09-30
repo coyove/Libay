@@ -77,7 +77,7 @@
 		<span>[[Search it]]</span></li>
 
 		{{if .IsSearch}}
-			<li onclick="goBack()">
+			<li onclick="location.href='../../../page/1'">
 			<span class='fai'>&#xe006;</span>
 			<span>[[Back]]</span></li>
 		{{end}}
@@ -85,20 +85,7 @@
 	<script type="text/javascript">
 		function doSearch() {
 			var pat = encodeURIComponent(etc.id("search-url").value);
-			if (pat == "") goBack();
-			{{if .CurType}}
-				location.href = "/{{.CurType}}/{{.CurTag}}/search/" + pat + "/page/1";
-			{{else}}
-				location.href = "/search/" + pat + "/page/1";
-			{{end}}
-		}
-
-		function goBack() {
-			{{if .CurType}}
-				location.href = "/{{.CurType}}/{{.CurTag}}/page/1";
-			{{else}}
-				location.href = "/page/1";
-			{{end}}
+			location.href = pat == "" ? '../../../page/1' : "../search/" + pat + "/page/1";
 		}
 
 		function focusSearch() {
@@ -106,10 +93,9 @@
 			etc.id("search-url").select();
 		}
 
-		etc.id("search-url").onkeydown = function(e) {
-			e = (e) ? e : window.event;
+		etc.id("search-url").on("keydown", function(e) {
 			if (e.which == 13 || e.keyCode == 13) doSearch();
-		}
+		});
 	</script>
 </div>
 
@@ -172,15 +158,15 @@
 	<div id="announcement">
 		<div id="announcement-content">{{.Announce.Content}}</div>
 		
-		<div style="margin-top: 5px" id="fold-announcement">
+		<div style="margin-top: 5px" id="fold-annc">
 			<a href="/article/{{.Announce.ID}}" class="badge">
 				&sect;{{.Announce.AuthorID}}-{{.Announce.ID}}-{{.Announce.Revision}}
 			</a>
 			<a href="/user/{{.Announce.AuthorID}}" class="badge">{{.Announce.Author}}</a>
-			<a href="javascript:foldAnnouncement()" class="badge">[[Fold]]</a>
+			<a href="javascript:foldAnnc()" class="badge">[[Fold]]</a>
 		</div>
-		<div style="margin-top: 5px; display: none" id="unfold-announcement">
-			<a href="javascript:unfoldAnnouncement()" class="badge">[[Unfold]]</a>
+		<div style="margin-top: 5px; display: none" id="unfold-annc">
+			<a href="javascript:unfoldAnnc()" class="badge">[[Unfold]]</a>
 		</div>
 	</div>
 
@@ -188,21 +174,21 @@
 	(function(){
 		var foldCookie = "fold-{{.Announce.ID}}-{{.Announce.Revision}}";
 
-		window.foldAnnouncement = function() {
+		window.foldAnnc = function() {
 			etc.util.cookie.write(foldCookie, "1", 3600 * 24 * 1000 * 30);
-			hideAnnouncement();
+			hideAnnc();
 		}
 
-		window.unfoldAnnouncement = function() {
+		window.unfoldAnnc = function() {
 			etc.util.cookie.remove(foldCookie);
-			etc.let.show("announcement-content").show("fold-announcement").hide("unfold-announcement");
+			etc.let.show("announcement-content").show("fold-annc").hide("unfold-annc");
 		}
 
-		window.hideAnnouncement = function() {
-			etc.let.hide("announcement-content").hide("fold-announcement").show("unfold-announcement");
+		window.hideAnnc = function() {
+			etc.let.hide("announcement-content").hide("fold-annc").show("unfold-annc");
 		}
 
-		if (etc.util.cookie.read(foldCookie) == "1") hideAnnouncement();
+		if (etc.util.cookie.read(foldCookie) == "1") hideAnnc();
 	}())
 	</script>
 {{end}}
@@ -218,8 +204,8 @@
 	{{range .Articles}}
 	<tr class="darken">
 		<td class="fit header right-align"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
-		<td class="title">
-			<a class="title" href="/article/{{.ID}}">{{.Title}}</a><br>
+		<td class="title reply" onclick="location.href='/article/{{.ID}}'">
+			{{.Title}}<br>
 			<span class="time">
 			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>
@@ -249,14 +235,13 @@
 			<a class="smaller" href="/tag/{{.Tag}}/page/1">{{.Tag}}</a>
 		</td>
 
-		<td class="title">
-			<a href="/article/{{.ID}}" class="title">
+		<td class="title reply" onclick="location.href='/article/{{.ID}}'">
 			{{if .Deleted}}
 				<del>{{.Title}}</del>
 			{{else}}
 				{{.Title}}
 			{{end}}
-			</a><br>
+			<br>
 			<span class="time">
 			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>
