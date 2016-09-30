@@ -10,12 +10,8 @@
 {{end}}{{end}}
 
 <p id="breadcrumbs">
-	<span>
-		<span class='fai'>&#xe12c;</span>
-		<span title="[[Logged-in as]]">
-		{{if .IsLoggedIn}} {{.Username}} {{else}} [[Anonymous]] {{end}}
-		</span>
-	</span>
+	<span><span class='fai'>&#xe12c;</span>
+	<span title="[[Logged-in as]]">{{if .IsLoggedIn}}{{.Username}}{{else}}[[Anonymous]]{{end}}</span></span>
 
 	{{if .Message}}
 		<span>[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
@@ -35,7 +31,8 @@
 		<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
 
 	{{else}}
-		<span><span class='fai'>&#xe067;</span> [[Post new article]]</span>
+		<span><span class='fai'>&#xe067;</span> 
+		<span>[[Post new article]]</span></span>
 
 	{{end}}{{end}}{{end}}
 
@@ -128,8 +125,8 @@
 
         {{if .Update}}
 			var lastDraft = etc.util.read("draft-edit-{{.ReplyTo}}");
-			etc.id("thread-content").value = (lastDraft && lastDraft.length > 1) ? 
-				lastDraft : etc.string.unescape(etc.id("article-raw-content").innerHTML);
+			etc.id("thread-content").value = (lastDraft && lastDraft.length > 1) ? lastDraft : 
+				etc.string.unescape(etc.id("article-raw-content").innerHTML);
 
 			etc.id("thread-title").value = etc.string.unescape("{{.Article.Title}}");
 

@@ -92,20 +92,26 @@ func CheckCSRF(r *http.Request) bool {
 
 func GetUser(vs ...interface{}) (ret AuthUser) {
 	r := vs[0].(*http.Request)
-	uid, _ := r.Cookie("uid")
+	_uid, _ := r.Cookie("uid")
 	invalid := false
 
 	defer func() {
 		if invalid {
-			glog.Warningln("Invalid cookie:", uid.Value, "IP:", GetIP(r))
+			glog.Warningln("Invalid cookie:", _uid.Value, "IP:", GetIP(r))
 		}
 	}()
 
-	if uid == nil {
-		return
+	uid := ""
+	if _uid == nil {
+		uid = r.FormValue("cduc")
+		if uid == "" {
+			return
+		}
+	} else {
+		uid = _uid.Value
 	}
 
-	tmp := strings.Split(uid.Value, ":")
+	tmp := strings.Split(uid, ":")
 	if len(tmp) != 4 {
 		invalid = true
 		return
@@ -217,17 +223,17 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-			&username,
-			&session_id,
-			&nickname,
-			&date,
-			&ip,
-			&signupDate,
-			&status,
-			&group,
-			&comment,
-			&avatar,
-			&usage); err == nil {
+		&username,
+		&session_id,
+		&nickname,
+		&date,
+		&ip,
+		&signupDate,
+		&status,
+		&group,
+		&comment,
+		&avatar,
+		&usage); err == nil {
 
 		ret = AuthUser{
 			ID:            _id,

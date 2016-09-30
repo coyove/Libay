@@ -2,14 +2,18 @@
 
 <p id="breadcrumbs">
 {{if .Message.IsViewingAll}}
-	<span><span class='fai'>&#xe0a5;</span> 所有私信</span>
+	<span><span class='fai'>&#xe0a5;</span> 
+	<span>所有私信</span></span>
+
+{{else}}{{if .Message.ViewingOtherName}}
+	<span><span class='fai'>&#xe12b;</span> 
+	<span>"{{.Message.ViewingOtherName}}" [[Private Message]]</span></span>
+
 {{else}}
-	{{if .Message.ViewingOtherName}}
-		<span><span class='fai'>&#xe12b;</span> "{{.Message.ViewingOtherName}}" [[Private Message]]</span>
-	{{else}}
-		<span><span class='fai'>&#xe149;</span> 系统消息</span>
-	{{end}}
-{{end}}
+	<span><span class='fai'>&#xe149;</span> 
+	<span>系统消息</span></span>
+		
+{{end}}{{end}}
 
 <span data-dropdown="message-function">
 	<span class='fai'>&#xe074;</span>

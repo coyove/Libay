@@ -14,7 +14,8 @@
 		<title>[[User Articles]]</title>
 		<p id="breadcrumbs">
 
-		<span><span class='fai'>&#xe12b;</span> "{{.UA.UserNickName}}" [[Article]]</span>
+		<span><span class='fai'>&#xe12b;</span> 
+		<span>"{{.UA.UserNickName}}" [[Article]]</span></span>
 	{{end}}
 
 	{{if .IsOWA}}
@@ -22,12 +23,15 @@
 		<p id="breadcrumbs">
 
 		{{if .OWA.IsViewingGlobal}}
-			<span><span class='fai'>&#xe0bf;</span> [[Global Articles]]</span>
+			<span><span class='fai'>&#xe0bf;</span> 
+			<span>[[Global Articles]]</span></span>
 		{{else}}
 			{{if .OWA.IsViewingOther}}
-				<span><span class='fai'>&#xe12b;</span> "{{.OWA.ViewingOtherName}}" [[Article]]</span>
+				<span><span class='fai'>&#xe12b;</span> 
+				<span>"{{.OWA.ViewingOtherName}}" [[Article]]</span></span>
 			{{else}}
-				<span><span class='fai'>&#xe12c;</span> [[My Articles]]</span>
+				<span><span class='fai'>&#xe12c;</span> 
+				<span>[[My Articles]]</span></span>
 			{{end}}
 		{{end}}
 
@@ -40,7 +44,8 @@
 		<title>{{.CurTag}}</title>
 		<p id="breadcrumbs">
 
-		<span><span class='fai'>&#xe10f;</span> "{{.CurTag}}" [[Article]]</span>
+		<span><span class='fai'>&#xe10f;</span> 
+		<span>"{{.CurTag}}" [[Article]]</span></span>
 
 		<script type="text/javascript">
 			function postUnderThisTag() {
@@ -54,7 +59,10 @@
 	{{end}}
 {{else}}
 	<title>[[All Articles]]</title>
-	<p id="breadcrumbs"><span class='fai'>&#xe0bf;</span> [[All Articles]]
+	<p id="breadcrumbs">
+	
+	<span><span class='fai'>&#xe0bf;</span> 
+	<span>[[All Articles]]</span></span>
 {{end}}
 
 <span data-dropdown="search-dropdown" data-dropdown-onload="focusSearch()">

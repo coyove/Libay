@@ -1,12 +1,13 @@
 <title>[{{.Article.Tag}}] {{.Article.Title}}</title>
 <p id="breadcrumbs">
 	{{if .Article.IsMessage}}
-		<span><span class='fai'>&#xe0a5;</span> [[Private Message]]</span>
+		<span><span class='fai'>&#xe0a5;</span> 
+		<span>[[Private Message]]</span></span>
 
 		<span><span class='fai' title="[[Last modified date]]">&#xe120;</span>
-		<script type="text/javascript">
+		<span><script type="text/javascript">
 			document.write(etc.date.format({{.Article.ModTimestamp}}, true));
-		</script></span>
+		</script></span></span>
 
 		{{if not .Article.IsMessageSentout}}
 			<span><span class='fai'>&#xe00b;</span>
@@ -63,7 +64,8 @@
 			</span>
 		{{end}}
 
-		<span><span class='fai'>&#xe06e;</span> <span title="[[Views]]">{{.Article.Hits}}</span></span>
+		<span><span class='fai'>&#xe06e;</span> 
+		<span title="[[Views]]">{{.Article.Hits}}</span></span>
 	{{end}}
 
 	{{if .Article.Deleted}}
@@ -100,9 +102,9 @@
 					<span>{{if .Article.Deleted}}[[Restore]]{{else}}[[Delete]]{{end}}</span>
 				</li>
 
-				<li data-onclick="tryDeleteRestore(false)"><span class='fai'>&#xe123;</span>
+				<!-- <li data-onclick="tryDeleteRestore(false)"><span class='fai'>&#xe123;</span>
 					<span>[[Delete article's images]]</span>
-				</li>
+				</li> -->
 			{{end}}
 
 			{{if .CanMakeLocked}}

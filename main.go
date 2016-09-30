@@ -28,6 +28,7 @@ var configPath = flag.String("c", "./config.json", "Load config from file")
 var logPath = flag.String("l", "./log", "Log saving directory for glog, alias of '-log_dir'")
 var debugMode = flag.Bool("d", false, "Debug mode")
 var debugPort = flag.Int("debug-port", 731, "Debug server port")
+var imageServer = flag.Bool("image-server", false, "Run as only an image server")
 var testHash = flag.String("test-hash", "", "Make a test hash")
 
 func main() {
@@ -104,93 +105,77 @@ Disallow: /tag/`))
 	mux.Handle("/thumbs/", http.StripPrefix("/thumbs/", http.FileServer(http.Dir("./thumbs"))))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 
-	router := httprouter.New()
+	if !(*imageServer) {
 
-	glog.Infoln("Installing routers...")
-	_start := time.Now()
+		router := httprouter.New()
 
-	mhd := reflect.TypeOf(models.ModelHandlerDummy)
-	mhv := reflect.ValueOf(models.ModelHandlerDummy)
-	re := regexp.MustCompile(`([A-Z]+)`)
+		glog.Infoln("Installing routers...")
+		_start := time.Now()
 
-	for i := 0; i < mhd.NumMethod(); i++ {
-		methodName := mhd.Method(i).Name
-		hs := strings.Split(methodName, "_")
-		method := hs[0]
-		handler := mhv.MethodByName(methodName).Interface().(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params))
+		mhd := reflect.TypeOf(models.ModelHandlerDummy)
+		mhv := reflect.ValueOf(models.ModelHandlerDummy)
+		re := regexp.MustCompile(`([A-Z]+)`)
 
-		routerPath := re.ReplaceAllStringFunc(strings.Join(hs[1:], "/"),
-			func(s string) string {
-				return ":" + strings.ToLower(s)
-			})
+		for i := 0; i < mhd.NumMethod(); i++ {
+			methodName := mhd.Method(i).Name
+			hs := strings.Split(methodName, "_")
+			method := hs[0]
+			handler := mhv.MethodByName(methodName).Interface().(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params))
 
-		routerPath = "/" + routerPath
-		glog.Infoln(fmt.Sprintf("%5s -> %s", method, routerPath))
+			routerPath := re.ReplaceAllStringFunc(strings.Join(hs[1:], "/"),
+				func(s string) string {
+					return ":" + strings.ToLower(s)
+				})
 
-		router.Handle(method, routerPath,
-			func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-				if conf.GlobalServerConfig.AccessLogging {
-					referer := strings.Replace(r.Referer(), conf.GlobalServerConfig.Host, "", -1)
-					referer = strings.Replace(referer, conf.GlobalServerConfig.DebugHost, "", -1)
+			routerPath = "/" + routerPath
+			glog.Infoln(fmt.Sprintf("%5s -> %s", method, routerPath))
 
-					ip := auth.GetIP(r)
-					url := strings.Split(r.URL.String(), "?")[0]
+			router.Handle(method, routerPath,
+				func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+					if conf.GlobalServerConfig.AccessLogging {
+						referer := strings.Replace(r.Referer(), conf.GlobalServerConfig.Host, "", -1)
+						referer = strings.Replace(referer, conf.GlobalServerConfig.DebugHost, "", -1)
 
-					info := ip
-					if cookie, err := r.Cookie("uid"); err == nil {
-						cookies := strings.Split(cookie.Value, ":")
+						ip := auth.GetIP(r)
+						url := strings.Split(r.URL.String(), "?")[0]
 
-						if len(cookies) >= 2 {
-							info = cookies[0] + "." + cookies[1] + "." + info
+						info := ip
+						if cookie, err := r.Cookie("uid"); err == nil {
+							cookies := strings.Split(cookie.Value, ":")
+
+							if len(cookies) >= 2 {
+								info = cookies[0] + "." + cookies[1] + "." + info
+							} else {
+								info = "0.invalid." + info
+							}
 						} else {
-							info = "0.invalid." + info
+							info = "guest." + info
 						}
-					} else {
-						info = "guest." + info
+
+						glog.Infoln(info, referer, "->", url)
 					}
 
-					glog.Infoln(info, referer, "->", url)
-				}
+					if r.Method == "POST" && !auth.CheckCSRF(r) {
+						w.WriteHeader(503)
+						w.Write([]byte("Err::CSRF::CSRF_Failure"))
+						return
+					}
 
-				if r.Method == "POST" && !auth.CheckCSRF(r) {
-					w.WriteHeader(503)
-					w.Write([]byte("Err::CSRF::CSRF_Failure"))
-					return
-				}
+					handler(w, r, ps)
+				})
+		}
 
-				handler(w, r, ps)
-			})
+		router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			models.ServePage(w, r, "404", nil)
+		})
+
+		mux.Handle("/", router)
+		glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
+
+		// _start = time.Now()
+		s1 := rand.NewSource(time.Now().UnixNano())
+		rand.New(s1)
 	}
-
-	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		models.ServePage(w, r, "404", nil)
-	})
-
-	mux.Handle("/", router)
-	glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
-
-	// _start = time.Now()
-	s1 := rand.NewSource(time.Now().UnixNano())
-	rand.New(s1)
-	// tags := conf.GlobalServerConfig.GetComplexTags()
-
-	// for i := 0; i < 1000; i++ {
-	// 	go func(idx int) {
-	// 		// glog.Infoln(models.Article(nil,
-	// 		// 	auth.DummyUsers[_rand.Intn(5)],
-	// 		// 	0,
-	// 		// 	tags[_rand.Intn(5)].Name,
-	// 		// 	"test"+strconv.Itoa(idx),
-	// 		// 	auth.MakeHash()))
-	// 		glog.Infoln(models.UpdateArticle(
-	// 			auth.DummyUsers[_rand.Intn(5)],
-	// 			_rand.Intn(60)+195,
-	// 			tags[_rand.Intn(5)].Name,
-	// 			"new"+strconv.Itoa(idx),
-	// 			"new"+auth.MakeHash()))
-	// 	}(i)
-	// }
-	// glog.Infoln("Routers installed in", time.Now().Sub(_start).Nanoseconds()/1e6, "ms")
 
 	glog.Infoln("Start image server on", conf.GlobalServerConfig.ImageListen)
 	muxImage := http.NewServeMux()

@@ -2,12 +2,11 @@
 
 <p id="breadcrumbs">
 	<span><span class='fai'>&#xe08d;</span>
-	{{if .IsGlobal}}
+	<span>{{if .IsGlobal}}
 		[[Global Gallery]]
 	{{else}}
 		"{{.UploaderName}}" [[Gallery]]
-	{{end}}
-	</span>
+	{{end}}</span></span>
 
 	<span data-dropdown="gallery-function" data-dropdown-onload="focusSearch()">
 		{{if .IsSearch}}

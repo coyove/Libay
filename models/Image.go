@@ -242,6 +242,25 @@ func getRealPath(url string) (string, int) {
 }
 
 func ServeImage(w http.ResponseWriter, r *http.Request) {
+	url := r.URL.RequestURI()[1:]
+	origin := strings.ToLower(r.Header.Get("origin"))
+
+	if origin == conf.GlobalServerConfig.Host ||
+		origin == conf.GlobalServerConfig.DebugHost {
+		w.Header().Add("Access-Control-Allow-Origin", origin)
+	}
+
+	if url == "upload" {
+		ModelHandlerDummy.POST_upload(w, r, nil)
+		return
+	} else if url == "alter/images" {
+		ModelHandlerDummy.POST_alter_images(w, r, nil)
+		return
+	} else if url == "search/image" {
+		ModelHandlerDummy.POST_search_image(w, r, nil)
+		return
+	}
+
 	write := func(mime string, buf []byte) {
 		w.Header().Add("Content-Type", mime)
 		w.Header().Add("Cache-Control", "public, max-age=7200")
@@ -249,7 +268,6 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		w.Write(buf)
 	}
 
-	url := r.URL.RequestURI()[1:]
 	path, _ := getRealPath(url)
 	if path == "" {
 		Return(w, 404)
@@ -378,31 +396,6 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-func (th ModelHandler) POST_delete_images_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	u := auth.GetUser(r)
-	id, err := strconv.Atoi(ps.ByName("id"))
-
-	if u.ID == 0 || err != nil {
-		Return(w, "Err::Post::Invalid_User")
-		return
-	}
-
-	article := auth.GetArticle(r, auth.DummyUsers[0], id, true)
-	for _, m := range deleteRe.FindAllStringSubmatch(article.Raw, -1) {
-		if len(m) >= 3 {
-			path, iid := getRealPath(m[1] + "." + m[2])
-			if path != "" {
-				if iid == u.ID || conf.GlobalServerConfig.GetPrivilege(u.Group, "DeleteOthers") {
-					auth.Gimage.Remove(path)
-					os.Remove(path)
-				}
-			}
-		}
-	}
-
-	Return(w, "ok")
-}
-
 func (th ModelHandler) POST_search_image(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := r.FormValue("url")
 	if data == "" {
@@ -423,12 +416,9 @@ func (th ModelHandler) POST_search_image(w http.ResponseWriter, r *http.Request,
 	} else {
 		var ts int
 		if err := auth.Gdb.QueryRow(`
-		SELECT 
-			ts 
-		FROM 
-			images 
-		WHERE 
-			uploader = ` + strconv.Itoa(id) + ` AND image = '` + url[len(url)-1] + `'`).
+		SELECT 	ts 
+		FROM 	images 
+		WHERE  	uploader = ` + strconv.Itoa(id) + ` AND image = '` + url[len(url)-1] + `'`).
 			Scan(&ts); err == nil {
 			ts = ts + 1
 			Return(w, fmt.Sprintf("ok::/gallery/%d/page/before=%s_%s", id, auth.HashTS(ts), auth.To60(uint64(ts))))

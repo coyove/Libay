@@ -265,7 +265,12 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) string {
 			new_session_id := MakeHash()
 			userToken := fmt.Sprintf("%d:%s:%s:%s", id, u, new_session_id, MakeHash(u, new_session_id))
 
-			cookie := &http.Cookie{Name: "uid", Value: userToken, HttpOnly: true, Path: "/"}
+			cookie := &http.Cookie{
+				Name:     "uid",
+				Value:    userToken,
+				HttpOnly: true,
+				Path:     "/",
+			}
 			if expire >= 0 {
 				cookie.Expires = exp
 			}

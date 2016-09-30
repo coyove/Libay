@@ -81,16 +81,19 @@ func ServePage(w http.ResponseWriter, r *http.Request, fp string, pl interface{}
 	}
 
 	var title struct {
-		Title      string
-		URL        string
-		CDN        string
-		MainJS     string
-		MainCSS    string
-		CurrentNav string
+		Title       string
+		URL         string
+		CDN         string
+		ImageServer string
+		MainJS      string
+		MainCSS     string
+		CurrentNav  string
 	}
+
 	title.Title = conf.GlobalServerConfig.Title
 	title.URL = conf.GlobalServerConfig.Host
 	title.CDN = conf.GlobalServerConfig.CDNPrefix
+	title.ImageServer = conf.GlobalServerConfig.ImageHost
 	title.MainCSS = conf.GlobalServerConfig.MainCSS
 	title.MainJS = conf.GlobalServerConfig.MainJS
 

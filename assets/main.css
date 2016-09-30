@@ -390,7 +390,7 @@ td.fit, th.fit{
 }
 
 #thread-tag {
-    margin: 4px 0;
+    margin: 2px 0;
     padding: 2px 6px;
     border: solid 1px #aaa;
     display: inline-block;
@@ -478,7 +478,7 @@ a.block.flatten {
 #about {
     text-align: left; 
     margin: auto; 
-    max-width: 500px; 
+    max-width: 660px; 
     width: 100%;
 }
 
@@ -518,7 +518,7 @@ p {
 }
 
 #breadcrumbs > span {
-    margin-right: 4px;
+    margin-right: 2px;
     padding-left: 10px;
     border-left: solid 1px #aaa;
 }
@@ -526,6 +526,10 @@ p {
 #breadcrumbs > span:first-child {
     padding-left: 0;
     border-left: none;
+}
+
+#breadcrumbs > span *:not([class=fai]) {
+    word-spacing: 0;
 }
 
 a.badge {
