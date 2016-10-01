@@ -6,6 +6,7 @@ config.json
 *.rrd
 test.png
 nohup.out
+rsync.sh
 
 # directory
 

@@ -93,7 +93,12 @@
 	<script type="text/javascript">
 		function doSearch() {
 			var pat = encodeURIComponent(etc.id("search-url").value);
-			location.href = pat == "" ? '../../../page/1' : "../search/" + pat + "/page/1";
+			location.href = pat == "" ? 
+			{{if .CurType}}
+				'/{{.CurType}}/{{.CurTag}}/page/1' : "/{{.CurType}}/{{.CurTag}}/search/" + pat + "/page/1";
+			{{else}}
+				'/page/1' : "/search/" + pat + "/page/1";
+			{{end}}
 		}
 
 		function focusSearch() {

@@ -32,7 +32,7 @@
 
 <div id="gallery-function" class="dropdown">
 	<div>
-		<input id="search-url" placeholder="[[Search]]">
+		<input id="search-url" placeholder="[[Search]]" {{if .IsSearch}}value="{{.SearchPattern}}"{{end}}>
 	</div>
 	<ul>
 		<li data-onclick="searchImage()">
@@ -163,6 +163,7 @@
 
 		etc.util.ajax.post("/search/image", { 
 			"url": url,
+			"id": "{{.GalleryUserID}}",
 			"csrf": etc.util.CSRF() 
 		}).then(function(e, text) {
 			etc.wait.on(this).done();

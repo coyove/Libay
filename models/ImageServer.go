@@ -71,6 +71,40 @@ func calcImagePath(fn string, ext string, id int) (string, string, string) {
 	return storePath, finalFilename + ext, url + ext
 }
 
+func reverseCacheDeletion(id string) {
+	if conf.GlobalServerConfig.ReverseCache != "" {
+		url := conf.GlobalServerConfig.ReverseCache + "/reverse/cache/" + id
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("GET", url, nil)
+		req.Header.Add("X-Salt", conf.GlobalServerConfig.Salt)
+		res, err := client.Do(req)
+		if err != nil {
+			res.Body.Close()
+		}
+	}
+}
+
+func getRealPath(url string) (string, int) {
+	imageDots := strings.Split(url, ".")
+	cookie := imageDots[0]
+
+	if len(imageDots) != 2 || len(cookie) < 6 {
+		return "", 0
+	}
+
+	prefix := "./images/"
+	if cookie[:6] == "small-" {
+		cookie = cookie[6:]
+		prefix = "./thumbs/"
+	}
+
+	id := int(auth.From60(cookie) & 4294967295)
+
+	return prefix + strconv.Itoa(id/100) + "/" +
+		strconv.Itoa(id) + "/" + string(cookie[0]) + "/" + cookie[1:] + "." + imageDots[1], id
+}
+
 func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	uid := strconv.Itoa(u.ID)
@@ -213,32 +247,13 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	auth.Gcache.Remove(`\S+-` + uid + `-img(true|false)`)
+	reverseCacheDeletion(uid)
 
 	if r.FormValue("direct") != "direct" {
 		Return(w, payload)
 	} else {
 		http.ServeFile(w, r, "."+payload.Link)
 	}
-}
-
-func getRealPath(url string) (string, int) {
-	imageDots := strings.Split(url, ".")
-	cookie := imageDots[0]
-
-	if len(imageDots) != 2 || len(cookie) < 6 {
-		return "", 0
-	}
-
-	prefix := "./images/"
-	if cookie[:6] == "small-" {
-		cookie = cookie[6:]
-		prefix = "./thumbs/"
-	}
-
-	id := int(auth.From60(cookie) & 4294967295)
-
-	return prefix + strconv.Itoa(id/100) + "/" +
-		strconv.Itoa(id) + "/" + string(cookie[0]) + "/" + cookie[1:] + "." + imageDots[1], id
 }
 
 func ServeImage(w http.ResponseWriter, r *http.Request) {
@@ -258,6 +273,23 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if url == "search/image" {
 		ModelHandlerDummy.POST_search_image(w, r, nil)
+		return
+	} else if url == "cache" {
+		ci := auth.Gimage.GetLowLevelCache()
+		caches := []string{}
+
+		for k, v := range ci {
+			_, sec, hits := auth.Gcache.Info(v)
+
+			if sec < 0 {
+				caches = append(caches, fmt.Sprintf("Hits: %5d, waits purging: %s", hits, k))
+			} else {
+				caches = append(caches, fmt.Sprintf("Hits: %5d, expire in %2ds: %s", hits, sec, k))
+			}
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		Return(w, "<pre>"+strings.Join(caches, "<br>")+"</pre>")
 		return
 	}
 
@@ -406,8 +438,24 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 
 	if id == 0 {
 		auth.Gcache.Remove(`\S+-\d+-img(true|false)`)
+		reverseCacheDeletion("all")
 	} else {
 		auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
+		reverseCacheDeletion(strconv.Itoa(id))
+	}
+}
+
+func (th ModelHandler) GET_reverse_cache_CACHE(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.Header.Get("X-Salt") != conf.GlobalServerConfig.Salt {
+		Return(w, 503)
+		return
+	}
+
+	cache := ps.ByName("cache")
+	if cache == "all" {
+		auth.Gcache.Remove(`\S+-\d+-img(true|false)`)
+	} else {
+		auth.Gcache.Remove(`\S+-` + cache + `-img(true|false)`)
 	}
 }
 
@@ -422,12 +470,12 @@ func (th ModelHandler) POST_search_image(w http.ResponseWriter, r *http.Request,
 	_, id := getRealPath(url[len(url)-1])
 
 	if !auth.LogIP(r) {
-		Return(w, "Err::Router::Frequent_Access")
+		Return(w, "Err::Router::Frequent_Access_"+auth.GetIP(r))
 		return
 	}
 
 	if id == 0 {
-		Return(w, fmt.Sprintf("ok::../search/%s/page/1", data))
+		Return(w, fmt.Sprintf("ok::/gallery/%s/search/%s/page/1", r.FormValue("id"), data))
 	} else {
 		var ts int
 		if err := auth.Gdb.QueryRow(`

@@ -21,12 +21,14 @@ type ServerConfig struct {
 
 	Host        string
 	DebugHost   string
-	ImageHost   string
 	Referer     string
 	Description string
 	Title       string
 	Author      string
 	Email       string
+
+	ImageHost    string
+	ReverseCache string
 
 	MainJS  string
 	MainCSS string
