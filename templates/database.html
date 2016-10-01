@@ -5,16 +5,31 @@
 	function tryDelete() {
 		var ck = (getChecked());
 		if (confirm("是否删除: " + ck)) {
-			etc.util.ajax.post("/database/{{.Table}}/delete", {
-				"ids": ck,
-				"csrf": etc.util.CSRF()
-			}).then( function(e, d, x) {
-				if (d == "ok") {
-					window.location.reload();
-				} else {
-					alert("发生错误");
-				}
-			});
+			if ("{{.Table}}" == "images") {
+				etc.util.ajax.post("/alter/images", { 
+					"ids": getChecked(),
+					"id": "0",
+					"action": "delete",
+					"csrf": etc.util.CSRF() 
+				}).then(function(e, text) {
+					if (text == "ok") {
+						window.location.reload();
+					} else {
+						alert("[[Error: ]]" + text);			
+					}
+				});
+			} else {
+				etc.util.ajax.post("/database/{{.Table}}/delete", {
+					"ids": ck,
+					"csrf": etc.util.CSRF()
+				}).then( function(e, d, x) {
+					if (d == "ok") {
+						window.location.reload();
+					} else {
+						alert("[[Error: ]]" + d);
+					}
+				});
+			}
 		}
 	}
 
@@ -123,6 +138,7 @@
 	<button onclick="_update('newtag')">添加标签</button>
 	<button onclick="tryUpdateTags()">更新标签</button>
 	<button onclick="_update('deldupimg')">删除重复图片记录</button>
+	<button onclick="location.href='/database/images::order by requests desc/page/1'">图片举报</button>
 	</div>
 </div>
 
@@ -138,21 +154,42 @@
 	{{range .TableRows}}
 	<tr>
 	<td><input type="checkbox"></td>
-		{{range .Columns}}
-		<td>
-			{{.}}
-		</td>
+		{{range $i, $e := .Columns}}
+		<td class="col-{{$i}}">{{$e}}</td>
 		{{end}}
 	</tr>
 	{{end}}
 
 	<script type="text/javascript">
-		var elems = document.querySelectorAll(".database td");
-		for (var i in elems){
-			var e = elems[i];
-			if (e.innerHTML && /ts:\d+?/.test(e.innerHTML)) {
-				e.innerHTML = etc.date.format(parseInt(e.innerHTML.replace("ts:", "")) * 1000);
-			}
+		switch ("{{.Table}}") {
+		case "images":
+			etc.get(".database td.col-1").forEach(function(e) {
+				var h = e.innerHTML;
+				e.innerHTML = "<a href='" + window.__image + "/" + h + "' target='_blank'>" + h + "</a>";
+			});
+
+			etc.get("td.col-3").forEach(function(e) {
+				e.innerHTML = etc.date.format(parseInt(e.innerHTML), true);
+			});
+			break;
+		case "articles":
+			etc.get(".database td.col-0").forEach(function(e) {
+				e.innerHTML = "<a href='/article/" + e.innerHTML + "' target='_blank'>" + e.innerHTML + "</a>";
+			});
+
+			etc.get("td.col-17, td.col-16, td.col-12, td.col-3").forEach(function(e) {
+				e.innerHTML = ("...");
+			});
+
+			etc.get("td.col-4, td.col-6").forEach(function(e) {
+				e.innerHTML = etc.date.format(parseInt(e.innerHTML), true);
+			});
+			break;
+		case "users":
+			etc.get("td.col-6").forEach(function(e) {
+				e.innerHTML = ("...");
+			});
+			break;
 		}
 	</script>
 </table>

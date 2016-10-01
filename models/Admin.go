@@ -35,6 +35,7 @@ func (th ModelHandler) GET_database_TABLE_page_PAGE(w http.ResponseWriter, r *ht
 		Table          string
 		Full           string
 		WhereStatement string
+		OrderStatement string
 		CurPage        int
 		PagerLinks     []pager
 		TableRows      []auth.TableRow
@@ -47,11 +48,17 @@ func (th ModelHandler) GET_database_TABLE_page_PAGE(w http.ResponseWriter, r *ht
 	if strings.Contains(payload.Table, ":") {
 		tmp := strings.Split(payload.Table, ":")
 		payload.Table = tmp[0]
+		payload.OrderStatement = tmp[2]
 		payload.WhereStatement = tmp[1]
 	}
 
 	var count int
-	payload.TableColumns, payload.TableRows, count = auth.ReadTableDirect(payload.Table, page, payload.WhereStatement)
+	payload.TableColumns, payload.TableRows, count = auth.ReadTableDirect(
+		payload.Table,
+		page,
+		payload.WhereStatement,
+		payload.OrderStatement,
+	)
 	maxPages := int(count/conf.GlobalServerConfig.ArticlesPerPage) + 1
 
 	for i := page - 5; i <= page+5; i++ {

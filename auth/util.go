@@ -169,16 +169,16 @@ type TableRow struct {
 	ColumnName  []string
 }
 
-func ReadTableDirect(table string, page int, whereStat string) ([]string, []TableRow, int) {
+func ReadTableDirect(table string, page int, whereStat, orderStat string) ([]string, []TableRow, int) {
 	ret := make([]TableRow, 0)
 	columnNames := make([]string, 0)
 
-	if whereStat != "" {
-		whereStat = " WHERE " + whereStat
-	}
-
 	_app := conf.GlobalServerConfig.ArticlesPerPage
 	_start := _app * (page - 1)
+
+	if orderStat == "" {
+		orderStat = " ORDER BY id DESC "
+	}
 
 	var count, rowCount int
 
@@ -197,22 +197,16 @@ func ReadTableDirect(table string, page int, whereStat string) ([]string, []Tabl
 
 	count = len(columnNames)
 
-	if Gdb.QueryRow(`
-        SELECT
-            COUNT(id)
-        FROM `+table+
-		whereStat).Scan(&rowCount) != nil {
+	if Gdb.QueryRow(`SELECT COUNT(id) FROM `+table+` `+whereStat).Scan(&rowCount) != nil {
 		return columnNames, ret, 0
 	}
 
 	rows, err := Gdb.Query(`
-        SELECT
-            *
-        FROM ` + table +
-		whereStat + `
-        ORDER BY id DESC 
+        SELECT * FROM ` + table + ` ` + whereStat + ` ` + orderStat + `
         OFFSET ` + strconv.Itoa(_start) + " LIMIT " + strconv.Itoa(_app))
+
 	if err != nil {
+		glog.Errorln("Database:", err)
 		return columnNames, ret, 0
 	}
 

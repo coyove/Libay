@@ -65,6 +65,11 @@
 
 		<li data-dropdown="copy-function" data-subdropdown="true"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy selected]]</span></li>
+
+		{{else}}
+		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe123;</span>
+		<span>[[Flag for deletion]]</span></li>
+
 		{{end}}
 	</ul>
 </div>
@@ -142,9 +147,10 @@
 			etc.wait.on(this).done();
 
 			if (text == "ok") {
+				if (action == "flag") alert("[[Operation completed]]");
 				window.location.reload();
 			} else {
-				alert("[[Error: ]]" + text);			
+				alert("[[Error: ]]" + text);
 			}
 		});
 

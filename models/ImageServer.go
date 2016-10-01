@@ -309,9 +309,15 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
 	id, err := strconv.Atoi(r.FormValue("id"))
+	action := r.FormValue("action")
 
-	if u.ID == 0 || err != nil || id < 0 {
+	if u.ID == 0 && action != "flag" {
 		Return(w, "Err::Post::Invalid_User")
+		return
+	}
+
+	if err != nil || id < 0 {
+		Return(w, "Err::Post::Invalid_ID")
 		return
 	}
 
@@ -334,7 +340,7 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		tester = "1 = 1"
 	}
 
-	switch r.FormValue("action") {
+	switch action {
 	case "delete":
 		rows, err := auth.Gdb.Query("SELECT path FROM images WHERE " + tester +
 			" AND id IN (" + strings.Join(ids, ",") + ")")
@@ -377,6 +383,15 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		filename := auth.CleanString(r.FormValue("filename"))
 		_, err := auth.Gdb.Exec("UPDATE images SET filename = '" + filename + "' WHERE " + tester +
 			" AND id IN (" + strings.Join(ids, ",") + ")")
+
+		if err != nil {
+			Return(w, "Err:DB::Update_Failure")
+			return
+		}
+
+		Return(w, "ok")
+	case "flag":
+		_, err := auth.Gdb.Exec("UPDATE images SET requests = requests + 1 WHERE id IN (" + strings.Join(ids, ",") + ")")
 
 		if err != nil {
 			Return(w, "Err:DB::Update_Failure")
