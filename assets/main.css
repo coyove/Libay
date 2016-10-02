@@ -187,14 +187,14 @@ td.fit, th.fit{
 #gallery .img-id {
     display: block;
     position: absolute;
-    font-size: 80%;
+    font-size: 12px;
     margin: 2px;
     padding: 0 4px;
-    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=85)";
-    filter: alpha(opacity=85);
-    -moz-opacity: 0.85;
-    -khtml-opacity: 0.85;
-    opacity: 0.85;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";
+    filter: alpha(opacity=90);
+    -moz-opacity: 0.9;
+    -khtml-opacity: 0.9;
+    opacity: 0.9;
     background-color: white;
     border: solid 1px #666;
 }

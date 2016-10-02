@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -346,7 +347,7 @@ func GetMessages(enc string, userID, lookupID int) (ret []Message, nav BackForth
 	return
 }
 
-func GetGallery(enc string, user AuthUser, galleryUserID int, searchPattern string) (ret []Image, nav BackForth) {
+func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (ret []Image, nav BackForth) {
 	ret = make([]Image, 0)
 
 	direction, compare, ts, invalid := ExtractTS(enc)
@@ -356,9 +357,15 @@ func GetGallery(enc string, user AuthUser, galleryUserID int, searchPattern stri
 
 	nav.Set(ts, ts)
 
-	isSelf := user.ID == galleryUserID || conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOthers")
+	isSelf := user.ID == galleryUser.ID || conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOthers")
+	if user.ID == 0 {
+		isSelf = false
+	}
 
-	cacheKey := fmt.Sprintf("%s-%d-img%v%s", enc, galleryUserID, isSelf, searchPattern)
+	visible := isSelf || (user.Group != "" &&
+		regexp.MustCompile(`(^|\s)`+user.Group+`(\s|$)`).MatchString(galleryUser.GalleryVisible))
+
+	cacheKey := fmt.Sprintf("%s-%d-img%v%s", enc, galleryUser.ID, visible, searchPattern)
 	if v, e := Gcache.Get(cacheKey); e {
 		_v := v.([]interface{})
 		return _v[0].([]Image), _v[1].(BackForth)
@@ -369,26 +376,36 @@ func GetGallery(enc string, user AuthUser, galleryUserID int, searchPattern stri
 	}()
 
 	showHidden := " AND hide = false"
-	if isSelf {
+	if visible {
 		showHidden = ""
 	}
 
-	tester := ` AND uploader = ` + itoa(galleryUserID)
-	if galleryUserID == 0 {
+	tester := ` AND uploader = ` + itoa(galleryUser.ID)
+	if galleryUser.ID == 0 {
 		tester = ""
 	}
 
 	searcher := ""
 	if searchPattern != "" {
-		searcher = " AND filename = '" + CleanString(searchPattern) + "'"
+		searcher = " AND filename LIKE '%" + CleanString(searchPattern) + "%'"
 	}
 
 	_start := time.Now()
 	rows, err := Gdb.Query(`
         SELECT
-            id, image, filename, uploader, ts, hits, hide
+            images.id, 
+            images.image, 
+            images.filename, 
+            images.uploader, 
+            images.ts, 
+            images.hits, 
+            images.hide,
+            images.size,
+            COALESCE(users.nickname, 'user' || images.uploader::TEXT)
         FROM
             images
+        LEFT JOIN
+            users ON users.id = images.uploader
         WHERE 
             ts ` + compare + itoa(ts) + tester + showHidden + searcher + `
         ORDER BY
@@ -405,20 +422,22 @@ func GetGallery(enc string, user AuthUser, galleryUserID int, searchPattern stri
 	defer rows.Close()
 
 	for rows.Next() {
-		var id, uploaderID, timestamp, hits int
-		var path, filename string
+		var id, uploaderID, timestamp, hits, size int
+		var path, filename, uploader string
 		var hide bool
 
-		rows.Scan(&id, &path, &filename, &uploaderID, &timestamp, &hits, &hide)
+		rows.Scan(&id, &path, &filename, &uploaderID, &timestamp, &hits, &hide, &size, &uploader)
 		ret = append(ret, Image{
 			id,
 			uploaderID,
+			uploader,
 			conf.GlobalServerConfig.ImageHost + "/" + path,
 			conf.GlobalServerConfig.ImageHost + "/small-" + path,
 			filename,
 			timestamp,
 			hits,
 			hide,
+			size,
 		})
 	}
 

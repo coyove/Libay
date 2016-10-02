@@ -1,6 +1,10 @@
 {
 	"en-us": {},
 	"zh-cn": {
+		"tmp.is a super duper simple imageboard": "tmp.is 一个简单的图片站",
+		"supported formats": "支持格式",
+		"page not found": "无效页面或请求",
+		"go back to": "返回",
 		"note": "注意",
 		"to report any abuse, please contact at": "权利声明请发送至",
 		"select or drag'n drop images to upload": "选择或拖拽图片上传",

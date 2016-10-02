@@ -48,28 +48,31 @@ type Message struct {
 type Image struct {
 	ID         int
 	UploaderID int
+	Uploader   string
 	Path       string
 	ThumbPath  string
 	Filename   string
 	Timestamp  int
 	Hits       int
 	Hide       bool
+	Size       int
 }
 
 type AuthUser struct {
-	ID            int
-	Name          string
-	NickName      string
-	LastLoginDate int
-	SignUpDate    int
-	LastLoginIP   string
-	Status        string
-	Group         string
-	Comment       string
-	Avatar        string
-	AvatarThumb   string
-	ImageUsage    int
-	SessionID     string
+	ID             int
+	Name           string
+	NickName       string
+	LastLoginDate  int
+	SignUpDate     int
+	LastLoginIP    string
+	Status         string
+	Group          string
+	Comment        string
+	Avatar         string
+	AvatarThumb    string
+	ImageUsage     int
+	SessionID      string
+	GalleryVisible string
 }
 
 type SubTag struct {

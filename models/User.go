@@ -34,13 +34,13 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 
 	if err != nil || id <= 0 {
 		if !auth.LogIP(r) {
-			ServePage(w,r, "404", nil)
+			ServePage(w, r, "404", nil)
 			return
 		}
 
 		id = auth.GetIDByNickname(auth.CleanString(ps.ByName("id")))
 		if id <= 0 {
-			ServePage(w,r, "404", nil)
+			ServePage(w, r, "404", nil)
 			return
 		}
 	}
@@ -48,32 +48,39 @@ func (th ModelHandler) GET_user_ID(w http.ResponseWriter, r *http.Request, ps ht
 	payload.User = auth.GetUserByID(id)
 
 	if payload.User.ID == 0 {
-		ServePage(w,r, "404", nil)
+		ServePage(w, r, "404", nil)
 		return
 	}
 	payload.Tags = conf.GlobalServerConfig.GetTags()
-	ServePage(w,r, "user", payload)
+	ServePage(w, r, "user", payload)
 }
 
-func (th ModelHandler) POST_user_update_comment(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (th ModelHandler) POST_user_update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !auth.LogIP(r) {
+		Return(w, "Err::Router::Frequent_Access")
+		return
+	}
+
 	u := auth.GetUser(r)
 	if u.Name == "" {
 		Return(w, "Err::Privil::Invalid_User")
 		return
 	}
 
-	c := r.FormValue("comment")
+	c := r.FormValue("text")
 	if len(c) > 512 {
-		Return(w, "Err::Post::Comment_Too_Long")
+		Return(w, "Err::Post::Text_Too_Long")
 		return
 	}
 
-	comment := auth.Escape(c)
+	column := auth.Escape(r.FormValue("column"))
+	text := auth.Escape(c)
 
-	_, err := auth.Gdb.Exec(`UPDATE user_info SET comment = '` + comment + `' WHERE id = ` + strconv.Itoa(u.ID))
+	_, err := auth.Gdb.Exec(`UPDATE user_info SET ` + column + ` = '` + text + `' WHERE id = ` + strconv.Itoa(u.ID))
 	if err == nil {
 		w.Write([]byte("ok"))
 		auth.Guser.Remove(u.ID)
+		auth.Gcache.Remove(`\S+-` + strconv.Itoa(u.ID) + `-img(true|false)`)
 	} else {
 		glog.Errorln("Database:", err)
 		Return(w, "Err::DB::General_Failure")
@@ -123,6 +130,11 @@ func (th ModelHandler) POST_user_update_password(w http.ResponseWriter, r *http.
 }
 
 func (th ModelHandler) POST_unread_message_ID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !auth.LogIP(r) {
+		Return(w, "Err::Router::Frequent_Access")
+		return
+	}
+
 	u := auth.GetUser(r)
 	if u.Name == "" {
 		Return(w, "Err::Privil::Invalid_User")
@@ -197,7 +209,7 @@ func (th ModelHandler) GET_account(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	payload.UserPrivilege["Cooldown"] = conf.GlobalServerConfig.GetInt(payload.AuthUser.Group, "Cooldown")
-	ServePage(w,r, "account", payload)
+	ServePage(w, r, "account", payload)
 }
 
 // PAGE: Serve new user register page
@@ -206,5 +218,5 @@ func (th ModelHandler) GET_account_register(w http.ResponseWriter, r *http.Reque
 		IsOpen bool
 	}
 	payload.IsOpen = conf.GlobalServerConfig.AllowRegistration
-	ServePage(w,r, "register", payload)
+	ServePage(w, r, "register", payload)
 }

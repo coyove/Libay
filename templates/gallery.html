@@ -1,12 +1,16 @@
 <title>[[Gallery]]</title>
 
 <p id="breadcrumbs">
-	<span><span class='fai'>&#xe08d;</span>
-	<span>{{if .IsGlobal}}
-		[[Global Gallery]]
+	{{if .IsGlobal}}
+		<span><span class='fai'>&#xe08d;</span>
+		<span>[[Global Gallery]]</span></span>
 	{{else}}
-		"{{.UploaderName}}" [[Gallery]]
-	{{end}}</span></span>
+		<span><span class='fai'>&#xe08d;</span>
+		<span>[[Gallery]]</span></span>
+
+		<span><span class='fai'>&#xe12c;</span>
+		<a href="/user/{{.GalleryUserID}}">{{.UploaderName}}</a></span>
+	{{end}}
 
 	<span data-dropdown="gallery-function" data-dropdown-onload="focusSearch()">
 		{{if .IsSearch}}
@@ -217,6 +221,8 @@
 					<a href="{{.Path}}" target="_blank" class="fai">&#xe00b;</a>&nbsp;&nbsp;
 					<span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span>
 					{{if .Hide}}<span class="fai">&#xe137;</span> [[Hide]]{{end}}
+					{{if $.IsGlobal}}<span class="fai">&#xe12c;</span>
+					<a href="/gallery/{{.UploaderID}}/page/1">{{.Uploader}}</a>{{end}}
 				</span>
 				<img onclick="etc.id('img-{{.ID}}').click()" src="{{.ThumbPath}}">
 			</div>

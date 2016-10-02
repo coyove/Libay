@@ -4,11 +4,11 @@
 	<span>{{.TotalTags}}个标签</span></span>
 
 	<span><span class='fai'>&#xe110;</span>
-	<span>最近更新:
+	<span>最近更新:</span></span>
+
 	{{range .HotTags}}
-		<span class='fai'>&#xe10f;</span> <a href="/tag/{{.}}/page/1">{{.}}</a>
-	{{end}}
-	</span></span>
+	<span><span class='fai'>&#xe10f;</span> <a href="/tag/{{.}}/page/1">{{.}}</a></span>
+	{{end}}	
 </p>
 
 <script type="text/javascript">
@@ -38,7 +38,17 @@
 		<th class="fit">描述</th>
 		<th class="fit">公告</th>
 	</tr>
-
+	<tr class="darken">
+		<td class="fit header center"><span class='fai'>&#xe105;</span></td>
+		<td class="fit center">-</td>
+		<td class="tag-name reply" onclick="window.open('/page/1')">[[All Articles]]</td>
+		<td class="fit center">-</td>
+		<td class="fit center">-</td>
+		<td class="fit last">-</td>
+		<td class="fit">-</td>
+		<td class="fit center">-</td>
+	</tr>
+	<tr><td colspan="8"></td></tr>
 	{{range .Tags}}
 		{{if or .Visible $.IsLoggedIn}}
 		<tr class="darken">

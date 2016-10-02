@@ -58,10 +58,11 @@
             return etc.wait.on(this);
         }
 
-        var tryUpdateComment = function(){
+        var tryUpdate = function(col){
 
-            etc.util.ajax.post("/user/update/comment", {
-                "comment": etc.id("user-comment").value,
+            etc.util.ajax.post("/user/update", {
+                "text": etc.id("user-" + col).value,
+                "column": col,
                 "csrf": etc.util.CSRF()
             }).then(function(e, d, x){
                 etc.wait.on(this).done();
@@ -142,8 +143,8 @@
 	                window.location.href = window.location.href.split("?")[1] || "/";
 	            } else {
 	                var m = data.match(/Err::Login::Retry_Opportunities_(\d+)_Hint_(.+)/);
-	                var h = "登入失败: " + data;
-	                if (m[2]) h = "密码提示: " + m[2] + "<br>" + h;
+	                var h = "[[Error: ]]" + data;
+	                if (m[2]) h = "[[Password Hint]]: " + m[2] + "<br>" + h;
 	                
 	                etc.let.show("login-result").$.html(h);
 	            }
@@ -161,6 +162,13 @@
 </script>
 
 {{if .IsLoggedIn}}
+
+<style type="text/css">
+    input.fill {
+        width: 100%; 
+        max-width: 200px;
+    }
+</style>
 
 <table class="_table" style="width: 100%">
     <tr><td class="right-align fit">用户ID:</td><td>{{.ID}}</td></tr>
@@ -194,10 +202,20 @@
 
     <tr><td colspan="2"><hr></td></tr>
 
+    <tr><td class="right-align fit">隐藏可见:</td>
+    <td>
+        <input type="textbox" id="user-g_visible" class="fill" value="{{.GalleryVisible}}"/>
+        <button data-onclick="tryUpdate('g_visible')">更新用户组</button>
+    </td></tr>
+    <tr><td class="right-align fit"></td>
+    <td>对以上用户组(使用空格分隔)显示你的隐藏图片</td></tr>
+
+    <tr><td colspan="2"><hr></td></tr>
+
     <tr><td class="right-align fit">用户备注:</td>
     	<td>
-    		<input type="textbox" id="user-comment" style="width: 100%; max-width: 200px" value="{{.Comment}}"/>
-            <button data-onclick="tryUpdateComment()">更新备注</button>
+    		<input type="textbox" id="user-comment" class="fill" value="{{.Comment}}"/>
+            <button data-onclick="tryUpdate('comment')">更新备注</button>
         </td>
     </tr>
 
@@ -208,21 +226,21 @@
     </td></tr>
 
     <tr><td class="right-align fit">用户头像:</td><td>
-        <input type="file" id="user-avatar" style="width: 100%; max-width: 200px" />
+        <input type="file" id="user-avatar" class="fill"/>
         <button data-onclick="tryUpdateAvatar()">上传图像</button>
     </td></tr>
 
     <tr><td colspan="2"><hr></td></tr>
 
     <tr><td class="right-align fit">旧密码:</td>
-        <td><input type="textbox" id="old-password" style="width: 100%; max-width: 200px"/></td>
+        <td><input type="textbox" id="old-password" class="fill"/></td>
     </tr>
     <tr><td class="right-align fit">新密码:</td>
-        <td><input type="textbox" id="new-password" style="width: 100%; max-width: 200px"/></td>
+        <td><input type="textbox" id="new-password" class="fill"/></td>
     </tr>
     <tr><td class="right-align fit">[[Password Hint]]:</td>
         <td>
-            <input type="textbox" id="new-password-hint" style="width: 100%; max-width: 200px"/>
+            <input type="textbox" id="new-password-hint" class="fill"/>
             <button data-onclick="tryUpdatePassword()">修改密码</button>
         </td>
     </tr>

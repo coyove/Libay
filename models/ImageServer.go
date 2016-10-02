@@ -217,14 +217,15 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		}
 
 		_, err = auth.Gdb.Exec(`
-		INSERT INTO images (image, path, filename, uploader, ts, hide) 
+		INSERT INTO images (image, path, filename, uploader, ts, hide, size) 
 		VALUES (
 			'` + url + `', 
 			'` + path + `', 
 			'` + filename + `',
 			` + uid + `, 
 			` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `,
-			` + strconv.FormatBool(hide == "true") + `
+			` + strconv.FormatBool(hide == "true") + `,
+			` + imageSize + `
 		);
 		UPDATE user_info SET image_usage = image_usage + ` + imageSize + ` WHERE id = ` + uid)
 
@@ -247,6 +248,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	auth.Gcache.Remove(`\S+-` + uid + `-img(true|false)`)
+	auth.Guser.Remove(u.ID)
 	reverseCacheDeletion(uid)
 
 	if r.FormValue("direct") != "direct" {
@@ -355,9 +357,12 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 
 	ids := []string{}
 	for _, v := range strings.Split(r.FormValue("ids"), ",") {
-		_, err := strconv.Atoi(v)
-		if err == nil {
+		if _, err := strconv.Atoi(v); err == nil {
 			ids = append(ids, v)
+			if len(ids) > 1000 {
+				Return(w, "Err::Post::Too_Many_IDs")
+				return
+			}
 		}
 	}
 
@@ -392,7 +397,14 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 			auth.Gimage.Remove("./thumbs/" + path)
 		}
 
-		sql := "DELETE FROM images WHERE " + tester + " AND id IN (" + strings.Join(ids, ",") + ")"
+		jids := strings.Join(ids, ",")
+		sql := `UPDATE user_info SET image_usage = image_usage - sub.size FROM
+		(SELECT 	MAX(uploader) AS id, SUM(size) AS size 
+		FROM 		images 
+		WHERE 		id IN (` + jids + `) 
+		GROUP BY 	uploader) as sub
+		WHERE 		user_info.id = sub.id;
+		DELETE FROM images WHERE ` + tester + " AND id IN (" + jids + ")"
 
 		if _, err := auth.Gdb.Exec(sql); err == nil {
 			Return(w, "ok")
@@ -439,9 +451,11 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 	if id == 0 {
 		auth.Gcache.Remove(`\S+-\d+-img(true|false)`)
 		reverseCacheDeletion("all")
+		auth.Guser.Clear()
 	} else {
 		auth.Gcache.Remove(`\S+-` + strconv.Itoa(id) + `-img(true|false)`)
 		reverseCacheDeletion(strconv.Itoa(id))
+		auth.Guser.Remove(id)
 	}
 }
 
@@ -454,8 +468,11 @@ func (th ModelHandler) GET_reverse_cache_CACHE(w http.ResponseWriter, r *http.Re
 	cache := ps.ByName("cache")
 	if cache == "all" {
 		auth.Gcache.Remove(`\S+-\d+-img(true|false)`)
+		auth.Guser.Clear()
 	} else {
 		auth.Gcache.Remove(`\S+-` + cache + `-img(true|false)`)
+		id, _ := strconv.Atoi(cache)
+		auth.Guser.Remove(id)
 	}
 }
 

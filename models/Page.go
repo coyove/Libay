@@ -297,17 +297,18 @@ func GalleryHandler(search bool, w http.ResponseWriter, r *http.Request, ps http
 		ServePage(w, r, "404", nil)
 		return
 	}
+	galleryUser := auth.GetUserByID(galleryUserID)
 
-	if galleryUserID == 0 && !conf.GlobalServerConfig.GetPrivilege(user.Group, "ViewOthers") {
-		ServePage(w, r, "404", nil)
-		return
-	}
-
-	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUserID, searchPattern)
-	payload.UploaderName = auth.GetUserByID(galleryUserID).NickName
+	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUser, searchPattern)
 	payload.GalleryUserID = galleryUserID
+	payload.UploaderName = galleryUser.NickName
 	payload.IsSelf = galleryUserID == user.ID || (conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") &&
 		conf.GlobalServerConfig.GetPrivilege(user.Group, "DeleteOthers"))
+
+	if user.ID == 0 {
+		payload.IsSelf = false
+	}
+
 	payload.IsGlobal = galleryUserID == 0
 
 	if len(payload.Images) == 0 && page != "1" {

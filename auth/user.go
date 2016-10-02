@@ -194,7 +194,7 @@ func GetIDByNickname(n string) int {
 }
 
 func GetUserByID(id int) (ret AuthUser) {
-	var session_id, nickname, username, ip, status, group, comment, avatar string
+	var session_id, nickname, username, ip, status, group, comment, avatar, galleryVisible string
 	var date, signupDate time.Time
 	var _id, usage int
 
@@ -215,7 +215,8 @@ func GetUserByID(id int) (ret AuthUser) {
                 user_info.group,
                 user_info.comment,
                 user_info.avatar,
-                user_info.image_usage
+                user_info.image_usage,
+                user_info.g_visible
             FROM 
                 users
             INNER JOIN
@@ -223,32 +224,34 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-		&username,
-		&session_id,
-		&nickname,
-		&date,
-		&ip,
-		&signupDate,
-		&status,
-		&group,
-		&comment,
-		&avatar,
-		&usage); err == nil {
+			&username,
+			&session_id,
+			&nickname,
+			&date,
+			&ip,
+			&signupDate,
+			&status,
+			&group,
+			&comment,
+			&avatar,
+			&usage,
+			&galleryVisible); err == nil {
 
 		ret = AuthUser{
-			ID:            _id,
-			Name:          username,
-			NickName:      nickname,
-			LastLoginDate: int(date.Unix()),
-			SignUpDate:    int(signupDate.Unix()),
-			LastLoginIP:   ip,
-			Status:        strings.Trim(status, " "),
-			Group:         strings.Trim(group, " "),
-			Comment:       Unescape(comment),
-			Avatar:        conf.GlobalServerConfig.ImageHost + "/" + avatar,
-			AvatarThumb:   conf.GlobalServerConfig.ImageHost + "/small-" + avatar,
-			ImageUsage:    usage,
-			SessionID:     session_id,
+			ID:             _id,
+			Name:           username,
+			NickName:       nickname,
+			LastLoginDate:  int(date.Unix()),
+			SignUpDate:     int(signupDate.Unix()),
+			LastLoginIP:    ip,
+			Status:         strings.Trim(status, " "),
+			Group:          strings.Trim(group, " "),
+			Comment:        Unescape(comment),
+			Avatar:         conf.GlobalServerConfig.ImageHost + "/" + avatar,
+			AvatarThumb:    conf.GlobalServerConfig.ImageHost + "/small-" + avatar,
+			ImageUsage:     usage,
+			SessionID:      session_id,
+			GalleryVisible: galleryVisible,
 		}
 
 		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)

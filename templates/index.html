@@ -85,16 +85,18 @@
 
 	<table style="margin: 0 auto"><tr>
 	<td style="width: 33%" id="index-image-td">
-		<img id="index-image" src="/assets/images/inazuma.svg">
+		<img id="index-image" src="/assets/images/inazuma.png">
 		<div style="font-size: 80%">
-		Pixiv: <a href="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=53691885" target="_blank">53691885</a>,
-		Vectorized by Coyove
+		Pixiv: 
+		<a href="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=53691885" target="_blank">53691885</a>,
+		<a href="/assets/images/inazuma.png">SVG</a> by Coyove
 		</div>
 	</td>
 	<td>
 		<div id="about">
 			<div>
-				tmp.is a super duper simple image hosting site	
+				[[tmp.is a super duper simple imageboard]]<br>
+				[[Supported formats]]: .jpg .jpeg .png .gif (10M)
 			</div>
 			{{if .IsLoggedIn}}
 				{{if .CanPostImages}}
@@ -157,8 +159,6 @@
 </div>
 
 <script type="text/javascript">
-    etc.id('index-image').src = window.__logoImg;
-
     function setLang(lang) {
     	i18n(lang);
     	window.location.reload();

@@ -38,6 +38,9 @@
     document.write(({{.User.ImageUsage}} / 1024 / 1024).toFixed(2) + " MiB ({{.User.ImageUsage}} 字节)");
     </script>
     </td></tr>
+
+    <tr><td class="right-align fit">隐藏可见:</td><td>{{.User.GalleryVisible}}</td></tr>
+
     <tr><td class="right-align fit">用户备注:</td><td>{{.User.Comment}}</td></tr>
 </table>
 
