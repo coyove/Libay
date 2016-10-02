@@ -37,7 +37,6 @@
     </ul>
 </div>
 
-
 {{else}}
 <title>[[Sign in]]</title>
 <p id="breadcrumbs">
@@ -168,6 +167,11 @@
         width: 100%; 
         max-width: 200px;
     }
+
+    #avatar-image {
+        max-width: 150px; 
+        max-height: 150px;
+    }
 </style>
 
 <table class="_table" style="width: 100%">
@@ -208,7 +212,9 @@
         <button data-onclick="tryUpdate('g_visible')">更新用户组</button>
     </td></tr>
     <tr><td class="right-align fit"></td>
-    <td>对以上用户组(使用空格分隔)显示你的隐藏图片</td></tr>
+    <td style="font-size: 12px">
+        对以上用户组(使用空格分隔)显示你的隐藏图片, 留空则所有人可见
+    </td></tr>
 
     <tr><td colspan="2"><hr></td></tr>
 
@@ -220,9 +226,7 @@
     </tr>
 
     <tr><td></td><td>
-    	<a href="{{.Avatar}}" style="display: block;">
-        	<img id="avatar-image" style="max-width: 150px; max-height: 150px" src="{{.AvatarThumb}}">
-        </a>
+    	<a href="{{.Avatar}}"><img id="avatar-image" src="{{.AvatarThumb}}"></a>
     </td></tr>
 
     <tr><td class="right-align fit">用户头像:</td><td>

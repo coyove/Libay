@@ -279,7 +279,9 @@ CREATE TABLE images (
     hits integer DEFAULT 0 NOT NULL,
     path text DEFAULT ''::text NOT NULL,
     hide boolean DEFAULT false,
-    filename text DEFAULT ''::text
+    filename text DEFAULT ''::text,
+    requests integer DEFAULT 0,
+    size integer DEFAULT 0
 );
 
 
@@ -296,7 +298,8 @@ CREATE TABLE tags (
     restricted text,
     hidden boolean,
     short text,
-    announce_id integer DEFAULT 0
+    announce_id integer DEFAULT 0,
+    children integer DEFAULT 0
 );
 
 
@@ -317,7 +320,6 @@ CREATE TABLE users (
     retry integer DEFAULT 0,
     lock_date timestamp with time zone DEFAULT (now() - '00:30:00'::interval),
     nickname text,
-    public_key_file text,
     last_login_ip text DEFAULT ''::text,
     last_last_login_ip text DEFAULT ''::text,
     password_hint text DEFAULT ''::text
@@ -359,7 +361,8 @@ CREATE TABLE user_info (
     comment text DEFAULT ''::text,
     avatar text DEFAULT 'null'::text,
     image_usage integer DEFAULT 0,
-    unread text DEFAULT ''::text
+    unread text DEFAULT ''::text,
+    g_visible text DEFAULT 'user'::text
 );
 
 
@@ -453,6 +456,13 @@ CREATE INDEX articles_tag_index ON articles USING btree (tag);
 --
 
 CREATE INDEX articles_title_bigm_index ON articles USING gin (title gin_bigm_ops);
+
+
+--
+-- Name: filename_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX filename_index ON images USING gin (filename gin_bigm_ops);
 
 
 --

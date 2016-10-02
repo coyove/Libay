@@ -362,8 +362,12 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 		isSelf = false
 	}
 
-	visible := isSelf || (user.Group != "" &&
+	visible := isSelf || galleryUser.GalleryVisible == "" || (user.Group != "" &&
 		regexp.MustCompile(`(^|\s)`+user.Group+`(\s|$)`).MatchString(galleryUser.GalleryVisible))
+
+	if galleryUser.ID == 0 {
+		visible = isSelf
+	}
 
 	cacheKey := fmt.Sprintf("%s-%d-img%v%s", enc, galleryUser.ID, visible, searchPattern)
 	if v, e := Gcache.Get(cacheKey); e {
