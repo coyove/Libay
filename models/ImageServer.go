@@ -299,15 +299,21 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	write := func(mime string, buf []byte) {
+	write := func(mime string, buf []byte, etag string) {
 		w.Header().Add("Content-Type", mime)
-		w.Header().Add("Cache-Control", "public, max-age=7200")
-		w.Header().Add("Expires", time.Now().Add(2*time.Hour).Format(time.RFC1123))
+		w.Header().Add("Cache-Control", "public, max-age=31536000")
+		w.Header().Add("Expires", time.Now().Add(8760*time.Hour).Format(time.RFC1123))
+		w.Header().Add("ETag", etag)
 		w.Write(buf)
 	}
 
 	path, _ := getRealPath(url)
 	if path == "" {
+		Return(w, 404)
+		return
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		Return(w, 404)
 		return
 	}
@@ -320,9 +326,14 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if r.Header.Get("If-None-Match") != "" {
+		Return(w, 304)
+		return
+	}
+
 	if _image, e := auth.Gimage.Get(path); e {
 		image := _image.([]interface{})
-		write(image[0].(string), image[1].([]byte))
+		write(image[0].(string), image[1].([]byte), image[2].(string))
 		return
 	}
 
@@ -333,6 +344,7 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	etag := fmt.Sprintf("%x", sha1.Sum(buf))[:16]
 	mime := ""
 	if len(buf) > 512 {
 		mime = http.DetectContentType(buf[:512])
@@ -340,8 +352,9 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		mime = http.DetectContentType(buf)
 	}
 
-	write(mime, buf)
-	auth.Gimage.Add(path, []interface{}{mime, buf}, conf.GlobalServerConfig.CacheLifetime)
+	write(mime, buf, etag)
+	auth.Gimage.Add(path, []interface{}{mime, buf, etag},
+		conf.GlobalServerConfig.CacheLifetime)
 }
 
 func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

@@ -28,8 +28,8 @@
 		<span class="nc">[[Inverse Selection]]</span></span>
 
 	{{else}}
-		<span onclick="expandR18()" id="show-r18"><span class='fai'>&#xe11b;</span>
-		<span class="nc">[[Show R18]]</span></span>
+		<span onclick="expandR18()" id="show-r18" data-r18="false"><span class='fai'>&#xe11b;</span>
+		<span class="nc" id="show-r18-label">[[Show R18]]</span></span>
 
 	{{end}}
 
@@ -115,27 +115,35 @@
 	}
 
 	function selectAll() {
-		var checks = etc.get(".simple-check");
-
-		for (var i = 0; i < checks.length; i++) {
-			checks[i].checked = true;
-		}
+		etc.get(".simple-check").forEach(function(e) {
+			e.checked = true;
+			e.parentNode.style.backgroundColor = "#77aa8b";
+		});
 	}
 
 	function invertSelection() {
-		var checks = etc.get(".simple-check");
-
-		for (var i = 0; i < checks.length; i++) {
-			checks[i].checked = !checks[i].checked;
-		}
+		etc.get(".simple-check").forEach(function(e) {
+			e.checked = !e.checked;
+			e.parentNode.style.backgroundColor = e.checked ? "#77aa8b" : "#54638c";
+		});
 	}
 
 	function expandR18() {
-		etc.get(".img-r18").forEach(function(e) {
-			e.className = e.className.replace("img-r18", "");
-		});
-
-		etc.let.hide("show-r18");
+		if (etc.id("show-r18").attr("data-r18") == "false") {
+			etc.get("div[data-r18=true]").forEach(function(e) {
+				e.className = e.className.replace("img-r18", "");
+			});
+			etc.id("show-r18").attr("data-r18", "true");
+			etc.id("show-r18-label").html("[[Hide R18]]");
+			etc.util.cookie.write("r18", "1", 30 * 24 * 36000000);
+		} else {
+			etc.get("div[data-r18=true]").forEach(function(e) {
+				e.className += " img-r18";
+			});
+			etc.id("show-r18").attr("data-r18", "false");
+			etc.id("show-r18-label").html("[[Show R18]]");
+			etc.util.cookie.remove("r18");
+		}
 	}
 
 	function alterImages(action, all) {
@@ -241,14 +249,29 @@
 		color: white !important;
 	}
 
+	.img-container span {
+		display: none;
+	}
+
 	{{if not .IsSelf}}
 	.img-r18 img {
 		display: none;
 	}
 
 	.img-r18 {
-		width: 250px !important;
-		height: 250px !important;
+		width: 150px !important;
+		height: 150px !important;
+	}
+
+	.img-container.img-r18 span {
+		display: block;
+		width: 150px;
+		height: 150px;
+		line-height: 150px;
+		vertical-align: middle;
+		padding: 0;
+		font-size: 42px;
+		color: red;
 	}
 	{{end}}
 </style>
@@ -261,8 +284,9 @@
 					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" onchange="checkChanged({{.ID}})">
 					<label for="img-{{.ID}}">#{{.ID}} - {{.Filename}}</label>
 				</div>
-				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')">
+				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')" data-r18="{{.R18}}">
 					<img src="{{.ThumbPath}}" title="[[Double click to open]]">
+					<span class="fai">&#x0e03d;</span>
 				</div>
 			</div>
 
@@ -285,4 +309,8 @@
 	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
 		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
 		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}"));
+
+	{{if not .IsSelf}}
+	if (etc.util.cookie.read("r18") == "1") expandR18();
+	{{end}}
 </script>

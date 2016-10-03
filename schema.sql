@@ -281,7 +281,8 @@ CREATE TABLE images (
     hide boolean DEFAULT false,
     filename text DEFAULT ''::text,
     requests integer DEFAULT 0,
-    size integer DEFAULT 0
+    size integer DEFAULT 0,
+    r18 boolean DEFAULT false
 );
 
 
