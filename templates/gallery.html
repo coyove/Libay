@@ -22,10 +22,15 @@
 
 	{{if .IsSelf}}
 		<span onclick="selectAll()"><span class='fai'>&#xe072;</span>
-		<span class="nc">[[Select all]]</span></span>
+		<span class="nc">[[Select All]]</span></span>
 
 		<span onclick="invertSelection()"><span class='fai'>&#xe072;</span>
-		<span class="nc">[[Inverse selection]]</span></span>
+		<span class="nc">[[Inverse Selection]]</span></span>
+
+	{{else}}
+		<span onclick="expandR18()" id="show-r18"><span class='fai'>&#xe11b;</span>
+		<span class="nc">[[Show R18]]</span></span>
+
 	{{end}}
 
 	<script type="text/javascript">
@@ -64,8 +69,11 @@
 		<li data-onclick="alterImages('delete', true)"><span class='fai'>&#xe123;</span>
 		<span>[[Delete all in this page]]</span></li>
 
-		<li data-onclick="alterImages('showhide')"><span class='fai'>&#xe06f;</span>
+		<li data-onclick="alterImages('~hide')"><span class='fai'>&#xe06f;</span>
 		<span>[[Show/Hide selected]]</span></li>
+
+		<li data-onclick="alterImages('~r18')"><span class='fai'>&#xe06f;</span>
+		<span>[[Tag/Untag R18]]</span></li>
 
 		<li data-dropdown="copy-function" data-subdropdown="true"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy selected]]</span></li>
@@ -122,6 +130,14 @@
 		}
 	}
 
+	function expandR18() {
+		etc.get(".img-r18").forEach(function(e) {
+			e.className = e.className.replace("img-r18", "");
+		});
+
+		etc.let.hide("show-r18");
+	}
+
 	function alterImages(action, all) {
 		var checks = etc.get(".simple-check");
 		var ids = [];
@@ -141,11 +157,18 @@
 		if (action == "rename" && etc.id("rename-images").value == "")
 			return etc.wait.on(this).done();
 
+		var column = "";
+		if (action.charAt(0) == "~") {
+			column = action.substr(1);
+			action = "invert";
+		}
+
 		etc.util.ajax.post("/alter/images", { 
 			"ids": ids.join(","),
 			"id": "{{.GalleryUserID}}",
 			"filename": etc.id("rename-images").value,
 			"action": action,
+			"column": column,
 			"csrf": etc.util.CSRF() 
 		}).then(function(e, text) {
 			etc.wait.on(this).done();
@@ -202,6 +225,11 @@
 		etc.let.show("copy-code").$.value = code.join("\n");
 	}
 
+	function checkChanged(id) {
+		var c = etc.id("img-" + id);
+		c.parentNode.style.backgroundColor = c.checked ? "#77aa8b" : "#54638c";
+	}
+
 	etc.id("search-url").onkeydown = function(e) {
 		e = (e) ? e : window.event;
 		if (e.which == 13 || e.keyCode == 13) searchImage();
@@ -209,31 +237,45 @@
 </script>
 
 <style type="text/css">
-	.simple-check:checked + label { font-weight: bold; color: green; }
-	a.fai { font-size: 150%; }
+	.simple-check:checked + label:before {
+		color: white !important;
+	}
+
+	{{if not .IsSelf}}
+	.img-r18 img {
+		display: none;
+	}
+
+	.img-r18 {
+		width: 250px !important;
+		height: 250px !important;
+	}
+	{{end}}
 </style>
 
 <div id="gallery">
 	{{range .Images}}
 		<div class="image">
 			<div>
-				<span class="img-id">
-					<a href="{{.Path}}" target="_blank" class="fai">&#xe00b;</a>&nbsp;&nbsp;
-					<span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span>
-					{{if .Hide}}<span class="fai">&#xe137;</span> [[Hide]]{{end}}
-					{{if $.IsGlobal}}<span class="fai">&#xe12c;</span>
-					<a href="/gallery/{{.UploaderID}}/page/1">{{.Uploader}}</a>{{end}}
-				</span>
-				<img onclick="etc.id('img-{{.ID}}').click()" src="{{.ThumbPath}}">
+				<div class="img-id">
+					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" onchange="checkChanged({{.ID}})">
+					<label for="img-{{.ID}}">#{{.ID}} - {{.Filename}}</label>
+				</div>
+				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')">
+					<img src="{{.ThumbPath}}" title="[[Double click to open]]">
+				</div>
 			</div>
 
 			<div class="date">
-				<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}">
-				<label for="img-{{.ID}}">#{{.ID}} - {{.Filename}}
-					<div><script type="text/javascript">
+				<span class="fai">&#xe00b;</span> <a href="{{.Path}}" target="_blank">[[Open]]</a> 
+				<span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span>
+				{{if .Hide}}<span class="fai">&#xe137;</span> [[Hide]]{{end}}
+				{{if .R18}}<span class="fai">&#xe137;</span> [[R18]]{{end}}
+				{{if $.IsGlobal}}<span class="fai">&#xe12c;</span>
+				<a href="/gallery/{{.UploaderID}}/page/1">{{.Uploader}}</a>{{end}}
+				<div><script type="text/javascript">
 					document.write(etc.date.format({{.Timestamp}}));
-					</script></div>
-				</label>
+				</script></div>
 			</div>
 		</div>
 	{{end}}

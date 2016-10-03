@@ -14,33 +14,35 @@
 
 <title>[[User]] -- {{.User.NickName}}</title>
 
-<table class="_table" >
-    <tr>
-        <td colspan="2">
-            <a href="{{.User.Avatar}}"><img src="{{.User.AvatarThumb}}"></a>
-        </td>
-    </tr>
-    <tr><td class="right-align fit">用户:</td><td>{{.User.NickName}} (No.{{.User.ID}})</td></tr>
-    <tr><td class="right-align fit">用户状态:</td><td>{{.User.Status}}</td></tr>
-    <tr><td class="right-align fit">用户组:</td><td>{{.User.Group}}</td></tr>
-    <tr><td class="right-align fit">注册时间:</td><td>
+<div class="_float" style="max-width: 300px">
+    <a href="{{.User.Avatar}}"><img src="{{.User.AvatarThumb}}"></a>
+</div>
+
+<div class="_float">
+    <table class="_table">
+        <tr><td class="right-align fit">[[User]]:</td><td>{{.User.NickName}} (No.{{.User.ID}})</td></tr>
+        <tr><td class="right-align fit">[[User State]]:</td><td>{{.User.Status}}</td></tr>
+        <tr><td class="right-align fit">[[User Group]]:</td><td>{{.User.Group}}</td></tr>
+        <tr><td class="right-align fit">[[Signup Date]]:</td><td>
+            <script type="text/javascript">
+            document.write(etc.date.format({{.User.SignUpDate}} * 1000, true))
+            </script>
+        </td></tr>
+        <tr><td class="right-align fit">[[Last Login]]:</td><td>
+            <script type="text/javascript">
+            document.write(etc.date.format({{.User.LastLoginDate}} * 1000,  true))
+            </script>
+        </td></tr>
+        <tr><td class="right-align fit">[[Disk Size]]:</td><td>
         <script type="text/javascript">
-        document.write(etc.date.format({{.User.SignUpDate}} * 1000, true))
+        document.write(({{.User.ImageUsage}} / 1024 / 1024).toFixed(2) + " MiB ({{.User.ImageUsage}} [[bytes]])");
         </script>
-    </td></tr>
-    <tr><td class="right-align fit">上次登入:</td><td>
-        <script type="text/javascript">
-        document.write(etc.date.format({{.User.LastLoginDate}} * 1000,  true))
-        </script>
-    </td></tr>
-    <tr><td class="right-align fit">上传图片:</td><td>
-    <script type="text/javascript">
-    document.write(({{.User.ImageUsage}} / 1024 / 1024).toFixed(2) + " MiB ({{.User.ImageUsage}} 字节)");
-    </script>
-    </td></tr>
+        </td></tr>
 
-    <tr><td class="right-align fit">隐藏可见:</td><td>{{.User.GalleryVisible}}</td></tr>
+        <tr><td class="right-align fit">[[Expose Hidden]]:</td><td>{{.User.GalleryVisible}}</td></tr>
 
-    <tr><td class="right-align fit">用户备注:</td><td>{{.User.Comment}}</td></tr>
-</table>
+        <tr><td class="right-align fit">[[User Comment]]:</td><td>{{.User.Comment}}</td></tr>
+    </table>
+</div>
 
+<br style="clear: both">

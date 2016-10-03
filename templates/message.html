@@ -113,7 +113,7 @@
 		{{if .Sentout}}<a target="_blank" href="/user/{{.ReceiverID}}">{{.ReceiverName}}</a>{{else}}你{{end}}
 		</td>
 		<td class="title">
-			<span data-dropdown="m{{.ID}}" class="fai">{{if .Sentout}}&#xe126;{{else}}&#xe065;{{end}}</span>
+			<span data-dropdown="m{{.ID}}" data-subdropdown="true" class="fai">{{if .Sentout}}&#xe126;{{else}}&#xe065;{{end}}</span>
 			<div id="m{{.ID}}" class="dropdown">
 				<ul>
 					{{if .Sentout}}

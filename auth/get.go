@@ -404,6 +404,7 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
             images.ts, 
             images.hits, 
             images.hide,
+            images.r18,
             images.size,
             COALESCE(users.nickname, 'user' || images.uploader::TEXT)
         FROM
@@ -428,9 +429,9 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 	for rows.Next() {
 		var id, uploaderID, timestamp, hits, size int
 		var path, filename, uploader string
-		var hide bool
+		var hide, r18 bool
 
-		rows.Scan(&id, &path, &filename, &uploaderID, &timestamp, &hits, &hide, &size, &uploader)
+		rows.Scan(&id, &path, &filename, &uploaderID, &timestamp, &hits, &hide, &r18, &size, &uploader)
 		ret = append(ret, Image{
 			id,
 			uploaderID,
@@ -441,6 +442,7 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 			timestamp,
 			hits,
 			hide,
+			r18,
 			size,
 		})
 	}

@@ -41,7 +41,7 @@
 	<tr class="darken">
 		<td class="fit header center"><span class='fai'>&#xe105;</span></td>
 		<td class="fit center">-</td>
-		<td class="tag-name reply" onclick="window.open('/page/1')">[[All Articles]]</td>
+		<td class="tag-name reply" onclick="location.href='/page/1'">[[All Articles]]</td>
 		<td class="fit center">-</td>
 		<td class="fit center">-</td>
 		<td class="fit last">-</td>
@@ -54,7 +54,7 @@
 		<tr class="darken">
 			<td class="fit header center">{{.ID}}</td>
 			<td class="fit center">{{.Short}}</td>
-			<td class="tag-name reply" onclick="window.open('/tag/{{.Name}}/page/1')">{{.Name}}</td>
+			<td class="tag-name reply" onclick="location.href='/tag/{{.Name}}/page/1'">{{.Name}}</td>
 			<td class="fit center">
 				{{if .Visible}}
 				<span class="fai">&#xe11e;</span>

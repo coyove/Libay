@@ -55,6 +55,7 @@ type Image struct {
 	Timestamp  int
 	Hits       int
 	Hide       bool
+	R18        bool
 	Size       int
 }
 

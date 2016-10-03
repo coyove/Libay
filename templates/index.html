@@ -95,7 +95,7 @@
 	<td>
 		<div id="about">
 			<div>
-				[[tmp.is a super duper simple imageboard]]<br>
+				<h2>[[tmp.is a super duper simple imageboard]]</h2>
 				[[Supported formats]]: .jpg .jpeg .png .gif (10M)
 			</div>
 			{{if .IsLoggedIn}}
@@ -141,6 +141,10 @@
 					<input type="checkbox" class="simple-check" id="hide-image">
 					<label for="hide-image">[[Hide in my gallery]]
 					(<b>[[Note]]</b>: [[Hiding will not prevent anyone accessing it through url]])</label>
+				</div>
+				<div>
+					<input type="checkbox" class="simple-check" id="r18-image">
+					<label for="r18-image">[[Tag as R18]]</label>
 				</div>
 				<div>
 					<input type="checkbox" class="simple-check" id="rename-image">
@@ -218,6 +222,7 @@
     	var uploaded = {
     		"additional_form": {
     			"hide": etc.id("hide-image").checked,
+    			"r18": etc.id("r18-image").checked,
     			"tag": etc.id("rename-image").checked ? etc.id("upload-filename").value : ""
     		},
     		"uploaded_callback": function(thumb, full) {

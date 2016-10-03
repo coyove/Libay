@@ -14,11 +14,11 @@
 	<span title="[[Logged-in as]]">{{if .IsLoggedIn}}{{.Username}}{{else}}[[Anonymous]]{{end}}</span></span>
 
 	{{if .Message}}
-		<span>[[Send Private Message]] <span class='fai'>&#xe12b;</span> 
+		<span><span>[[Send Private Message]]</span> <span class='fai'>&#xe12b;</span> 
 		<a href='/user/{{.ReplyTo}}'>{{.MessageReceiverName}}</a></span>
 
 	{{else}}{{if .Update}}
-		<span>[[Edit]] <span class='fai'>&#xe067;</span>
+		<span><span>[[Edit]]</span> <span class='fai'>&#xe067;</span>
 		<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
 
 		<span data-dropdown="article-history">
@@ -27,7 +27,7 @@
 		</span>
 
 	{{else}}{{if .ReplyTo}}
-		<span>[[Reply]] <span class='fai'>&#xe00b;</span> 
+		<span><span>[[Reply]]</span> <span class='fai'>&#xe00b;</span> 
 		<a href='/article/{{.ReplyTo}}'>{{.ReplyTo}}</a></span>
 
 	{{else}}
@@ -204,7 +204,7 @@
     }
 
   	function clearContent() {
-		if (confirm("是否清空内容")) etc.id("thread-content").value = "";
+		if (confirm("[[Confirm to clear content]]")) etc.id("thread-content").value = "";
 	}
 
 	function insertLink() {
@@ -364,9 +364,10 @@
 		<span data-dropdown="tag-list" id="thread-tag" data-subdropdown="true" data-dropdown-onload="searchTagOnload()">
 			[[-- please select a tag --]]
 		</span>
+		{{if not .IsLoggedIn}}匿名身份只可以选择[a: 匿名]或[r: 回复区]标签{{end}}
 	</div>
 
-	<div>
+	<div style="margin-top: 4px">
 		[[Content]]: <span id="save-draft"></span>
 	</div>
 
@@ -406,7 +407,6 @@
 			</li>
 			<![endif]-->
 
-			<li>匿名身份只可以选择[a: 匿名]或[r: 回复区]标签</li>
 			<li>
 				<a href="/article/870" target="_blank">BBCode语法说明</a>，使用[html][/html]时
 				<select>

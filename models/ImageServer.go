@@ -110,6 +110,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	uid := strconv.Itoa(u.ID)
 	ava := r.FormValue("avatar")
 	hide := r.FormValue("hide")
+	r18 := r.FormValue("r18")
 	tag := auth.CleanString(r.FormValue("tag"))
 
 	if !u.CanPostImages() {
@@ -217,7 +218,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		}
 
 		_, err = auth.Gdb.Exec(`
-		INSERT INTO images (image, path, filename, uploader, ts, hide, size) 
+		INSERT INTO images (image, path, filename, uploader, ts, hide, r18, size) 
 		VALUES (
 			'` + url + `', 
 			'` + path + `', 
@@ -225,6 +226,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 			` + uid + `, 
 			` + strconv.Itoa(int(time.Now().UnixNano()/1e6)) + `,
 			` + strconv.FormatBool(hide == "true") + `,
+			` + strconv.FormatBool(r18 == "true") + `,
 			` + imageSize + `
 		);
 		UPDATE user_info SET image_usage = image_usage + ` + imageSize + ` WHERE id = ` + uid)
@@ -278,7 +280,9 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if url == "cache" {
 		ci := auth.Gimage.GetLowLevelCache()
-		caches := []string{}
+		buf, _ := exec.Command("sh", "-c", "df | awk 'NR==2 {print $5}'").Output()
+
+		caches := []string{"Disk usage: " + string(buf)}
 
 		for k, v := range ci {
 			_, sec, hits := auth.Gcache.Info(v)
@@ -413,8 +417,9 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 			Return(w, "Err:DB::Delete_Failure")
 			return
 		}
-	case "showhide":
-		_, err := auth.Gdb.Exec("UPDATE images SET hide = NOT hide WHERE " + tester +
+	case "invert":
+		col := auth.CleanString(r.FormValue("column"))
+		_, err := auth.Gdb.Exec("UPDATE images SET " + col + " = NOT " + col + " WHERE " + tester +
 			" AND id IN (" + strings.Join(ids, ",") + ")")
 
 		if err != nil {

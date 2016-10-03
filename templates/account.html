@@ -80,7 +80,7 @@
         var tryUpdatePassword = function(){
             var op = etc.id("old-password").value;
             if (op === "") {
-                alert("请先输入旧密码");
+                alert("[[Please enter the old password]]");
                 return etc.wait.on(this).done();
             }
 
@@ -174,81 +174,92 @@
     }
 </style>
 
-<table class="_table" style="width: 100%">
-    <tr><td class="right-align fit">用户ID:</td><td>{{.ID}}</td></tr>
-    <tr><td class="right-align fit">[[Nickname]]:</td><td>{{.NickName}}</td></tr>
-    <tr><td class="right-align fit">[[Username]]:</td><td>{{.Name}}</td></tr>
-    <tr><td class="right-align fit">用户组:</td><td>{{.Group}}</td></tr>
+<div class="_float">
+    <table class="_table">
+        <tr><td class="right-align fit">[[User]] ID:</td><td>{{.ID}}</td></tr>
+        <tr><td class="right-align fit">[[Nickname]]:</td><td>{{.NickName}}</td></tr>
+        <tr><td class="right-align fit">[[Username]]:</td><td>{{.Name}}</td></tr>
+        <tr><td class="right-align fit">[[User Group]]:</td><td>{{.Group}}</td></tr>
+        <tr><td class="right-align fit">[[User State]]:</td><td>{{.Status}}</td></tr>
+        <tr><td class="right-align fit">[[Last Login]]:</td><td>
+            <script type="text/javascript">
+                document.write(etc.date.format({{.LastLoginDate}} * 1000, true))
+            </script> @
+            <a href="http://ipinfo.io/{{.LastLoginIP}}" target="_blank">{{.LastLoginIP}}</a>
+        </td></tr>
+        
+        <tr><td class="right-align fit">[[Signup Date]]:</td><td>
+            <script type="text/javascript">
+                document.write(etc.date.format({{.SignUpDate}} * 1000, true))
+            </script>
+        </td></tr>
 
-    <tr><td class="right-align fit">用户状态:</td><td>{{.Status}}</td></tr>
-    
-    {{range $n, $av := .UserPrivilege}}
-        <tr><td class="right-align fit">{{$n}}:</td><td>{{$av}}</td></tr>
-    {{end}}
-    <tr><td class="right-align fit">上次登入:</td><td>
+        <tr><td class="right-align fit">[[Disk Size]]:</td><td>
         <script type="text/javascript">
-            document.write(etc.date.format({{.LastLoginDate}} * 1000, true))
-        </script> @
-        <a href="http://ipinfo.io/{{.LastLoginIP}}" target="_blank">{{.LastLoginIP}}</a>
-    </td></tr>
-    
-    <tr><td class="right-align fit">注册时间:</td><td>
-        <script type="text/javascript">
-            document.write(etc.date.format({{.SignUpDate}} * 1000, true))
+            document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} [[bytes]])");
         </script>
-    </td></tr>
+        </td></tr>
 
-    <tr><td class="right-align fit">上传图片:</td><td>
-    <script type="text/javascript">
-        document.write(({{.ImageUsage}} / 1048576).toFixed(2) + " MiB ({{.ImageUsage}} 字节)");
-    </script>
-    </td></tr>
+        {{range $n, $av := .UserPrivilege}}
+        <tr>{{if eq $n "Cooldown"}}
+                <td class="right-align fit">[[Cooldown]]:</td>
+                <td>{{if $av}}{{$av}}s{{else}}[[No Limit]]{{end}}</td>
+            {{else}}
+                <td class="right-align fit">{{$n}} [[privil]]:</td>
+                <td>{{if $av}}<span class="fai">&#xe11e;</span>{{else}}<span class="fai">&#xe122;</span>{{end}}</td>
+            {{end}}
+        {{end}}</tr>
+    </table>
+</div>
 
-    <tr><td colspan="2"><hr></td></tr>
-
-    <tr><td class="right-align fit">隐藏可见:</td>
-    <td>
-        <input type="textbox" id="user-g_visible" class="fill" value="{{.GalleryVisible}}"/>
-        <button data-onclick="tryUpdate('g_visible')">更新用户组</button>
-    </td></tr>
-    <tr><td class="right-align fit"></td>
-    <td style="font-size: 12px">
-        对以上用户组(使用空格分隔)显示你的隐藏图片, 留空则所有人可见
-    </td></tr>
-
-    <tr><td colspan="2"><hr></td></tr>
-
-    <tr><td class="right-align fit">用户备注:</td>
-    	<td>
-    		<input type="textbox" id="user-comment" class="fill" value="{{.Comment}}"/>
-            <button data-onclick="tryUpdate('comment')">更新备注</button>
-        </td>
-    </tr>
-
-    <tr><td></td><td>
-    	<a href="{{.Avatar}}"><img id="avatar-image" src="{{.AvatarThumb}}"></a>
-    </td></tr>
-
-    <tr><td class="right-align fit">用户头像:</td><td>
-        <input type="file" id="user-avatar" class="fill"/>
-        <button data-onclick="tryUpdateAvatar()">上传图像</button>
-    </td></tr>
-
-    <tr><td colspan="2"><hr></td></tr>
-
-    <tr><td class="right-align fit">旧密码:</td>
-        <td><input type="textbox" id="old-password" class="fill"/></td>
-    </tr>
-    <tr><td class="right-align fit">新密码:</td>
-        <td><input type="textbox" id="new-password" class="fill"/></td>
-    </tr>
-    <tr><td class="right-align fit">[[Password Hint]]:</td>
+<div class="_float">
+    <table class="_table">
+        <tr><td class="right-align fit">[[Expose Hidden]]:</td>
         <td>
-            <input type="textbox" id="new-password-hint" class="fill"/>
-            <button data-onclick="tryUpdatePassword()">修改密码</button>
-        </td>
-    </tr>
-</table>
+            <input type="textbox" id="user-g_visible" class="fill" value="{{.GalleryVisible}}"/>
+            <button data-onclick="tryUpdate('g_visible')">[[Update Groups]]</button>
+        </td></tr>
+        <tr><td class="right-align fit"></td>
+        <td style="font-size: 12px">
+            [[Expose hidden images to user groups (separated by spaces), blank means everyone]]
+        </td></tr>
+
+        <tr><td colspan="2"></td></tr>
+
+        <tr><td class="right-align fit">[[User Comment]]:</td>
+        	<td>
+        		<input type="textbox" id="user-comment" class="fill" value="{{.Comment}}"/>
+                <button data-onclick="tryUpdate('comment')">[[Update Comment]]</button>
+            </td>
+        </tr>
+
+        <tr><td></td><td>
+        	<a href="{{.Avatar}}"><img id="avatar-image" src="{{.AvatarThumb}}"></a>
+        </td></tr>
+
+        <tr><td class="right-align fit">[[User Avatar]]:</td><td>
+            <input type="file" id="user-avatar" class="fill"/>
+            <button data-onclick="tryUpdateAvatar()">[[Upload Avatar]]</button>
+        </td></tr>
+
+        <tr><td colspan="2"></td></tr>
+
+        <tr><td class="right-align fit">[[Old Password]]:</td>
+            <td><input type="textbox" id="old-password" class="fill"/></td>
+        </tr>
+        <tr><td class="right-align fit">[[New Password]]:</td>
+            <td><input type="textbox" id="new-password" class="fill"/></td>
+        </tr>
+        <tr><td class="right-align fit">[[Password Hint]]:</td>
+            <td>
+                <input type="textbox" id="new-password-hint" class="fill"/>
+                <button data-onclick="tryUpdatePassword()">[[Update Password]]</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<br style="clear: both">
 {{else}}
 
 <table class="_table" style="max-width: 300px;">
