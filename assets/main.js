@@ -726,8 +726,6 @@
                     if (callback) callback("Err::Upload::" + A, file);
                 };
 
-                console.log(file);
-
                 var payload = { "image": file };
                 if (options["additional_form"]) {
                     for (var k in options["additional_form"])

@@ -21,9 +21,8 @@ func NewArticle(r *http.Request, user AuthUser, id int, tag string, title string
 	}
 
 	_title := Escape(title)
-	//_extracted1, _extracted2, _ := ExtractContent(content, user)
 	_content, _preview, errs := BBCodeToHTML(content)
-	//_preview := Escape(_extracted1)
+
 	if len(errs) > 0 {
 		return "Err::Post::BBCode_Error"
 	}
@@ -56,6 +55,10 @@ func NewArticle(r *http.Request, user AuthUser, id int, tag string, title string
 	}
 
 	if _tag == conf.GlobalServerConfig.MessageArea {
+		if conf.GlobalServerConfig.GetPrivilege(user.Group, "ForbidPM") || user.Status == "locked" {
+			return "Err::Post::Cannot_Send_PM"
+		}
+
 		_tag = id + 100000
 		id = 0
 	}

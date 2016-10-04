@@ -6,7 +6,7 @@
 
 <p id="breadcrumbs">    
     <span><span class='fai'>&#xe0bf;</span>
-    <a href="/ua/{{.ID}}/page/1">[[User Articles]]</a></span>
+    <a href="/ua/{{.ID}}/page/1">[[My Articles]]</a></span>
 
     <span><span class='fai'>&#xe04f;</span>
     <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a></span>
@@ -15,7 +15,7 @@
     <a id="message-box-count" href="/message/{{.ID}}/page/1">[[Private Message]]</a></span>
 
     <span><span class='fai'>&#xe08d;</span>
-    <a href="/gallery/{{.ID}}/page/1">[[Gallery]]</a></span>
+    <a href="/gallery/{{.ID}}/page/1">[[My Gallery]]</a></span>
 
     <span><span class='fai'>&#xe069;</span>
     <a data-onclick="tryLogout()">[[Log Out]]</a></span>
@@ -209,6 +209,18 @@
                 <td>{{if $av}}<span class="fai">&#xe11e;</span>{{else}}<span class="fai">&#xe122;</span>{{end}}</td>
             {{end}}
         {{end}}</tr>
+
+        <tr><td class="right-align fit">[[User Index]]:</td>
+        <td>
+        {{if .IndexID}}
+        <a href="/article/{{.IndexID}}">[[Article]] #{{.IndexID}}</a> - 
+        <a data-onclick="tryUpdate('index')">[[Clear Index]]</a>
+        <input type="hidden" id="user-index" value="0"/>
+        {{else}}
+        <span class='fai'>&#xe0bf;</span>
+        <a href="/ua/{{.ID}}/page/1">[[Select from 'My Articles']]</a>
+        {{end}}
+        </td></tr>
     </table>
 </div>
 
@@ -216,22 +228,14 @@
     <table class="_table">
         <tr><td class="right-align fit">[[Expose Hidden]]:</td>
         <td>
-            <input type="textbox" id="user-g_visible" class="fill" value="{{.GalleryVisible}}"/>
+            <input type="text" id="user-g_visible" class="fill" value="{{.GalleryVisible}}"/>
             <button data-onclick="tryUpdate('g_visible')">[[Update Groups]]</button>
         </td></tr>
-        <tr><td class="right-align fit"></td>
-        <td style="font-size: 12px">
+        <tr><td colspan="2" style="font-size: 12px">
             [[Expose hidden images to user groups (separated by spaces), blank means everyone]]
         </td></tr>
 
         <tr><td colspan="2"></td></tr>
-
-        <tr><td class="right-align fit">[[User Comment]]:</td>
-        	<td>
-        		<input type="textbox" id="user-comment" class="fill" value="{{.Comment}}"/>
-                <button data-onclick="tryUpdate('comment')">[[Update Comment]]</button>
-            </td>
-        </tr>
 
         <tr><td></td><td>
         	<a href="{{.Avatar}}"><img id="avatar-image" src="{{.AvatarThumb}}"></a>
@@ -245,14 +249,14 @@
         <tr><td colspan="2"></td></tr>
 
         <tr><td class="right-align fit">[[Old Password]]:</td>
-            <td><input type="textbox" id="old-password" class="fill"/></td>
+            <td><input type="text" id="old-password" class="fill"/></td>
         </tr>
         <tr><td class="right-align fit">[[New Password]]:</td>
-            <td><input type="textbox" id="new-password" class="fill"/></td>
+            <td><input type="text" id="new-password" class="fill"/></td>
         </tr>
         <tr><td class="right-align fit">[[Password Hint]]:</td>
             <td>
-                <input type="textbox" id="new-password-hint" class="fill"/>
+                <input type="text" id="new-password-hint" class="fill"/>
                 <button data-onclick="tryUpdatePassword()">[[Update Password]]</button>
             </td>
         </tr>
@@ -265,7 +269,7 @@
 <table class="_table" style="max-width: 300px;">
     <tr>
         <td class="right-align fit">[[Username]]:</td>
-        <td><input type="textbox" id="simple-username" class="_f" /></td>
+        <td><input type="text" id="simple-username" class="_f" /></td>
     </tr>
     <tr>
         <td class="right-align fit">[[Password]]:</td><td>

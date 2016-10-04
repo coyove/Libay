@@ -52,6 +52,7 @@ type Image struct {
 	Path       string
 	ThumbPath  string
 	Filename   string
+	ShortName  string
 	Timestamp  int
 	Hits       int
 	Hide       bool
@@ -68,12 +69,14 @@ type AuthUser struct {
 	LastLoginIP    string
 	Status         string
 	Group          string
-	Comment        string
 	Avatar         string
 	AvatarThumb    string
 	ImageUsage     int
 	SessionID      string
 	GalleryVisible string
+
+	Index   Article
+	IndexID int
 }
 
 type SubTag struct {

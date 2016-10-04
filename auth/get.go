@@ -391,7 +391,9 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 
 	searcher := ""
 	if searchPattern != "" {
-		searcher = " AND filename LIKE '%" + CleanString(searchPattern) + "%'"
+		for _, word := range strings.Split(searchPattern, " ") {
+			searcher += " AND filename LIKE '%" + word + "%'"
+		}
 	}
 
 	_start := time.Now()
@@ -428,10 +430,15 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 
 	for rows.Next() {
 		var id, uploaderID, timestamp, hits, size int
-		var path, filename, uploader string
+		var path, filename, uploader, shortName string
 		var hide, r18 bool
-
 		rows.Scan(&id, &path, &filename, &uploaderID, &timestamp, &hits, &hide, &r18, &size, &uploader)
+
+		shortName = filename
+		if len(filename) > 16 {
+			shortName = Shorten(filename)
+		}
+
 		ret = append(ret, Image{
 			id,
 			uploaderID,
@@ -439,6 +446,7 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 			conf.GlobalServerConfig.ImageHost + "/" + path,
 			conf.GlobalServerConfig.ImageHost + "/small-" + path,
 			filename,
+			shortName,
 			timestamp,
 			hits,
 			hide,

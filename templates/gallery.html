@@ -4,6 +4,11 @@
 	{{if .IsGlobal}}
 		<span><span class='fai'>&#xe08d;</span>
 		<span>[[Global Gallery]]</span></span>
+
+	{{else}}{{if .IsSelf}}
+		<span><span class='fai'>&#xe08d;</span>
+		<span>[[My Gallery]]</span></span>
+
 	{{else}}
 		<span><span class='fai'>&#xe08d;</span>
 		<span>[[Gallery]]</span></span>
@@ -277,15 +282,17 @@
 </style>
 
 <div id="gallery">
+	<div id="gallery-container">
 	{{range .Images}}
+	<div class="outter-image">
 		<div class="image">
 			<div>
 				<div class="img-id">
 					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" onchange="checkChanged({{.ID}})">
-					<label for="img-{{.ID}}">#{{.ID}} - {{.Filename}}</label>
+					<label for="img-{{.ID}}" title="{{.Filename}}">#{{.ID}} - {{.ShortName}}</label>
 				</div>
 				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')" data-r18="{{.R18}}">
-					<img src="{{.ThumbPath}}" title="[[Double click to open]]">
+					<img class="img-image" src="{{.ThumbPath}}" title="[[Double click to open]]">
 					<span class="fai">&#x0e03d;</span>
 				</div>
 			</div>
@@ -302,7 +309,9 @@
 				</script></div>
 			</div>
 		</div>
+	</div>
 	{{end}}
+	</div>
 </div>
 
 <script type="text/javascript">
@@ -313,4 +322,11 @@
 	{{if not .IsSelf}}
 	if (etc.util.cookie.read("r18") == "1") expandR18();
 	{{end}}
+
+	var width = parseInt(document.getElementsByTagName('body')[0].innerWidth / 5) - 10;
+	if (width > 204) {
+		etc.get(".outter-image").forEach(function(e) {
+			e.style.width = width + "px";
+		});
+	}
 </script>

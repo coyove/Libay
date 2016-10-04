@@ -66,6 +66,8 @@ func calcImagePath(fn string, ext string, id int) (string, string, string) {
 
 	if ext == "" {
 		ext = ".jpg"
+	} else {
+		ext = strings.ToLower(ext)
 	}
 
 	return storePath, finalFilename + ext, url + ext
@@ -111,7 +113,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	ava := r.FormValue("avatar")
 	hide := r.FormValue("hide")
 	r18 := r.FormValue("r18")
-	tag := auth.CleanString(r.FormValue("tag"))
+	tag := auth.CleanString("", r.FormValue("tag"))
 
 	if !u.CanPostImages() {
 		if ava == "true" && u.ID > 0 {
@@ -442,7 +444,7 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 
 		Return(w, "ok")
 	case "rename":
-		filename := auth.CleanString(r.FormValue("filename"))
+		filename := auth.CleanString("", r.FormValue("filename"))
 		_, err := auth.Gdb.Exec("UPDATE images SET filename = '" + filename + "' WHERE " + tester +
 			" AND id IN (" + strings.Join(ids, ",") + ")")
 

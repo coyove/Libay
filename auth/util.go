@@ -41,12 +41,12 @@ func (ss *SStack) Pop() (ret string) {
 
 var Escape = html.EscapeString
 var Unescape = html.UnescapeString
-var Ft = fmt.Sprintf
 var itoa = strconv.Itoa
 
 var tsReg = regexp.MustCompile(`(after|before)=(.+)_(.+)`)
 var titleReg = regexp.MustCompile(`<title.*>([\s\S]+)<\/title>`)
 var cleanReg = regexp.MustCompile(`(\s|\t|\n|\'|\"|\=|\+|\*|\-|\:|\/|\\|\?')`)
+var cleanReg2 = regexp.MustCompile(`(\t|\n|\'|\"|\=|\+|\*|\-|\:|\/|\\|\?')`)
 
 type _time struct {
 }
@@ -61,11 +61,19 @@ func (t *_time) F(tt time.Time) string {
 
 var Time _time
 
-func CleanString(s string) (ret string) {
-	ret = cleanReg.ReplaceAllString(s, "_")
+func CleanString(s ...string) (ret string) {
+	if len(s) == 1 {
+		ret = cleanReg.ReplaceAllString(s[0], "_")
 
-	if len(ret) > 64 {
-		ret = ret[:64]
+		if len(ret) > 64 {
+			ret = ret[:64]
+		}
+	} else {
+		ret = cleanReg2.ReplaceAllString(s[1], "_")
+
+		if len(ret) > 128 {
+			ret = ret[:128]
+		}
 	}
 
 	return
@@ -440,4 +448,19 @@ func GenerateRSS(a []Article) string {
 	xml = append(xml, "</channel></rss>")
 
 	return strings.Join(xml, "")
+}
+
+func Shorten(src string) string {
+	r := []rune(src)
+	ret := []rune{}
+
+	if len(r) <= 16 {
+		return src
+	}
+
+	ret = r[:8]
+	ret = append(ret, '.', '.', '.')
+	ret = append(ret, r[len(r)-5:]...)
+
+	return string(ret)
 }

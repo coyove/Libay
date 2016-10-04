@@ -157,11 +157,26 @@ td.fit, th.fit{
     border-top: dotted 1px grey; 
     border-bottom: dotted 1px grey;
     padding: 4px;
+    text-align: center;
+}
+
+#gallery-container {
+	width: 100%;
+    max-width: 1200px; 
+    margin: 0 auto;
+}
+
+#gallery .outter-image {
+    width: 210px;
+    display: inline-block;
+    text-align: center;
+    margin: 4px;
+    vertical-align: middle;
 }
 
 #gallery div.image {
     padding: 2px;
-    margin: 2px;
+    margin: auto 2px;
     display: inline-block;
     text-align: center;
     border: solid 1px #ccc;
@@ -785,5 +800,10 @@ div#editor textarea {
 
     #index-image-td {
         display: none;
+    }
+
+    #gallery .outter-image {
+        width: 100%;
+        display: block;
     }
 }

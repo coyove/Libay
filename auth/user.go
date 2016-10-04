@@ -194,9 +194,9 @@ func GetIDByNickname(n string) int {
 }
 
 func GetUserByID(id int) (ret AuthUser) {
-	var session_id, nickname, username, ip, status, group, comment, avatar, galleryVisible string
+	var session_id, nickname, username, ip, status, group, avatar, galleryVisible string
 	var date, signupDate time.Time
-	var _id, usage int
+	var _id, usage, index int
 
 	if v, ok := Guser.Get(id); ok {
 		return v.(AuthUser)
@@ -213,7 +213,7 @@ func GetUserByID(id int) (ret AuthUser) {
                     users.signup_date, 
                 user_info.status,
                 user_info.group,
-                user_info.comment,
+                user_info.index,
                 user_info.avatar,
                 user_info.image_usage,
                 user_info.g_visible
@@ -224,18 +224,18 @@ func GetUserByID(id int) (ret AuthUser) {
             WHERE 
                 users.id = `+strconv.Itoa(id)).
 		Scan(&_id,
-			&username,
-			&session_id,
-			&nickname,
-			&date,
-			&ip,
-			&signupDate,
-			&status,
-			&group,
-			&comment,
-			&avatar,
-			&usage,
-			&galleryVisible); err == nil {
+		&username,
+		&session_id,
+		&nickname,
+		&date,
+		&ip,
+		&signupDate,
+		&status,
+		&group,
+		&index,
+		&avatar,
+		&usage,
+		&galleryVisible); err == nil {
 
 		ret = AuthUser{
 			ID:             _id,
@@ -246,12 +246,16 @@ func GetUserByID(id int) (ret AuthUser) {
 			LastLoginIP:    ip,
 			Status:         strings.Trim(status, " "),
 			Group:          strings.Trim(group, " "),
-			Comment:        Unescape(comment),
 			Avatar:         conf.GlobalServerConfig.ImageHost + "/" + avatar,
 			AvatarThumb:    conf.GlobalServerConfig.ImageHost + "/small-" + avatar,
 			ImageUsage:     usage,
 			SessionID:      session_id,
 			GalleryVisible: galleryVisible,
+			IndexID:        index,
+		}
+
+		if index != 0 {
+			ret.Index = GetArticle(nil, ret, index, false)
 		}
 
 		Guser.Add(_id, ret, conf.GlobalServerConfig.CacheLifetime)

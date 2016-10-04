@@ -15,7 +15,7 @@
 <title>[[User]] -- {{.User.NickName}}</title>
 
 <div class="_float" style="max-width: 300px">
-    <a href="{{.User.Avatar}}"><img src="{{.User.AvatarThumb}}"></a>
+    <a href="{{.User.Avatar}}"><img src="{{.User.AvatarThumb}}" style="max-height: 200px; max-width: 200px;"></a>
 </div>
 
 <div class="_float">
@@ -40,9 +40,15 @@
         </td></tr>
 
         <tr><td class="right-align fit">[[Expose Hidden]]:</td><td>{{.User.GalleryVisible}}</td></tr>
-
-        <tr><td class="right-align fit">[[User Comment]]:</td><td>{{.User.Comment}}</td></tr>
     </table>
 </div>
+
+<hr style="clear: both">
+
+{{if .User.Index.Content}}
+<div id="article-content">{{.User.Index.Content}}</div>
+{{else}}
+暂无用户页
+{{end}}
 
 <br style="clear: both">

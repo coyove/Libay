@@ -102,9 +102,9 @@
 					<span>{{if .Article.Deleted}}[[Restore]]{{else}}[[Delete]]{{end}}</span>
 				</li>
 
-				<!-- <li data-onclick="tryDeleteRestore(false)"><span class='fai'>&#xe123;</span>
-					<span>[[Delete article's images]]</span>
-				</li> -->
+				<li data-onclick="setUserIndex()"><span class='fai'>&#xe089;</span>
+					<span>[[Make as my index]]</span>
+				</li>
 			{{end}}
 
 			{{if .CanMakeLocked}}
@@ -243,6 +243,24 @@
 		});
 
 		return etc.wait.on(this);
+	}
+
+	function setUserIndex() {
+		etc.util.ajax.post("/user/update", {
+            "text": "{{.Article.ID}}",
+            "column": "index",
+            "csrf": etc.util.CSRF()
+        }).then(function(e, d, x){
+            etc.wait.on(this).done();
+
+            if (d == "ok") {
+                location.href = "/user/{{.Article.AuthorID}}";
+            } else {
+                alert("[[Error: ]]" + d);
+            }
+        });
+
+        return etc.wait.on(this);
 	}
 
 	function tryUnread() {

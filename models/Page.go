@@ -284,7 +284,7 @@ func GalleryHandler(search bool, w http.ResponseWriter, r *http.Request, ps http
 	payload.IsSearch = search
 
 	if search {
-		payload.SearchPattern = auth.CleanString(searchPattern)
+		payload.SearchPattern = auth.CleanString("", searchPattern)
 		payload.IndexPage = "/gallery/" + filter + "/search/" + searchPattern + "/page/1"
 		payload.LastPage = "/gallery/" + filter + "/search/" + searchPattern + "/page/last"
 	} else {
@@ -299,7 +299,7 @@ func GalleryHandler(search bool, w http.ResponseWriter, r *http.Request, ps http
 	}
 	galleryUser := auth.GetUserByID(galleryUserID)
 
-	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUser, searchPattern)
+	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUser, payload.SearchPattern)
 	payload.GalleryUserID = galleryUserID
 	payload.UploaderName = galleryUser.NickName
 	payload.IsSelf = galleryUserID == user.ID || (conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") &&
