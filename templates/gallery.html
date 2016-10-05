@@ -65,7 +65,7 @@
 			<input id="rename-images" placeholder="[[Rename selected]]">
 		</div>
 	<ul>
-		<li data-onclick="alterImages('rename')"><span class='fai'>&#xe0c3;</span>
+		<li data-onclick="alterImages('rename')" id="go-rename"><span class='fai'>&#xe0c3;</span>
 		<span>[[Rename selected]]</span></li>
 
 		<li data-onclick="alterImages('delete')"><span class='fai'>&#xe123;</span>
@@ -80,14 +80,14 @@
 		<li data-onclick="alterImages('~r18')"><span class='fai'>&#xe06f;</span>
 		<span>[[Tag/Untag R18]]</span></li>
 
-		<li data-dropdown="copy-function" data-subdropdown="true"><span class='fai'>&#xe04a;</span>
-		<span>[[Copy selected]]</span></li>
-
 		{{else}}
 		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe123;</span>
 		<span>[[Flag for deletion]]</span></li>
 
 		{{end}}
+
+		<li data-dropdown="copy-function" data-subdropdown="true"><span class='fai'>&#xe04a;</span>
+		<span>[[Copy selected]]</span></li>
 	</ul>
 </div>
 
@@ -107,12 +107,22 @@
 	</ul>
 </div>
 
-<textarea id="copy-code" style="display: none" class="image-code" rows="10"></textarea>
+<div id="copy-code-div" style="display: none">
+<textarea id="copy-code" class="image-code" rows="10"></textarea>
+<button onclick="copyCode()"><span class='fai'>&#xe04a;</span></button>
+<button onclick="etc.let.hide('copy-code-div')"><span class='fai'>&#xe122;</span></button>
+</div>
 
 <script type="text/javascript">
 	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},
 		"{{.IndexPage}}", "{{.LastPage}}", "{{.Nav.PrevPage}}", "{{.Nav.NextPage}}",
 		"{{.Nav.LastWeekPage}}", "{{.Nav.LastMonthPage}}", "{{.Nav.LastYearPage}}", "{{.Nav.LastDayPage}}"));
+
+	function copyCode() {
+		etc.id('copy-code').focus();
+		etc.id('copy-code').select();
+		document.execCommand('copy');
+	}
 
 	function focusSearch() {
 		etc.id("search-url").focus();
@@ -221,24 +231,25 @@
 	}
 
 	function copyImageCode(type) {
-		var checks = etc.get(".simple-check");
 		var code = [];
 		if (type == "data") code.push("[gallery]");
 
-		for (var i = 0; i < checks.length; i++) {
-			if (checks[i].checked) {
-				var full = checks[i].getAttribute("data-full");
+		etc.get(".simple-check").forEach(function(e) {
+			if (e.checked) {
+				var full = e.getAttribute("data-full");
+				var title = e.getAttribute("data-title");
 
 				switch (type) {
 					case "url": code.push(full); break;
 					case "bbcode": code.push("[img]" + full + "[/img]"); break;
-					case "data": code.push("[img=data]" + full + "[/img]"); break;
+					case "data": code.push(title + " [img=data]" + full + "[/img]"); break;
 					case "md": code.push("![](" + full + ")"); break;
 				}
 			}
-		}
+		});
 
-		etc.let.show("copy-code").$.value = code.join("\n");
+		etc.let.show("copy-code-div");
+		etc.id("copy-code").value = code.join("\n");
 	}
 
 	function checkChanged(id) {
@@ -246,10 +257,13 @@
 		c.parentNode.style.backgroundColor = c.checked ? "#77aa8b" : "#54638c";
 	}
 
-	etc.id("search-url").onkeydown = function(e) {
-		e = (e) ? e : window.event;
+	etc.id("search-url").on("keydown", function(e) {
 		if (e.which == 13 || e.keyCode == 13) searchImage();
-	}
+	});
+
+	etc.id("rename-images").on("keydown", function(e) {
+		if (e.which == 13 || e.keyCode == 13) etc.id("go-rename").click();
+	});
 </script>
 
 <style type="text/css">
@@ -301,10 +315,10 @@
 	}
 	.img-container[data-r18=true] {
 		background: #fff;
-		background: repeating-linear-gradient(45deg, #faa, #faa 10px, #fff 10px, #fff 20px) !important;
-		background: -webkit-repeating-linear-gradient(45deg, #faa, #faa 10px, #fff 10px, #fff 20px) !important;
-		background: -o-repeating-linear-gradient(45deg, #faa, #faa 10px, #fff 10px, #fff 20px) !important;
-		background: -moz-repeating-linear-gradient(45deg, #faa, #faa 10px, #fff 10px, #fff 20px) !important;
+		background: repeating-linear-gradient(45deg, #f66, #f66 10px, #fff 10px, #fff 20px) !important;
+		background: -webkit-repeating-linear-gradient(45deg, #f66, #f66 10px, #fff 10px, #fff 20px) !important;
+		background: -o-repeating-linear-gradient(45deg, #f66, #f66 10px, #fff 10px, #fff 20px) !important;
+		background: -moz-repeating-linear-gradient(45deg, #f66, #f66 10px, #fff 10px, #fff 20px) !important;
 	}
 	{{end}}
 </style>
@@ -317,10 +331,10 @@
 			<div>
 				<div class="img-id">
 					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" data-title="{{.Filename}}" onchange="checkChanged({{.ID}})">
-					<label for="img-{{.ID}}" title="{{.Filename}}">#{{.ID}} - {{.ShortName}}</label>
+					<label for="img-{{.ID}}">#{{.ID}} - {{.ShortName}}</label>
 				</div>
 				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')" data-r18="{{.R18}}" data-hide="{{.Hide}}">
-					<img class="img-image" src="{{.ThumbPath}}" title="[[Double click to open]]" data-hide="{{.Hide}}" data-r18="{{.R18}}">
+					<img class="img-image" src="{{.ThumbPath}}" title="[[Double click to open]] {{.Filename}}" data-hide="{{.Hide}}" data-r18="{{.R18}}">
 					<span class="fai">&#x0e03d;</span>
 				</div>
 			</div>
@@ -334,7 +348,7 @@
 				{{end}}
 
 				{{if .R18}}
-				<span><span class="fai">&#xe137;</span> [[R18]]</span>
+				<span style="color: #f66"><span class="fai">&#xe137;</span> [[R18]]</span>
 				{{end}}
 
 				{{if $.IsGlobal}}
@@ -343,7 +357,7 @@
 				{{end}}
 
 				<div><script type="text/javascript">
-					document.write(etc.date.format({{.Timestamp}}));
+					document.write(etc.date.format({{.Timestamp}}, true));
 				</script></div>
 			</div>
 		</div>

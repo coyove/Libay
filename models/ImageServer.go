@@ -451,6 +451,7 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		Return(w, "ok")
 	case "rename":
 		filename := auth.CleanString("", r.FormValue("filename"))
+		// Note here we don't escape filename, escaping is done at auth.GetGallery()
 		_, err := auth.Gdb.Exec("UPDATE images SET filename = '" + filename + "' WHERE " + tester +
 			" AND id IN (" + strings.Join(ids, ",") + ")")
 
