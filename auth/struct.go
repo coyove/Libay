@@ -91,10 +91,12 @@ type BackForth struct {
 	NextPage string
 	PrevPage string
 
+	LastDayPage   string
 	LastWeekPage  string
 	LastMonthPage string
 	LastYearPage  string
 
+	NextDayPage   string
 	NextWeekPage  string
 	NextMonthPage string
 	NextYearPage  string
@@ -117,10 +119,12 @@ func (bf *BackForth) Set(prev, next int) {
 	bf.PrevPage = make2(prev)
 	bf.NextPage = make1(next)
 
+	bf.LastDayPage = make1(prev - 3600000*24)
 	bf.LastWeekPage = make1(prev - 3600000*24*7)
 	bf.LastMonthPage = make1(prev - 3600000*24*30)
 	bf.LastYearPage = make1(prev - 3600000*24*365)
 
+	bf.NextDayPage = make2(prev + 3600000*24)
 	bf.NextWeekPage = make2(prev + 3600000*24*7)
 	bf.NextMonthPage = make2(prev + 3600000*24*30)
 	bf.NextYearPage = make2(prev + 3600000*24*365)

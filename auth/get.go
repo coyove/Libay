@@ -362,7 +362,7 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
 		isSelf = false
 	}
 
-	visible := isSelf || galleryUser.GalleryVisible == "" || (user.Group != "" &&
+	visible := isSelf || galleryUser.GalleryVisible == "all" || (user.Group != "" &&
 		regexp.MustCompile(`(^|\s)`+user.Group+`(\s|$)`).MatchString(galleryUser.GalleryVisible))
 
 	if galleryUser.ID == 0 {

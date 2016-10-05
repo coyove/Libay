@@ -197,14 +197,20 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	if _, err := os.Stat("./thumbs/" + path); os.IsNotExist(err) {
-		if err := auth.ResizeImage(hashBuf, "./thumbs/"+path,
-			250, 250, auth.RICompressionLevel.DefaultCompression); err != nil {
-			glog.Errorln("Generating thumbnail failed: "+path, err)
+		better := conf.GlobalServerConfig.GetPrivilege(u.Group, "ImageMagick")
 
-			cmd := exec.Command("sh", "-c", "convert ./images/"+path+" -thumbnail '250x250>' ./thumbs/"+path)
+		var err error = nil
+		if !better {
+			err = auth.ResizeImage(hashBuf, "./thumbs/"+path, 250, 250,
+				auth.RICompressionLevel.DefaultCompression)
+		}
+
+		if better || err != nil {
+			cmd := exec.Command("sh", "-c", "convert ./images/"+path+" -quality 90 -thumbnail '250x250>' ./thumbs/"+path)
 			err = cmd.Start()
 
 			if err != nil {
+				glog.Errorln("Generating thumbnail failed: "+path, err)
 				Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
 				return
 			}

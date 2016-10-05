@@ -293,6 +293,7 @@ func LoadConfig(f string, db *sql.DB) {
 		os.Exit(1)
 	}
 
+	GlobalServerConfig = ServerConfig{}
 	err = json.Unmarshal(_conf, &GlobalServerConfig)
 	if err != nil {
 		glog.Fatalln("Invalid config file, exiting...", err)

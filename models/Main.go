@@ -118,6 +118,14 @@ func ServePage(w http.ResponseWriter, r *http.Request, fp string, pl interface{}
 		case "owa":
 			title.CurrentNav = "nv-owa"
 		}
+	case "gallery":
+		gs := pl.(GalleryStruct)
+
+		if gs.IsAuthor {
+			title.CurrentNav = "nv-my-gallery"
+		} else {
+			title.CurrentNav = "nv-gallery"
+		}
 	default:
 		title.CurrentNav = "nv-" + fp
 	}

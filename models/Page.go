@@ -81,6 +81,7 @@ type GalleryStruct struct {
 	SearchPattern string
 
 	IsSelf   bool
+	IsAuthor bool
 	IsGlobal bool
 }
 
@@ -297,16 +298,23 @@ func GalleryHandler(search bool, w http.ResponseWriter, r *http.Request, ps http
 		ServePage(w, r, "404", nil)
 		return
 	}
+
 	galleryUser := auth.GetUserByID(galleryUserID)
+	if galleryUserID != 0 && galleryUserID != galleryUser.ID {
+		ServePage(w, r, "404", nil)
+		return
+	}
 
 	payload.Images, payload.Nav = auth.GetGallery(page, user, galleryUser, payload.SearchPattern)
 	payload.GalleryUserID = galleryUserID
 	payload.UploaderName = galleryUser.NickName
 	payload.IsSelf = galleryUserID == user.ID || (conf.GlobalServerConfig.GetPrivilege(user.Group, "EditOthers") &&
 		conf.GlobalServerConfig.GetPrivilege(user.Group, "DeleteOthers"))
+	payload.IsAuthor = galleryUserID == user.ID
 
 	if user.ID == 0 {
 		payload.IsSelf = false
+		payload.IsAuthor = false
 	}
 
 	payload.IsGlobal = galleryUserID == 0

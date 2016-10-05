@@ -175,7 +175,6 @@ td.fit, th.fit{
 }
 
 #gallery div.image {
-    padding: 2px;
     margin: auto 2px;
     display: inline-block;
     text-align: center;
@@ -183,7 +182,6 @@ td.fit, th.fit{
 }
 
 #gallery div.date {
-    margin: -2px;
     padding: 4px;
     background: #eee;
     font-size: 12px;
@@ -194,14 +192,30 @@ td.fit, th.fit{
     color: #888;
 }
 
+#gallery div.date {
+    word-spacing: 2px;
+}
+
+#gallery div.date > span {
+    word-spacing: 0;
+    border-left: solid 1px #aaa;
+    padding-left: 6px;
+}
+
+#gallery div.date > span:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
 #gallery div.image img {
     max-width: 200px;
     max-height: 200px;
+    display: block;
+    margin: 0 auto;
 }
 
 #gallery .img-id {
     font-size: 12px;
-    margin: -2px -2px 2px -2px;
     padding: 2px 4px;
     background: #54638c;
     color: white;

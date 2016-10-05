@@ -30,6 +30,7 @@
         <li id="nv-new-article" class="link"><a href="/new/article/0">[[Post]]</a></li>
         <li id="nv-console" class="link"><a href="/account" id="nv-console-a">[[Console]]</a></li>
         <li id="nv-user" class="link hide"><a>[[User]]</a></li>
+        <li id="nv-my-gallery" class="link hide"><a>[[My Gallery]]</a></li>
         <li id="nv-owa" class="link hide"><a>[[Iceberg]]</a></li>
         <li id="nv-message" class="link hide"><a>[[Private Message]]</a></li>
         <li id="nv-register" class="link hide"><a>[[Sign Up]]</a></li>
@@ -93,7 +94,7 @@
 
         function buildPager(IsIndexPage, IsLastPage, 
             IndexPage, LastPage, PrevPage, NextPage, 
-            LastWeekPage, LastMonthPage, LastYearPage) {
+            LastWeekPage, LastMonthPage, LastYearPage, LastDayPage) {
             var html = ['<table class="pager"><tr>'];
 
             if (IsIndexPage)
@@ -107,7 +108,12 @@
                 html.push('<td class="nc"><b>[[Last]]</b></td>');
             else {
                 html.push('<td class="c n next"><a href="' + NextPage + '">[[Next]]</a></td>');
-                html.push('<td class="c n l t"><a href="' + LastWeekPage + '">[[Week]]</a></td>');
+                if (LastDayPage) {
+                    html.push('<td class="c n l t"><a href="' + LastDayPage + '">[[Day]]</a></td>');
+                    html.push('<td class="c n l"><a href="' + LastWeekPage + '">[[Week]]</a></td>');
+                } else {
+                    html.push('<td class="c n l t"><a href="' + LastWeekPage + '">[[Week]]</a></td>');
+                }
                 html.push('<td class="c n l"><a href="' + LastMonthPage + '">[[Month]]</a></td>');
                 if (LastYearPage)
                     html.push('<td class="c l"><a href="' + LastYearPage + '">[[Year]]</a></td>');

@@ -227,11 +227,14 @@
 			"type": t
 		};
 
-		etc.editor.uploadImage(etc.file('file-uploader-' + t, e), function(e) {
-			etc.id("file-uploader-" + t).value = "";
-			
-			Animation.stop();
-			if (e) etc.id("uploading-sign").html(e);
+		etc.editor.uploadImage(etc.file('file-uploader-' + t, e), function(e, file) {
+			if (e) {
+				alert(file.name + ": " + e);
+			} else {
+				etc.id("file-uploader-" + t).value = "";
+				Animation.stop();
+			}
+
 		}, payload);
 	}
 

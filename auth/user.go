@@ -199,7 +199,11 @@ func GetUserByID(id int) (ret AuthUser) {
 	var _id, usage, index int
 
 	if v, ok := Guser.Get(id); ok {
-		return v.(AuthUser)
+		ret = v.(AuthUser)
+		if ret.IndexID != 0 {
+			ret.Index = GetArticle(nil, ret, ret.IndexID, false)
+		}
+		return
 	}
 
 	if err := Gdb.QueryRow(`

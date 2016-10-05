@@ -6,7 +6,7 @@
 
 <p id="breadcrumbs">    
     <span><span class='fai'>&#xe0bf;</span>
-    <a href="/ua/{{.ID}}/page/1">[[My Articles]]</a></span>
+    <a href="/ua/{{.ID}}/page/1">[[Visible Articles]]</a></span>
 
     <span><span class='fai'>&#xe04f;</span>
     <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a></span>
@@ -218,7 +218,7 @@
         <input type="hidden" id="user-index" value="0"/>
         {{else}}
         <span class='fai'>&#xe0bf;</span>
-        <a href="/ua/{{.ID}}/page/1">[[Select from 'My Articles']]</a>
+        <a href="/owa/{{.ID}}/page/1">[[Select from 'Iceberg']]</a>
         {{end}}
         </td></tr>
     </table>
@@ -232,7 +232,7 @@
             <button data-onclick="tryUpdate('g_visible')">[[Update Groups]]</button>
         </td></tr>
         <tr><td colspan="2" style="font-size: 12px">
-            [[Expose hidden images to user groups (separated by spaces), blank means everyone]]
+            [[Expose hidden images to user groups (separated by spaces), 'all' means everyone]]
         </td></tr>
 
         <tr><td colspan="2"></td></tr>
