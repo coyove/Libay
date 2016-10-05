@@ -203,7 +203,7 @@
 		etc.let.show(this.value);
 	}
 
-	etc.id("upload-filename").onchange = function(e) {
+	etc.id("upload-filename").onkeyup = function(e) {
 		etc.id("rename-image").checked = etc.id("upload-filename").value != "";
 	}
 

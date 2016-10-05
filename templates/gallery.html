@@ -152,19 +152,21 @@
 	}
 
 	function alterImages(action, all) {
-		var checks = etc.get(".simple-check");
 		var ids = [];
+		var titles = [];
 
-		for (var i = 0; i < checks.length; i++) {
-			if (checks[i].checked || all) {
-				ids.push(checks[i].getAttribute("data-id"));
+		etc.get(".simple-check").forEach(function(e) {
+			if (e.checked || all) {
+				var id = e.getAttribute("data-id");
+				ids.push(id);
+				titles.push(id + " -- " + e.getAttribute("data-title"));
 			}
-		}
+		});
 
 		if (ids.length == 0) 
 			return etc.wait.on(this).done();
 
-		if (action == "delete" && !confirm("[[Confirm to delete]]: " + ids.join(","))) 
+		if (action == "delete" && !confirm("[[Confirm to delete]]: \n" + titles.join("\n"))) 
 			return etc.wait.on(this).done();
 
 		if (action == "rename" && etc.id("rename-images").value == "")
@@ -261,19 +263,19 @@
 
 	{{if not .IsSelf}}
 	.img-r18 img {
-		display: none;
+		display: none !important;
 	}
 
 	.img-r18 {
-		width: 150px !important;
-		height: 150px !important;
+		width: 200x !important;
+		height: 200px !important;
 	}
 
 	.img-container.img-r18 span {
 		display: block;
-		width: 150px;
-		height: 150px;
-		line-height: 150px;
+		width: 200px;
+		height: 200px;
+		line-height: 200px;
 		vertical-align: middle;
 		padding: 0;
 		font-size: 42px;
@@ -314,7 +316,7 @@
 		<div class="image">
 			<div>
 				<div class="img-id">
-					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" onchange="checkChanged({{.ID}})">
+					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" data-title="{{.Filename}}" onchange="checkChanged({{.ID}})">
 					<label for="img-{{.ID}}" title="{{.Filename}}">#{{.ID}} - {{.ShortName}}</label>
 				</div>
 				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')" data-r18="{{.R18}}" data-hide="{{.Hide}}">

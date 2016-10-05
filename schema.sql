@@ -359,11 +359,10 @@ CREATE TABLE user_info (
     username text,
     status character(8) DEFAULT 'ok'::text,
     "group" character(16) DEFAULT 'user'::bpchar,
-    comment text DEFAULT ''::text,
     avatar text DEFAULT 'null'::text,
     image_usage integer DEFAULT 0,
-    unread text DEFAULT ''::text,
-    g_visible text DEFAULT 'user'::text
+    g_visible text DEFAULT 'user'::text,
+    index integer DEFAULT 0
 );
 
 
