@@ -16,14 +16,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
-
-var deleteRe = regexp.MustCompile(`(?i)https:\/\/img\.tmp\.is\/(\S+?)\.(jpg|jpeg|png|gif)`)
 
 var uploadDeamon struct {
 	sync.Mutex
@@ -49,7 +46,7 @@ func UploadDeamon() {
 		}
 
 		uploadDeamon.Unlock()
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Minute)
 	}
 }
 
@@ -125,7 +122,6 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	uploadDeamon.Lock()
-	uploadDeamon.Map[u.ID]++
 
 	if uploadDeamon.MapThreshold[u.ID] == 0 {
 		uploadDeamon.MapThreshold[u.ID] = conf.GlobalServerConfig.ImagePointsThreshold
@@ -133,10 +129,13 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 	if uploadDeamon.Map[u.ID] > uploadDeamon.MapThreshold[u.ID] && u.Group != "admin" {
 		uploadDeamon.MapThreshold[u.ID] = 1
-		Return(w, `{"Error": true, "R": "Over_Quota"}`)
+		Return(w, fmt.Sprintf(`{"Error": true, "R": "Over_Quota_Wait_%dmin"}`,
+			uploadDeamon.Map[u.ID]/conf.GlobalServerConfig.ImagePointsDecline))
 		uploadDeamon.Unlock()
 
 		return
+	} else {
+		uploadDeamon.Map[u.ID]++
 	}
 
 	uploadDeamon.Unlock()

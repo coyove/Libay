@@ -55,7 +55,7 @@ func NewArticle(r *http.Request, user AuthUser, id int, tag string, title string
 	}
 
 	if _tag == conf.GlobalServerConfig.MessageArea {
-		if conf.GlobalServerConfig.GetPrivilege(user.Group, "ForbidPM") || user.Status == "locked" {
+		if user.Status == "locked" {
 			return "Err::Post::Cannot_Send_PM"
 		}
 

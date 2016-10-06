@@ -738,17 +738,17 @@
                     'Authorization': 'Client-ID c37fc05199a05b7'
                 }).then(function(e, rt, x) {
                     if (e) {
-                        onError("AJAX");
+                        onError("Network");
                     } else {
                         try {
                             var D = options["type"] == "imgur" ? JSON.parse(rt).data : JSON.parse(rt);
                         } catch (E) {
-                            onError(rt == "Err::CSRF::CSRF_Failure" ? rt : "JSON");
+                            onError(rt == "Err::CSRF::CSRF_Failure" ? "CSRF_Failure" : "Invalid_JSON");
                             return;
                         }
 
                         if (D.Error || D.error) {
-                            onError("Server_Failure_" + D.R);
+                            onError(D.R);
                         } else {
                             var _link = (D.Link || D.link).replace("http://", "https://");
                             var _thumb = (D.Thumbnail || D.link).replace("http://", "https://");
