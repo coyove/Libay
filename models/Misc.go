@@ -117,3 +117,7 @@ func (th ModelHandler) GET_get_captcha_CAPTCHA(w http.ResponseWriter, r *http.Re
 	captcha.WriteImage(w, ps.ByName("captcha"), 200, 50)
 	// captcha.WriteImage(w, cid, 200, 50)
 }
+
+func (th ModelHandler) GET_get_keywords(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	Return(w, auth.GetImageKeywords())
+}

@@ -61,6 +61,27 @@ COMMENT ON EXTENSION zhparser IS 'a parser for full-text search of Chinese';
 SET search_path = public, pg_catalog;
 
 --
+-- Name: filename_changed(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION filename_changed() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+insert into image_keywords select unnest(regexp_split_to_array(lower(NEW.filename), E'\\s+'));
+
+return NEW;
+
+end
+
+$$;
+
+
+ALTER FUNCTION public.filename_changed() OWNER TO postgres;
+
+--
 -- Name: new_article(text, integer, text, text, text, bigint, bigint, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -268,6 +289,19 @@ CREATE SEQUENCE image_id_seq
 ALTER TABLE image_id_seq OWNER TO postgres;
 
 --
+-- Name: image_keywords; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE image_keywords (
+    keyword text NOT NULL,
+    ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000),
+    children integer DEFAULT 0
+);
+
+
+ALTER TABLE image_keywords OWNER TO postgres;
+
+--
 -- Name: images; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -392,6 +426,14 @@ ALTER TABLE ONLY history
 
 
 --
+-- Name: image_keywords_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY image_keywords
+    ADD CONSTRAINT image_keywords_pkey PRIMARY KEY (keyword);
+
+
+--
 -- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -498,6 +540,25 @@ CREATE INDEX users_nickname_index ON users USING btree (nickname);
 --
 
 CREATE INDEX users_username_index ON users USING btree (username);
+
+
+--
+-- Name: image_keywords_ignore_duplicate_keywords; Type: RULE; Schema: public; Owner: postgres
+--
+
+CREATE RULE image_keywords_ignore_duplicate_keywords AS
+    ON INSERT TO image_keywords
+   WHERE (EXISTS ( SELECT 1
+           FROM image_keywords image_keywords_1
+          WHERE (image_keywords_1.keyword = new.keyword))) DO INSTEAD  UPDATE image_keywords SET children = (image_keywords.children + 1)
+  WHERE (image_keywords.keyword = new.keyword);
+
+
+--
+-- Name: filename_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER filename_trigger AFTER UPDATE OF filename ON images FOR EACH ROW EXECUTE PROCEDURE filename_changed();
 
 
 --

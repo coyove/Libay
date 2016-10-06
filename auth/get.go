@@ -16,62 +16,80 @@ import (
 	"time"
 )
 
-var articleCounter struct {
+var Counter struct {
 	sync.RWMutex
 	articles map[int]int
 	images   map[string]int
+
+	Keywords map[string]int
 }
 
-func IncrArticleCounter(id int) {
-	articleCounter.Lock()
-	articleCounter.articles[id]++
-	articleCounter.Unlock()
+func IncrCounter(id int) {
+	Counter.Lock()
+	Counter.articles[id]++
+	Counter.Unlock()
 }
 
 func IncrImageCounter(img string) {
-	articleCounter.Lock()
-	articleCounter.images[img]++
-	articleCounter.Unlock()
+	Counter.Lock()
+	Counter.images[img]++
+	Counter.Unlock()
+}
+
+func GetImageKeywords() map[string]int {
+	Counter.RLock()
+	defer Counter.RUnlock()
+
+	return Counter.Keywords
 }
 
 func ArticleCounter() {
-	ticker := time.NewTicker(5 * time.Minute)
-	articleCounter.articles = make(map[int]int)
-	articleCounter.images = make(map[string]int)
+	Counter.articles = make(map[int]int)
+	Counter.images = make(map[string]int)
+	Counter.Keywords = make(map[string]int)
 
-	defer ticker.Stop()
 	for {
-		select {
-		case <-ticker.C:
-			articleCounter.Lock()
-			var query string = ""
-			for id, c := range articleCounter.articles {
-				query += "UPDATE articles SET hits = hits + " + itoa(c) + " WHERE id = " + itoa(id) + ";"
-				delete(articleCounter.articles, id)
-			}
+		Counter.Lock()
+		var query string = ""
+		for id, c := range Counter.articles {
+			query += "UPDATE articles SET hits = hits + " + itoa(c) + " WHERE id = " + itoa(id) + ";"
+			delete(Counter.articles, id)
+		}
 
-			for img, c := range articleCounter.images {
-				query += "UPDATE images SET hits = hits + " + itoa(c) + " WHERE image = '" + img + "';"
-				delete(articleCounter.images, img)
-			}
+		for img, c := range Counter.images {
+			query += "UPDATE images SET hits = hits + " + itoa(c) + " WHERE image = '" + img + "';"
+			delete(Counter.images, img)
+		}
 
-			now := time.Now()
-			if now.Hour()%2 == 0 && now.Minute() >= 7 && now.Minute() < 12 {
-				query += `
+		now := time.Now()
+		if now.Hour()%2 == 0 && now.Minute() >= 7 && now.Minute() < 12 {
+			query += `
 				UPDATE tags SET children = sub.count FROM (
 					SELECT COUNT(id) AS count, MAX(tag) AS tag FROM articles 
 					WHERE tag <= 65536 GROUP BY tag) AS sub 
 				WHERE tags.id = sub.tag;`
-			}
-
-			if _, err := Gdb.Exec(query); err != nil {
-				glog.Errorln("Database:", err)
-			}
-
-			conf.GlobalServerConfig.InitTags(Gdb)
-
-			articleCounter.Unlock()
 		}
+
+		if _, err := Gdb.Exec(query); err != nil {
+			glog.Errorln("Database:", err)
+		}
+		conf.GlobalServerConfig.InitTags(Gdb)
+
+		rows, err := Gdb.Query(`SELECT keyword, children FROM image_keywords`)
+		if err != nil {
+			glog.Errorln("Database:", err)
+		}
+
+		for rows.Next() {
+			var children int
+			var keyword string
+
+			rows.Scan(&keyword, &children)
+			Counter.Keywords[keyword] = children
+		}
+
+		Counter.Unlock()
+		time.Sleep(5 * time.Minute)
 	}
 }
 
@@ -481,7 +499,7 @@ func GetArticle(r *http.Request, user AuthUser, id int, noEscape bool) (ret Arti
 	}()
 
 	if r != nil && LogIPnv(r) {
-		IncrArticleCounter(id)
+		IncrCounter(id)
 	}
 
 	rows, err := Gdb.Query(`

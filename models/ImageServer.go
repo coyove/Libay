@@ -207,6 +207,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		if better || err != nil {
 			cmd := exec.Command("sh", "-c", "convert ./images/"+path+" -quality 90 -thumbnail '250x250>' ./thumbs/"+path)
 			err = cmd.Start()
+			err = cmd.Wait()
 
 			if err != nil {
 				glog.Errorln("Generating thumbnail failed: "+path, err)
