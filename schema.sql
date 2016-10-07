@@ -289,13 +289,28 @@ CREATE SEQUENCE image_id_seq
 ALTER TABLE image_id_seq OWNER TO postgres;
 
 --
+-- Name: image_keywords_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE image_keywords_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE image_keywords_id_seq OWNER TO postgres;
+
+--
 -- Name: image_keywords; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE TABLE image_keywords (
     keyword text NOT NULL,
     ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000),
-    children integer DEFAULT 0
+    children integer DEFAULT 0,
+    id integer DEFAULT nextval('image_keywords_id_seq'::regclass)
 );
 
 
@@ -552,6 +567,13 @@ CREATE RULE image_keywords_ignore_duplicate_keywords AS
            FROM image_keywords image_keywords_1
           WHERE (image_keywords_1.keyword = new.keyword))) DO INSTEAD  UPDATE image_keywords SET children = (image_keywords.children + 1)
   WHERE (image_keywords.keyword = new.keyword);
+
+
+--
+-- Name: filename_insert_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER filename_insert_trigger AFTER INSERT ON images FOR EACH ROW EXECUTE PROCEDURE filename_changed();
 
 
 --

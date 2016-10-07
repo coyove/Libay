@@ -17,7 +17,7 @@
 		<a href="/user/{{.GalleryUserID}}">{{.UploaderName}}</a></span>
 	{{end}}{{end}}
 
-	<span data-dropdown="gallery-function" data-dropdown-onload="focusSearch()">
+	<span data-dropdown="gallery-function" data-dropdown-onload="focusSearch()" id="expand-gallery-function">
 		{{if .IsSearch}}
 		<span class='fai'>&#xe14f;</span> <span class="nc">[[Search]] "{{.SearchPattern}}"</span>
 		{{else}}
@@ -44,7 +44,7 @@
 	</script>
 </p>
 
-<div id="gallery-function" class="dropdown">
+<div id="gallery-function" class="dropdown contextmenu" style="width: 200px">
 	<div>
 		<input id="search-url" placeholder="[[Search]]" {{if .IsSearch}}value="{{.SearchPattern}}"{{end}}>
 	</div>
@@ -60,13 +60,8 @@
 		{{end}}
 
 		{{if .IsSelf}}
-	</ul>
-		<div>
-			<input id="rename-images" placeholder="[[Rename selected]]">
-		</div>
-	<ul>
-		<li data-onclick="alterImages('rename')" id="go-rename"><span class='fai'>&#xe0c3;</span>
-		<span>[[Rename selected]]</span></li>
+		<li onclick="showRename()" id="go-rename"><span class='fai'>&#xe0c3;</span>
+		<span>[[Batch rename selected]]</span></li>
 
 		<li data-onclick="alterImages('delete')"><span class='fai'>&#xe123;</span>
 		<span>[[Delete selected]]</span></li>
@@ -86,25 +81,22 @@
 
 		{{end}}
 
-		<li data-dropdown="copy-function" data-subdropdown="true"><span class='fai'>&#xe04a;</span>
-		<span>[[Copy selected]]</span></li>
+		<li onclick="copyImageCode('data')"><span class='fai'>&#xe04a;</span>
+		<span>[[Copy]] [[Data images]]</span></li>
+
+		<li onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
+		<span>[[Copy]] [[Full images url]]</span></li>
+
+		<li onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
+		<span>[[Copy]] [[Full images bbcode]]</span></li>
+
+		<li onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>
+		<span>[[Copy]] [[Full images markdown]]</span></li>
 	</ul>
 </div>
 
-<div id="copy-function" class="dropdown">
-	<ul>
-		<li onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
-		<span>[[Full images url]]</span></li>
-
-		<li onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
-		<span>[[Full images bbcode]]</span></li>
-
-		<li onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>
-		<span>[[Full images markdown]]</span></li>
-
-		<li onclick="copyImageCode('data')"><span class='fai'>&#xe04a;</span>
-		<span>[[Data images]]</span></li>
-	</ul>
+<div id="filename-keywords" class="dropdown">
+	<div><input type="text"></div>
 </div>
 
 <div id="copy-code-div" style="display: none">
@@ -141,6 +133,31 @@
 			e.checked = !e.checked;
 			e.parentNode.style.backgroundColor = e.checked ? "#77aa8b" : "#54638c";
 		});
+	}
+
+	function showRename() {
+		var body = document.getElementsByTagName('body')[0];
+		var width = etc.width();
+		width = parseInt(width / 2);
+		if (width < 200) width = 200;
+
+		body.className += " stop-scrolling";
+		var div = etc.let.show('rename-div').$;
+		div.style.zIndex = 100;
+		div.style.width = width + "px";
+		div.style.marginLeft = "-" + (width / 2) + "px";
+		var newTop = document.documentElement.scrollTop || document.body.scrollTop;
+		div.style.top = (newTop + etc.height() / 3) + "px";
+
+		div.querySelector(".dropdown").style.width = (width - 12) + "px";
+		var input = div.querySelector("input");
+		input.focus();
+		input.select();
+
+		etc.let.show("rename-div-underlay").$.onclick = function() {
+			etc.let.hide("rename-div-underlay").hide("rename-div");
+			body.className = body.className.replace(" stop-scrolling", "");
+		}
 	}
 
 	function expandR18() {
@@ -255,14 +272,11 @@
 	function checkChanged(id) {
 		var c = etc.id("img-" + id);
 		c.parentNode.style.backgroundColor = c.checked ? "#77aa8b" : "#54638c";
+		etc.id("rename-images").value = c.attr("data-title");
 	}
 
 	etc.id("search-url").on("keydown", function(e) {
 		if (e.which == 13 || e.keyCode == 13) searchImage();
-	});
-
-	etc.id("rename-images").on("keydown", function(e) {
-		if (e.which == 13 || e.keyCode == 13) etc.id("go-rename").click();
 	});
 </script>
 
@@ -273,6 +287,31 @@
 
 	.img-container span {
 		display: none;
+	}
+
+	#rename-div {
+		display: none;
+		width: 200px; height: 90px; position: absolute; left: 50%; top: 20%; 
+		margin-left: -100px; 
+		margin-top: -45px;
+		padding: 6px;
+		border: solid 1px #ccc;
+		background-color: white;
+	}
+
+	#rename-div > div:first-child {
+		background-color: #548c78;
+		padding: 4px;
+		margin: -6px -6px 4px -6px;
+		color: white;
+	}
+
+	#rename-div .dropdown {
+		width: 188px;
+	}
+
+	#rename-images {
+		width: 100%;
 	}
 
 	{{if not .IsSelf}}
@@ -365,6 +404,20 @@
 	{{end}}
 	</div>
 </div>
+
+<div id="rename-div">
+	<div>[[Batch rename selected]]</div>
+
+	<div class="dropdown dropdown-normal">
+		<div><input id="rename-images" type="text"></div>
+	</div>
+	<div style="height: 28px"></div>
+
+	<div style="text-align: center;">
+	<button data-onclick="alterImages('rename')" style="height: 22px">[[OK]]</button>
+	</div>
+</div>
+<div id="rename-div-underlay" class="dropdown-underlay"></div>
 
 <script type="text/javascript">
 	document.write(buildPager({{.IsIndexPage}}, {{.IsLastPage}},

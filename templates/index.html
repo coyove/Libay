@@ -79,6 +79,11 @@
 		height: 100%;
 		vertical-align: top;
 	}
+
+	#filename-keywords {
+		width: 90%;
+		max-width: 300px;
+	}
 </style>
 
 <div style="text-align: center">
@@ -148,9 +153,10 @@
 					<label for="r18-image">[[Add R18 tag]] ([[Thumbnail won't show up directly in the gallery]])</label>
 				</div>
 				<div>
-					<input type="checkbox" class="simple-check" id="rename-image">
-					<label for="rename-image">[[Rename it when uploaded]]: 
-					<input type="textbox" id="upload-filename" placeholder="[[Keep original filename]]"></label>
+					<div id="filename-keywords" class="dropdown-normal dropdown">
+						<div><input type="text" id="upload-filename" placeholder="[[Rename it when uploaded]]: [[Keep original filename]]"></div>
+					</div>
+					<div style="height: 30px"></div>
 				</div>
 				{{else}}
 					<div>您所在的用户组无法上传图片</div>
@@ -227,7 +233,7 @@
     		"additional_form": {
     			"hide": etc.id("hide-image").checked,
     			"r18": etc.id("r18-image").checked,
-    			"tag": etc.id("rename-image").checked ? etc.id("upload-filename").value : ""
+    			"tag": etc.id("upload-filename").value
     		},
     		"uploaded_callback": function(thumb, full) {
 				var a = document.createElement("a");
