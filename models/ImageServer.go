@@ -223,6 +223,8 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		filename := auth.CleanString(header.Filename)
 		if tag != "" {
 			filename = tag
+		} else {
+			filename = "*" + filename
 		}
 
 		_, err = auth.Gdb.Exec(`

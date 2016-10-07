@@ -900,7 +900,7 @@
         }
 
         var menu = document.querySelector(".dropdown.contextmenu");
-        g.etc.body().oncontextmenu = function (event) {
+        if (menu) g.etc.body().oncontextmenu = function (event) {
             event.preventDefault();
             event = g.etc.coord(event);
 
@@ -1035,6 +1035,11 @@ etc.onload(function() {
 
                     dd.appendChild(ul);
                 }
+
+                if (this.value == "") {
+                    var ul = dd.getElementsByTagName('ul')[0];
+                    ul && dd.removeChild(ul);
+                }
             }
         } (e))).on("keydown", (function(dd) {
             return function (ev) {
@@ -1080,7 +1085,8 @@ etc.onload(function() {
                     
                     ev.preventDefault();
                     ev.stopPropagation();
-                } else if ([32, 37, 39].indexOf(ev.keyCode) > -1 || [32, 37, 39].indexOf(ev.which) > -1) {
+                } else if ([32, 37, 39].indexOf(ev.keyCode) > -1 || 
+                    [32, 37, 39].indexOf(ev.which) > -1 || this.value == "") {
                     var ul = dd.getElementsByTagName('ul')[0];
                     ul && dd.removeChild(ul);
                 }

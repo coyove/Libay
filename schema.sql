@@ -70,7 +70,9 @@ CREATE FUNCTION filename_changed() RETURNS trigger
 
 begin
 
+if not ascii(NEW.filename) = 42 then
 insert into image_keywords select unnest(regexp_split_to_array(lower(NEW.filename), E'\\s+'));
+end if;
 
 return NEW;
 

@@ -25,14 +25,7 @@
 		{{end}}
 	</span>
 
-	{{if .IsSelf}}
-		<span onclick="selectAll()"><span class='fai'>&#xe072;</span>
-		<span class="nc">[[Select All]]</span></span>
-
-		<span onclick="invertSelection()"><span class='fai'>&#xe072;</span>
-		<span class="nc">[[Inverse Selection]]</span></span>
-
-	{{else}}
+	{{if not .IsSelf}}
 		<span onclick="expandR18()" id="show-r18" data-r18="false"><span class='fai'>&#xe11b;</span>
 		<span class="nc" id="show-r18-label">[[Show R18]]</span></span>
 
@@ -59,6 +52,15 @@
 		<span>[[Back]]</span></li>
 		{{end}}
 
+		<li onclick="selectImages(true)"><span class='fai'>&#xe085;</span>
+		<span class="nc">[[Select All]]</span></li>
+
+		<li onclick="selectImages(null)"><span class='fai'>&#xe087;</span>
+		<span class="nc">[[Unselect]]</span></li>
+
+		<li onclick="selectImages(false)"><span class='fai'>&#xe086;</span>
+		<span class="nc">[[Inverse Selection]]</span></li>
+
 		{{if .IsSelf}}
 		<li onclick="showRename()" id="go-rename"><span class='fai'>&#xe0c3;</span>
 		<span>[[Batch rename selected]]</span></li>
@@ -72,7 +74,7 @@
 		<li data-onclick="alterImages('~hide')"><span class='fai'>&#xe06f;</span>
 		<span>[[Show/Hide selected]]</span></li>
 
-		<li data-onclick="alterImages('~r18')"><span class='fai'>&#xe06f;</span>
+		<li data-onclick="alterImages('~r18')"><span class='fai'>&#xe11b;</span>
 		<span>[[Tag/Untag R18]]</span></li>
 
 		{{else}}
@@ -82,16 +84,16 @@
 		{{end}}
 
 		<li onclick="copyImageCode('data')"><span class='fai'>&#xe04a;</span>
-		<span>[[Copy]] [[Data images]]</span></li>
+		<span>[[Copy]] [[data images]]</span></li>
 
 		<li onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
-		<span>[[Copy]] [[Full images url]]</span></li>
+		<span>[[Copy]] [[original URL]]</span></li>
 
 		<li onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
-		<span>[[Copy]] [[Full images bbcode]]</span></li>
+		<span>[[Copy]] [[original bbcode]]</span></li>
 
 		<li onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>
-		<span>[[Copy]] [[Full images markdown]]</span></li>
+		<span>[[Copy]] [[original markdown]]</span></li>
 	</ul>
 </div>
 
@@ -121,16 +123,15 @@
 		etc.id("search-url").select();
 	}
 
-	function selectAll() {
+	function selectImages(checked) {
 		etc.get(".simple-check").forEach(function(e) {
-			e.checked = true;
-			e.parentNode.style.backgroundColor = "#77aa8b";
-		});
-	}
-
-	function invertSelection() {
-		etc.get(".simple-check").forEach(function(e) {
-			e.checked = !e.checked;
+			if (checked === true) {
+				e.checked = checked;
+			} else if (checked === null) {
+				e.checked = false;
+			} else if (checked === false) {
+				e.checked = !e.checked;
+			}
 			e.parentNode.style.backgroundColor = e.checked ? "#77aa8b" : "#54638c";
 		});
 	}
@@ -369,10 +370,26 @@
 		<div class="image">
 			<div>
 				<div class="img-id">
-					<input type="checkbox" class="simple-check" id="img-{{.ID}}" data-id="{{.ID}}" data-full="{{.Path}}" data-thumb="{{.ThumbPath}}" data-title="{{.Filename}}" onchange="checkChanged({{.ID}})">
+					<input 
+						type="checkbox" 
+						class="simple-check" 
+						id="img-{{.ID}}" 
+						data-id="{{.ID}}" 
+						data-full="{{.Path}}" 
+						data-thumb="{{.ThumbPath}}" 
+						data-title="{{.Filename}}" 
+						onchange="checkChanged({{.ID}})">
+						
 					<label for="img-{{.ID}}">#{{.ID}} - {{.ShortName}}</label>
 				</div>
-				<div class="img-container {{if .R18}}img-r18{{end}}" onclick="etc.id('img-{{.ID}}').click()" ondblclick="window.open('{{.Path}}')" data-r18="{{.R18}}" data-hide="{{.Hide}}">
+				<div 
+					class="img-container {{if .R18}}img-r18{{end}}" 
+					onclick="etc.id('img-{{.ID}}').click()" 
+					ondblclick="window.open('{{.Path}}')" 
+					oncontextmenu="!etc.id('img-{{.ID}}').checked && etc.id('img-{{.ID}}').click()" 
+					data-r18="{{.R18}}" 
+					data-hide="{{.Hide}}">
+
 					<img class="img-image" src="{{.ThumbPath}}" title="[[Double click to open]] {{.Filename}}" data-hide="{{.Hide}}" data-r18="{{.R18}}">
 					<span class="fai">&#x0e03d;</span>
 				</div>

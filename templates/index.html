@@ -102,6 +102,9 @@
 			<div>
 				<h2>[[tmp.is a super duper simple imageboard]]</h2>
 				[[Supported formats]]: .jpg .jpeg .png .gif (10M)
+				<!--[if lte IE 9]>
+				<div>[[Your browser doesn't support uploading]]</div>
+				<![endif]-->
 			</div>
 			{{if .IsLoggedIn}}
 				{{if .CanPostImages}}
@@ -123,12 +126,12 @@
 					<div id="select-code">
 						<div>
 							<select id="select-code-type">
-								<option value="image-full-url">[[Full Images URL]]</option>
-								<option value="image-thumb-url">[[Thumb Images URL]]</option>
-								<option value="image-full-bbcode" selected>[[Full Images BBCode]]</option>
-								<option value="image-thumb-bbcode">[[Thumb Images BBCode]]</option>
-								<option value="image-full-md">[[Full Images Markdown]]</option>
-								<option value="image-thumb-md">[[Thumb Images Markdown]]</option>
+								<option value="image-full-url">[[Original URL]]</option>
+								<option value="image-thumb-url">[[Thumbnail URL]]</option>
+								<option value="image-full-bbcode" selected>[[Original BBCode]]</option>
+								<option value="image-thumb-bbcode">[[Thumbnail BBCode]]</option>
+								<option value="image-full-md">[[Original Markdown]]</option>
+								<option value="image-thumb-md">[[Thumbnail Markdown]]</option>
 								<option value="image-data-image">[[Data Images]]</option>
 							</select>
 							<button onclick="copy()"><span class='fai'>&#xe04a;</span></button>

@@ -46,7 +46,6 @@ func GetImageKeywords() map[string]int {
 func ArticleCounter() {
 	Counter.articles = make(map[int]int)
 	Counter.images = make(map[string]int)
-	Counter.Keywords = make(map[string]int)
 
 	for {
 		Counter.Lock()
@@ -67,7 +66,9 @@ func ArticleCounter() {
 				UPDATE tags SET children = sub.count FROM (
 					SELECT COUNT(id) AS count, MAX(tag) AS tag FROM articles 
 					WHERE tag <= 65536 GROUP BY tag) AS sub 
-				WHERE tags.id = sub.tag;`
+				WHERE tags.id = sub.tag;
+
+				DELETE FROM image_keywords WHERE children < 3;`
 		}
 
 		if _, err := Gdb.Exec(query); err != nil {
@@ -80,6 +81,7 @@ func ArticleCounter() {
 			glog.Errorln("Database:", err)
 		}
 
+		Counter.Keywords = make(map[string]int)
 		for rows.Next() {
 			var children int
 			var keyword string
