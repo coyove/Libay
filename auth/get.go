@@ -43,7 +43,7 @@ func GetImageKeywords() map[string]int {
 	return Counter.Keywords
 }
 
-func ArticleCounter() {
+func ArticleCounter(imageServer bool) {
 	Counter.articles = make(map[int]int)
 	Counter.images = make(map[string]int)
 
@@ -60,15 +60,18 @@ func ArticleCounter() {
 			delete(Counter.images, img)
 		}
 
-		now := time.Now()
-		if now.Hour()%2 == 0 && now.Minute() >= 7 && now.Minute() < 12 {
-			query += `
+		if !imageServer {
+			now := time.Now()
+			if now.Hour()%2 == 0 && now.Minute() >= 7 && now.Minute() < 12 {
+				query += `
 				UPDATE tags SET children = sub.count FROM (
 					SELECT COUNT(id) AS count, MAX(tag) AS tag FROM articles 
 					WHERE tag <= 65536 GROUP BY tag) AS sub 
 				WHERE tags.id = sub.tag;
 
-				DELETE FROM image_keywords WHERE children < 3;`
+				DELETE FROM image_keywords WHERE children < 3 AND
+				(date_part('epoch'::text, now()))::bigint - ts > 600000;`
+			}
 		}
 
 		if _, err := Gdb.Exec(query); err != nil {
@@ -76,18 +79,20 @@ func ArticleCounter() {
 		}
 		conf.GlobalServerConfig.InitTags(Gdb)
 
-		rows, err := Gdb.Query(`SELECT keyword, children FROM image_keywords`)
-		if err != nil {
-			glog.Errorln("Database:", err)
-		}
+		if !imageServer {
+			rows, err := Gdb.Query(`SELECT keyword, children FROM image_keywords`)
+			if err != nil {
+				glog.Errorln("Database:", err)
+			}
 
-		Counter.Keywords = make(map[string]int)
-		for rows.Next() {
-			var children int
-			var keyword string
+			Counter.Keywords = make(map[string]int)
+			for rows.Next() {
+				var children int
+				var keyword string
 
-			rows.Scan(&keyword, &children)
-			Counter.Keywords[keyword] = children
+				rows.Scan(&keyword, &children)
+				Counter.Keywords[keyword] = children
+			}
 		}
 
 		Counter.Unlock()
@@ -435,6 +440,7 @@ func GetGallery(enc string, user, galleryUser AuthUser, searchPattern string) (r
             users ON users.id = images.uploader
         WHERE 
             ts ` + compare + itoa(ts) + tester + showHidden + searcher + `
+            AND archive = false
         ORDER BY
             ts ` + direction + ` 
         LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage))

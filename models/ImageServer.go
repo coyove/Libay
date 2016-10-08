@@ -423,7 +423,6 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 			auth.Gimage.Remove("./images/" + path)
 			auth.Gimage.Remove("./thumbs/" + path)
 		}
-
 		jids := strings.Join(ids, ",")
 		sql := `UPDATE user_info SET image_usage = image_usage - sub.size FROM
 		(SELECT 	MAX(uploader) AS id, SUM(size) AS size 
@@ -438,6 +437,16 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		} else {
 			glog.Errorln("Database:", err)
 			Return(w, "Err:DB::Delete_Failure")
+			return
+		}
+
+	case "archive":
+		if _, err := auth.Gdb.Exec(`UPDATE images SET archive = true WHERE ` + tester +
+			" AND id IN (" + strings.Join(ids, ",") + ")"); err == nil {
+			Return(w, "ok")
+		} else {
+			glog.Errorln("Database:", err)
+			Return(w, "Err:DB::Update_Failure")
 			return
 		}
 	case "invert":

@@ -993,8 +993,9 @@ etc.onload(function() {
                 var keyCode = ev.keyCode || ev.which;
                 if ([9, 13, 32, 37, 38, 39, 40].indexOf(keyCode) == -1) {
                     if (window.__keywords) {} else {
-                        etc.util.ajax.get("/get/keywords").then(function (e, list) {
+                        etc.util.ajax.get("/get/keywords?" + new Date().getTime()).then(function (e, list) {
                             window.__keywords = JSON.parse(list);
+                            dd.getElementsByTagName('input')[0].dispatchEvent(new Event('keyup'));
                         });
                         return;
                     }
@@ -1003,7 +1004,7 @@ etc.onload(function() {
                     var tester = this.value.split(' ');
                     for (var k in window.__keywords) {
                         if (k != "") 
-                            cands.push([k.score(tester[tester.length - 1]), k, window.__keywords[k] + 1]);
+                            cands.push([k.score(tester[tester.length - 1]), k, window.__keywords[k]]);
                     }
 
                     cands = cands.sort(function(a, b) { 
@@ -1034,6 +1035,9 @@ etc.onload(function() {
                         dd.removeChild(dd.children[1]);
 
                     dd.appendChild(ul);
+                    etc.body().onclick = function() {
+                    	if (ul.parentNode == dd) dd.removeChild(ul);
+                    }
                 }
 
                 if (this.value == "") {

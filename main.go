@@ -87,7 +87,7 @@ func main() {
 
 	// Access deamon: Log abnormal rapid accessing actions and ban it
 	go auth.AccessDaemon()
-	go auth.ArticleCounter()
+	go auth.ArticleCounter(*imageServer)
 
 	// PAGE: Serve robots.txt for search engines
 	mux.Handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

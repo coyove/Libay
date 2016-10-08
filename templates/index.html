@@ -145,7 +145,12 @@
 						<textarea style="display:none" class="image-code" id="image-thumb-md" readonly></textarea>
 					</div>
 				</div>
-
+				<div>
+					<div id="filename-keywords" class="dropdown-normal dropdown">
+						<div><input type="text" id="upload-filename" placeholder="[[Rename it when uploaded]]: [[Keep original filename]]"></div>
+					</div>
+					<div style="height: 40px"></div>
+				</div>
 				<div>
 					<input type="checkbox" class="simple-check" id="hide-image">
 					<label for="hide-image">[[Hide in my gallery]]
@@ -154,12 +159,6 @@
 				<div>
 					<input type="checkbox" class="simple-check" id="r18-image">
 					<label for="r18-image">[[Add R18 tag]] ([[Thumbnail won't show up directly in the gallery]])</label>
-				</div>
-				<div>
-					<div id="filename-keywords" class="dropdown-normal dropdown">
-						<div><input type="text" id="upload-filename" placeholder="[[Rename it when uploaded]]: [[Keep original filename]]"></div>
-					</div>
-					<div style="height: 30px"></div>
 				</div>
 				{{else}}
 					<div>您所在的用户组无法上传图片</div>

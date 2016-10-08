@@ -65,11 +65,13 @@
 		<li onclick="showRename()" id="go-rename"><span class='fai'>&#xe0c3;</span>
 		<span>[[Batch rename selected]]</span></li>
 
-		<li data-onclick="alterImages('delete')"><span class='fai'>&#xe123;</span>
-		<span>[[Delete selected]]</span></li>
+		<li data-onclick="alterImages('delete')">
+		<span class='fai' style="color: #a0a">&#xe123;</span>
+		<span style="color: #a0a">[[Delete selected]]</span></li>
 
-		<li data-onclick="alterImages('delete', true)"><span class='fai'>&#xe123;</span>
-		<span>[[Delete all in this page]]</span></li>
+		<li data-onclick="alterImages('archive')">
+		<span class='fai' style="color: #a0a">&#xe004;</span>
+		<span style="color: #a0a">[[Archive selected]]</span></li>
 
 		<li data-onclick="alterImages('~hide')"><span class='fai'>&#xe06f;</span>
 		<span>[[Show/Hide selected]]</span></li>
@@ -196,6 +198,9 @@
 
 		if (action == "delete" && !confirm("[[Confirm to delete]]: \n" + titles.join("\n"))) 
 			return etc.wait.on(this).done();
+
+		if (action == "archive" && !confirm("[[Archived images will be PERMANENTLY deleted from your gallery but remain visible through URLs]]"))
+			return etc.wait.on(this).done();			
 
 		if (action == "rename" && etc.id("rename-images").value == "")
 			return etc.wait.on(this).done();
@@ -380,7 +385,7 @@
 						data-title="{{.Filename}}" 
 						onchange="checkChanged({{.ID}})">
 						
-					<label for="img-{{.ID}}">#{{.ID}} - {{.ShortName}}</label>
+					<label for="img-{{.ID}}">{{.ShortName}}</label>
 				</div>
 				<div 
 					class="img-container {{if .R18}}img-r18{{end}}" 
@@ -412,7 +417,7 @@
 				<a href="/gallery/{{.UploaderID}}/page/1">{{.Uploader}}</a></span>
 				{{end}}
 
-				<div><script type="text/javascript">
+				<div>#{{.ID}} - <script type="text/javascript">
 					document.write(etc.date.format({{.Timestamp}}, true));
 				</script></div>
 			</div>

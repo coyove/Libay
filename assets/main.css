@@ -164,7 +164,7 @@ td.fit, th.fit{
     text-align: center;
 }
 
-#gallery-container {
+#gallery #gallery-container {
 	width: 100%;
     max-width: 1200px; 
     margin: 0 auto;
@@ -367,6 +367,10 @@ td.fit, th.fit{
     padding: 1px 5px;
     color: #333;
     border-bottom: dotted 1px #ccc;
+}
+
+.dropdown li:first-child {
+    border-top: dotted 1px #ccc;
 }
 
 .dropdown li:hover, .dropdown li[selected=selected] {
