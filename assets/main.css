@@ -231,6 +231,9 @@ td.fit, th.fit{
 
 #gallery .img-id div {
     font-size: 10px;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNvyMY98AAAAQSURBVBhXYwACESgGEQwiAAJqAFEYAm2wAAAAAElFTkSuQmCC');
+    margin: -2px -4px 2px -4px;
+    padding: 2px;
 }
 
 #gallery .img-container {

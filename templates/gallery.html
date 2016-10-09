@@ -65,6 +65,12 @@
 		<li onclick="showRename()" id="go-rename"><span class='fai'>&#xe0c3;</span>
 		<span>[[Batch rename selected]]</span></li>
 
+		<li data-onclick="alterImages('~hide')"><span class='fai'>&#xe06f;</span>
+		<span>[[Show/Hide selected]]</span></li>
+
+		<li data-onclick="alterImages('~r18')"><span class='fai'>&#xe11b;</span>
+		<span>[[Tag/Untag R18]]</span></li>
+
 		<li data-onclick="alterImages('delete')">
 		<span class='fai' style="color: #a0a">&#xe123;</span>
 		<span style="color: #a0a">[[Delete selected]]</span></li>
@@ -73,28 +79,25 @@
 		<span class='fai' style="color: #a0a">&#xe004;</span>
 		<span style="color: #a0a">[[Archive selected]]</span></li>
 
-		<li data-onclick="alterImages('~hide')"><span class='fai'>&#xe06f;</span>
-		<span>[[Show/Hide selected]]</span></li>
-
-		<li data-onclick="alterImages('~r18')"><span class='fai'>&#xe11b;</span>
-		<span>[[Tag/Untag R18]]</span></li>
-
 		{{else}}
 		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe123;</span>
 		<span>[[Flag for deletion]]</span></li>
 
 		{{end}}
 
-		<li onclick="copyImageCode('data')"><span class='fai'>&#xe04a;</span>
+		<li onmousemove="etc.let.hide(this).show('.copy-li');setTimeout((function(o){return function(){etc.let.show(o).hide('.copy-li')}}(this)),3000);" 
+		style="text-align: center; font-size: 80%"><span class='fai'>&#xe118;</span></li>
+
+		<li class="copy-li" style="display: none" onclick="copyImageCode('data')"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy]] [[data images]]</span></li>
 
-		<li onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
+		<li class="copy-li" style="display: none" onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy]] [[original URL]]</span></li>
 
-		<li onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
+		<li class="copy-li" style="display: none" onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy]] [[original bbcode]]</span></li>
 
-		<li onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>
+		<li class="copy-li" style="display: none" onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>
 		<span>[[Copy]] [[original markdown]]</span></li>
 	</ul>
 </div>
@@ -135,6 +138,7 @@
 				e.checked = !e.checked;
 			}
 			e.parentNode.style.backgroundColor = e.checked ? "#77aa8b" : "#54638c";
+			etc.id("info-" + etc.id(e).attr("data-id")).style.backgroundColor = e.checked ? "#ddd" : "#eee";
 		});
 	}
 
@@ -164,18 +168,19 @@
 	}
 
 	function expandR18() {
-		if (etc.id("show-r18").attr("data-r18") == "false") {
+		var r18 = etc.id("show-r18");
+		if (r18.attr("data-r18") == "false") {
 			etc.get("div[data-r18=true]").forEach(function(e) {
 				e.className = e.className.replace("img-r18", "");
 			});
-			etc.id("show-r18").attr("data-r18", "true");
+			r18.attr("data-r18", "true");
 			etc.id("show-r18-label").html("[[Hide R18]]");
 			etc.util.cookie.write("r18", "1", 30 * 24 * 36000000);
 		} else {
 			etc.get("div[data-r18=true]").forEach(function(e) {
 				e.className += " img-r18";
 			});
-			etc.id("show-r18").attr("data-r18", "false");
+			r18.attr("data-r18", "false");
 			etc.id("show-r18-label").html("[[Show R18]]");
 			etc.util.cookie.remove("r18");
 		}
@@ -278,6 +283,7 @@
 	function checkChanged(id) {
 		var c = etc.id("img-" + id);
 		c.parentNode.style.backgroundColor = c.checked ? "#77aa8b" : "#54638c";
+		etc.id("info-" + id).style.backgroundColor = c.checked ? "#ddd" : "#eee";
 		etc.id("rename-images").value = c.attr("data-title");
 	}
 
@@ -302,7 +308,7 @@
 	}
 
 	.img-container.img-r18 span.r18 {
-		display: block;
+		display: block !important;
 		width: 200px;
 		height: 200px;
 		line-height: 200px;
@@ -372,7 +378,7 @@
 				</div>
 			</div>
 
-			<div class="date">
+			<div class="date" id="info-{{.ID}}">
 				<span><span class="fai">&#xe00b;</span> <a href="{{.Path}}" target="_blank">[[Open]]</a></span>
 				<span><span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span></span>
 

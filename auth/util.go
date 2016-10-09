@@ -45,8 +45,8 @@ var itoa = strconv.Itoa
 
 var tsReg = regexp.MustCompile(`(after|before)=(.+)_(.+)`)
 var titleReg = regexp.MustCompile(`<title.*>([\s\S]+)<\/title>`)
-var cleanReg = regexp.MustCompile(`(\s|\t|\n|\'|\"|\=|\+|\*|\-|\:|\/|\\|\?')`)
-var cleanReg2 = regexp.MustCompile(`(\t|\n|\'|\"|\=|\+|\*|\-|\:|\/|\\|\?')`)
+var cleanReg = regexp.MustCompile(`(\s|\t|\n|\'|\"|\=|\+|\*|\-|\:|\/|\\|\?|\%')`)
+var cleanReg2 = regexp.MustCompile(`(\t|\n|\'|\"|\=|\+|\*|\-|\:|\/|\\|\?|\%')`)
 
 type _time struct {
 }

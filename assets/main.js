@@ -409,12 +409,26 @@
 
         "let": {
             "hide": function(id) {
+                if (typeof id === "string" && id.charAt(0) == '.') {
+                    g.etc.get(id).forEach(function(e){ 
+                        g.etc.let.hide(e); 
+                    });
+                    return g.etc.let;
+                }
+
                 g.etc.let.$ = _id(id);
                 g.etc.let.$.style.display = "none";
                 return g.etc.let;
             },
 
             "show": function(id) {
+                if (typeof id === "string" && id.charAt(0) == '.') {
+                    g.etc.get(id).forEach(function(e){ 
+                        g.etc.let.show(e); 
+                    });
+                    return g.etc.let;
+                }
+
                 g.etc.let.$ = _id(id);
                 var e = g.etc.let.$;
                 switch (e.tagName.toLowerCase()) {
