@@ -169,6 +169,7 @@
 		"confirm to delete all your images in this article": "是否删除此篇文章内所有你发的图片",
 		"archive selected": "存档选定",
 		"archived images will be permanently deleted from your gallery but remain visible through urls": "存档图片将永久从你的相册中删除, 但通过URL依旧可以访问",
+		"be sure to store urls somewhere else before archiving them": "请确定已将URL记录在某处(发布文章/外链)",
 		"search by url": "输入图片URL搜索",
 		"search": "搜索",
 		"search it": "在该分类中搜索",

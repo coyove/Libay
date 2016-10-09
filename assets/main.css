@@ -192,7 +192,7 @@ td.fit, th.fit{
 }
 
 #gallery div.date div {
-    font-size: 80%;
+    font-size: 10px;
     color: #888;
 }
 
@@ -229,10 +229,43 @@ td.fit, th.fit{
     color: white;
 }
 
+#gallery .img-id div {
+    font-size: 10px;
+}
+
 #gallery .img-container {
     width: 100%;
     height: 100%;
     cursor: pointer;
+}
+
+#gallery .img-container span.r18 {
+    display: none;
+}
+
+#rename-div {
+    display: none;
+    width: 200px; height: 90px; position: absolute; left: 50%; top: 20%; 
+    margin-left: -100px; 
+    margin-top: -45px;
+    padding: 6px;
+    border: solid 1px #ccc;
+    background-color: white;
+}
+
+#rename-div > div:first-child {
+    background-color: #548c78;
+    padding: 4px;
+    margin: -6px -6px 4px -6px;
+    color: white;
+}
+
+#rename-div .dropdown {
+    width: 188px;
+}
+
+#rename-images {
+    width: 100%;
 }
 
 #article-content {

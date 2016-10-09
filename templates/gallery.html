@@ -199,7 +199,7 @@
 		if (action == "delete" && !confirm("[[Confirm to delete]]: \n" + titles.join("\n"))) 
 			return etc.wait.on(this).done();
 
-		if (action == "archive" && !confirm("[[Archived images will be PERMANENTLY deleted from your gallery but remain visible through URLs]]"))
+		if (action == "archive" && !confirm("[[Archived images will be PERMANENTLY deleted from your gallery but remain visible through URLs]]\n[[Be sure to store URLs somewhere else before archiving them]]"))
 			return etc.wait.on(this).done();			
 
 		if (action == "rename" && etc.id("rename-images").value == "")
@@ -291,35 +291,6 @@
 		color: white !important;
 	}
 
-	.img-container span {
-		display: none;
-	}
-
-	#rename-div {
-		display: none;
-		width: 200px; height: 90px; position: absolute; left: 50%; top: 20%; 
-		margin-left: -100px; 
-		margin-top: -45px;
-		padding: 6px;
-		border: solid 1px #ccc;
-		background-color: white;
-	}
-
-	#rename-div > div:first-child {
-		background-color: #548c78;
-		padding: 4px;
-		margin: -6px -6px 4px -6px;
-		color: white;
-	}
-
-	#rename-div .dropdown {
-		width: 188px;
-	}
-
-	#rename-images {
-		width: 100%;
-	}
-
 	{{if not .IsSelf}}
 	.img-r18 img {
 		display: none !important;
@@ -330,7 +301,7 @@
 		height: 200px !important;
 	}
 
-	.img-container.img-r18 span {
+	.img-container.img-r18 span.r18 {
 		display: block;
 		width: 200px;
 		height: 200px;
@@ -375,6 +346,7 @@
 		<div class="image">
 			<div>
 				<div class="img-id">
+					<div>{{.ID}}</div>
 					<input 
 						type="checkbox" 
 						class="simple-check" 
@@ -396,7 +368,7 @@
 					data-hide="{{.Hide}}">
 
 					<img class="img-image" src="{{.ThumbPath}}" title="[[Double click to open]] {{.Filename}}" data-hide="{{.Hide}}" data-r18="{{.R18}}">
-					<span class="fai">&#x0e03d;</span>
+					<span class="fai r18">&#x0e03d;</span>
 				</div>
 			</div>
 
@@ -404,20 +376,29 @@
 				<span><span class="fai">&#xe00b;</span> <a href="{{.Path}}" target="_blank">[[Open]]</a></span>
 				<span><span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span></span>
 
-				{{if .Hide}}
-				<span><span class="fai">&#xe137;</span> [[Hide]]</span>
-				{{end}}
-
-				{{if .R18}}
-				<span style="color: #f66"><span class="fai">&#xe137;</span> [[R18]]</span>
-				{{end}}
-
 				{{if $.IsGlobal}}
 				<span><span class="fai">&#xe12c;</span>
 				<a href="/gallery/{{.UploaderID}}/page/1">{{.Uploader}}</a></span>
 				{{end}}
 
-				<div>#{{.ID}} - <script type="text/javascript">
+				<div>
+					<span><script type="text/javascript">
+					if ({{.Size}} < 1048576)
+						document.write(parseInt({{.Size}} / 1024) + " KiB");
+					else
+						document.write(parseFloat({{.Size}} / 1048576).toFixed(2) + " MiB");
+					</script></span>
+
+					{{if .Hide}}
+					<span><span class="fai">&#xe137;</span> [[Hide]]</span>
+					{{end}}
+
+					{{if .R18}}
+					<span style="color: #f66"><span class="fai">&#xe137;</span> [[R18]]</span>
+					{{end}}
+				</div>
+
+				<div><script type="text/javascript">
 					document.write(etc.date.format({{.Timestamp}}, true));
 				</script></div>
 			</div>
