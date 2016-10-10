@@ -10,6 +10,7 @@ import (
 
 	_ "database/sql"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -120,4 +121,33 @@ func (th ModelHandler) GET_get_captcha_CAPTCHA(w http.ResponseWriter, r *http.Re
 
 func (th ModelHandler) GET_get_keywords(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	Return(w, auth.GetImageKeywords())
+}
+
+func randomImage(w http.ResponseWriter, r18 bool) {
+
+	var id, uploader, ts int
+	var image string
+
+	err := auth.Gdb.QueryRow(fmt.Sprintf(`
+		SELECT id, uploader, ts, image FROM images 
+		WHERE id = (SELECT random_image(%v) LIMIT 1);`, r18)).Scan(&id, &uploader, &ts, &image)
+	if err != nil {
+		w.WriteHeader(503)
+		return
+	}
+
+	ts = ts + 1
+	url := fmt.Sprintf("/gallery/%d/page/before=%s_%s", uploader, auth.HashTS(ts), auth.To60(uint64(ts)))
+	img := conf.GlobalServerConfig.ImageHost + "/" + image
+
+	w.Header().Add("X-Image", img)
+	w.Write([]byte(fmt.Sprintf(`<a href="%s" target=_blank><img src="%s"/></a>`, url, img)))
+}
+
+func (th ModelHandler) GET_random_safe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	randomImage(w, false)
+}
+
+func (th ModelHandler) GET_random(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	randomImage(w, true)
 }

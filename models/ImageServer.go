@@ -222,7 +222,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 		filename := auth.CleanString(header.Filename)
 		if tag != "" {
-			filename = tag
+			filename = strings.Replace(tag, "$", filename, -1)
 		} else {
 			filename = "*" + filename
 		}
@@ -508,7 +508,7 @@ func (th ModelHandler) GET_reverse_cache_CACHE(w http.ResponseWriter, r *http.Re
 		auth.Gcache.Remove(`\S+-\d+-img(true|false)`)
 		auth.Guser.Clear()
 	} else {
-		auth.Gcache.Remove(`\S+-` + cache + `-img(true|false)`)
+		auth.Gcache.Remove(`\S+-(` + cache + `|0)-img(true|false)`)
 		id, _ := strconv.Atoi(cache)
 		auth.Guser.Remove(id)
 	}

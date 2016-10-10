@@ -134,6 +134,66 @@ $$;
 ALTER FUNCTION public.new_user_registered() OWNER TO postgres;
 
 --
+-- Name: random_image(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION random_image() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+
+DECLARE
+max_id integer;
+tmp_id integer;
+begin
+max_id := (select id from images order by ts desc limit 1);
+tmp_id := max_id;
+
+loop
+tmp_id := floor(random() * max_id);
+if EXISTS (select id from images where id = tmp_id and hide = false limit 1) then
+exit;
+end if;
+end loop;
+
+return tmp_id;
+end
+
+$$;
+
+
+ALTER FUNCTION public.random_image() OWNER TO postgres;
+
+--
+-- Name: random_image(boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION random_image(show_r18 boolean) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+
+DECLARE
+max_id integer;
+tmp_id integer;
+begin
+max_id := (select id from images order by ts desc limit 1);
+tmp_id := max_id;
+
+loop
+tmp_id := floor(random() * max_id);
+if EXISTS (select id from images where id = tmp_id and hide = false and r18 in (false, show_r18) limit 1) then
+exit;
+end if;
+end loop;
+
+return tmp_id;
+end
+
+$$;
+
+
+ALTER FUNCTION public.random_image(show_r18 boolean) OWNER TO postgres;
+
+--
 -- Name: update_article(integer, text, integer, integer, text, text, text, bigint, text, integer, text, text, bigint, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -310,7 +370,7 @@ ALTER TABLE image_keywords_id_seq OWNER TO postgres;
 
 CREATE TABLE image_keywords (
     keyword text NOT NULL,
-    ts bigint DEFAULT ((date_part('epoch'::text, now()))::bigint * 1000),
+    ts bigint DEFAULT (date_part('epoch'::text, now()))::bigint,
     children integer DEFAULT 0,
     id integer DEFAULT nextval('image_keywords_id_seq'::regclass)
 );
@@ -333,7 +393,8 @@ CREATE TABLE images (
     filename text DEFAULT ''::text,
     requests integer DEFAULT 0,
     size integer DEFAULT 0,
-    r18 boolean DEFAULT false
+    r18 boolean DEFAULT false,
+    archive boolean DEFAULT false
 );
 
 
