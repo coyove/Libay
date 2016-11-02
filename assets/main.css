@@ -246,6 +246,15 @@ td.fit, th.fit{
     display: none;
 }
 
+#gallery .img-container .gif-icon {
+    position: absolute;
+    display: none;
+    padding: 2px 4px;
+    background: #a3a3a3;
+    color: white;
+    font-size: 10px;
+}
+
 #rename-div {
     display: none;
     width: 200px; height: 90px; position: absolute; left: 50%; top: 20%; 
@@ -405,7 +414,7 @@ td.fit, th.fit{
     border-bottom: dotted 1px #ccc;
 }
 
-.dropdown li:first-child {
+.dropdown div + ul li:first-child {
     border-top: dotted 1px #ccc;
 }
 

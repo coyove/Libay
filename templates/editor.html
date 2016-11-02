@@ -70,6 +70,13 @@
 		<input type="textbox" id="search-tag" onchange="searchTag()" onkeyup="searchTag()"/>
 	</div>
 	<ul>
+	{{if not .IsLoggedIn}}
+	<style type="text/css">
+		li[data-short] { display: none; }
+		li[data-short=r], li[data-short=an] { display: list-item; }
+	</style>
+	{{end}}
+
 	{{range .Tags}}
 		{{if or .Visible $.IsLoggedIn}}
 		<li data-tag="{{.Name}}" data-short="{{.Short}}" onclick="etc.id('thread-tag').html('{{.Name}}')">
@@ -110,7 +117,9 @@
 
 
 		var defaultTag = etc.util.cookie.read("default-tag") || 1;
+		{{if .IsLoggedIn}}
 		if (defaultTag != 1) etc.id("thread-tag").html(defaultTag);
+		{{end}}
 
 		{{if .Message}}
 			etc.id("thread-tag").html(etc.get("li[data-short=m]")[0].getAttribute("data-tag"));
@@ -367,7 +376,6 @@
 		<span data-dropdown="tag-list" id="thread-tag" data-subdropdown="true" data-dropdown-onload="searchTagOnload()">
 			[[-- please select a tag --]]
 		</span>
-		{{if not .IsLoggedIn}}匿名身份只可以选择[a: 匿名]或[r: 回复区]标签{{end}}
 	</div>
 
 	<div style="margin-top: 4px">

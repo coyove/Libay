@@ -3,6 +3,7 @@ package auth
 import (
 	"image"
 	"image/draw"
+	_ "image/gif"
 	"image/jpeg"
 	"image/png"
 
@@ -26,11 +27,9 @@ var RICompressionLevel = struct {
 
 func ResizeImage(imageBuf []byte, fn string, nwidth, nheight int, quality riLevel) error {
 	ext := strings.ToLower(filepath.Ext(fn))
-	if ext == ".gif" {
-		return ioutil.WriteFile(fn, imageBuf, 0777)
-	}
-
-	// fmt.Println(imageBuf[:4], imageBuf[len(imageBuf)-4:])
+	// if ext == ".gif" {
+	// 	return ioutil.WriteFile(fn, imageBuf, 0777)
+	// }
 
 	img, _, err := image.Decode(bytes.NewReader(imageBuf))
 	if err != nil {
@@ -70,9 +69,7 @@ func ResizeImage(imageBuf []byte, fn string, nwidth, nheight int, quality riLeve
 	defer f.Close()
 
 	switch ext {
-	case ".jpg":
-		fallthrough
-	case ".jpeg":
+	case ".jpg", ".jpeg", ".gif":
 		jpeg.Encode(f, final, &jpeg.Options{Quality: quality[0]})
 	case ".png":
 		enc := png.Encoder{}

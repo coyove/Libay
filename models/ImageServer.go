@@ -202,15 +202,19 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 		if !better {
 			err = auth.ResizeImage(hashBuf, "./thumbs/"+path, 250, 250,
 				auth.RICompressionLevel.DefaultCompression)
+			if err != nil {
+				glog.Errorln("Generating thumbnail failed 1: "+path, err)
+			}
 		}
 
 		if better || err != nil {
-			cmd := exec.Command("sh", "-c", "convert ./images/"+path+" -quality 90 -thumbnail '250x250>' ./thumbs/"+path)
+			cmd := exec.Command("sh", "-c", "convert ./images/"+path+
+				"[0] -quality 90 -thumbnail '250x250>' ./thumbs/"+path)
 			err = cmd.Start()
 			err = cmd.Wait()
 
 			if err != nil {
-				glog.Errorln("Generating thumbnail failed: "+path, err)
+				glog.Errorln("Generating thumbnail failed 2: "+path, err)
 				Return(w, `{"Error": true, "R": "Thumbnail_Failure"}`)
 				return
 			}
@@ -222,7 +226,7 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 
 		filename := auth.CleanString(header.Filename)
 		if tag != "" {
-			filename = strings.Replace(tag, "$", filename, -1)
+			filename = strings.Replace(tag, "$", "*"+filename, -1)
 		} else {
 			filename = "*" + filename
 		}

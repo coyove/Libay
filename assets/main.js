@@ -877,13 +877,10 @@
                     underlay.style.display = "block";
 
                     dd.parentNode.insertBefore(underlay, dd);
-                    var body = document.getElementsByTagName('body')[0];
-                    body.className += " stop-scrolling";
 
                     underlay.onclick = dd.onclick = function() {
                         dd.style.display = "none";
                         dd.parentNode.removeChild(underlay);
-                        body.className = body.className.replace(" stop-scrolling", "");
                         el.focus();
                     };
 

@@ -65,7 +65,7 @@
 		<span class="nc">[[Inverse Selection]]</span></li>
 
 		{{if .IsSelf}}
-		<li onclick="showRename()" id="go-rename"><span class='fai'>&#xe0c3;</span>
+		<li onclick="showRename()"><span class='fai'>&#xe0c3;</span>
 		<span>[[Batch rename selected]]</span></li>
 
 		<li data-onclick="alterImages('~hide')"><span class='fai'>&#xe06f;</span>
@@ -83,7 +83,7 @@
 		<span style="color: #a0a">[[Archive selected]]</span></li>
 
 		{{else}}
-		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe123;</span>
+		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe11a;</span>
 		<span>[[Flag for deletion]]</span></li>
 
 		{{end}}
@@ -279,8 +279,12 @@
 			}
 		});
 
-		etc.let.show("copy-code-div");
+		etc.let.show("copy-code-div").$.style.height = "1px";
 		etc.id("copy-code").value = code.join("\n");
+		etc.id('copy-code').focus();
+		etc.id('copy-code').select();
+		document.execCommand('copy');
+		etc.let.hide("copy-code-div");
 	}
 
 	function checkChanged(id) {
@@ -320,6 +324,7 @@
 		font-size: 42px;
 		color: red;
 	}
+
 	{{else}}
 	img[data-hide=true], img[data-r18=true] {
 		opacity: 0.75;
@@ -375,6 +380,7 @@
 					oncontextmenu="!etc.id('img-{{.ID}}').checked && etc.id('img-{{.ID}}').click()" 
 					data-r18="{{.R18}}" 
 					data-hide="{{.Hide}}">
+					<div class="gif-icon">GIF</div>
 
 					<img class="img-image" src="{{.ThumbPath}}" title="[[Double click to open]] {{.Filename}}" data-hide="{{.Hide}}" data-r18="{{.R18}}">
 					<span class="fai r18">&#x0e03d;</span>
@@ -439,4 +445,10 @@
 	{{if not .IsSelf}}
 	if (etc.util.cookie.read("r18") == "1") expandR18();
 	{{end}}
+
+	etc.get('.image').forEach(function(c) {
+		if (/\.gif$/.test(c.querySelector(".simple-check").getAttribute("data-full"))) {
+			c.querySelector(".gif-icon").style.display = "block";
+		}
+	});
 </script>
