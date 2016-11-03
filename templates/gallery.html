@@ -5,7 +5,7 @@
 		<span><span class='fai'>&#xe08d;</span>
 		<span>[[Global Gallery]]</span></span>
 
-		<span><span class='fai'>&#xe018;</span>
+		<span><span class='fai'>&#xe01c;</span>
 		<a href="/random" target="_blank">[[Random]]</a></span>		
 
 	{{else}}{{if .IsAuthor}}
@@ -388,7 +388,13 @@
 			</div>
 
 			<div class="date" id="info-{{.ID}}">
-				<span><span class="fai">&#xe00b;</span> <a href="{{.Path}}" target="_blank">[[Open]]</a></span>
+				<span><span class="fai">&#xe06d;</span> <a href="{{.Path}}" target="_blank">
+				<script type="text/javascript">
+					if ({{.Size}} < 1048576)
+						document.write(parseInt({{.Size}} / 1024) + " KiB");
+					else
+						document.write(parseFloat({{.Size}} / 1048576).toFixed(2) + " MiB");
+					</script></a></span>
 				<span><span class="fai">&#xe06e;</span> <span title="[[Views]]">{{.Hits}}</span></span>
 
 				{{if $.IsGlobal}}
@@ -397,13 +403,6 @@
 				{{end}}
 
 				<div>
-					<span><script type="text/javascript">
-					if ({{.Size}} < 1048576)
-						document.write(parseInt({{.Size}} / 1024) + " KiB");
-					else
-						document.write(parseFloat({{.Size}} / 1048576).toFixed(2) + " MiB");
-					</script></span>
-
 					{{if .Hide}}
 					<span><span class="fai">&#xe137;</span> [[Hide]]</span>
 					{{end}}

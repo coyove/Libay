@@ -157,7 +157,8 @@ func (th ModelHandler) POST_upload(w http.ResponseWriter, r *http.Request, ps ht
 	defer in.Close()
 	hashBuf, _ := ioutil.ReadAll(in)
 
-	if len(hashBuf) > 1024*1024*conf.GlobalServerConfig.MaxImageSize {
+	if len(hashBuf) > 1024*1024*conf.GlobalServerConfig.MaxImageSize &&
+		!conf.GlobalServerConfig.GetPrivilege(u.Group, "NoSizeLimit") {
 		Return(w, `{"Error": true, "R": "Image_Too_Large"}`)
 		return
 	}

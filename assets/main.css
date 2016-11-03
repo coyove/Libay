@@ -206,6 +206,10 @@ td.fit, th.fit{
     padding-left: 6px;
 }
 
+#gallery div.date > span .fai {
+    font-size: 14px;
+}
+
 #gallery div.date > span:first-child {
     border-left: none;
     padding-left: 0;
