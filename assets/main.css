@@ -180,7 +180,6 @@ td.fit, th.fit{
 
 #gallery div.image {
     margin: auto 2px;
-    display: inline-block;
     text-align: center;
     border: solid 1px #ccc;
 }
@@ -244,6 +243,7 @@ td.fit, th.fit{
     width: 100%;
     height: 100%;
     cursor: pointer;
+    overflow: hidden;
 }
 
 #gallery .img-container span.r18 {
@@ -458,6 +458,26 @@ td.fit, th.fit{
 
 .dropdown input {
     width: 100%;
+}
+
+.dropdown .li50left {
+    width: 50%; float: left;
+}
+
+.dropdown .li50right {
+    width: 50%; float: left;
+    border-left: dotted 1px #ccc;
+}
+
+.dropdown .li50bottom {
+    display: inline-block !important;
+    width: 100% !important;
+}
+
+.dropdown .sep {
+    font-size:12px;
+    padding:0;color:#ccc;border-bottom:dotted 1px #ccc;
+    padding-left: 6px;
 }
 
 .dropdown-normal input {
@@ -886,7 +906,10 @@ div#editor textarea {
     }
 
     #gallery .outter-image {
-        width: 100%;
-        display: block;
+        width: 128px;
+    }
+
+    #gallery div.date {
+        font-size: 10px;
     }
 }

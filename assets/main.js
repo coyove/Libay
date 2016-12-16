@@ -314,10 +314,18 @@
         },
 
         "height": function(dom) {
+            var body = document.body,
+                html = document.documentElement;
+
             if (dom) {
-                return dom.offsetHeight;
+                if (dom === document) {
+                    return Math.max( body.scrollHeight, body.offsetHeight, 
+                        html.clientHeight, html.scrollHeight, html.offsetHeight );
+                } else {
+                    return dom.offsetHeight;
+                }
             } else {
-                return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                return window.innerHeight || html.clientHeight || body.clientHeight;
             }
         },
 
@@ -860,14 +868,9 @@
                     if (el.children && el.children[0] && sub != "true")
                         rect = el.children[0].getBoundingClientRect();
 
-                    if (sub == "true") {
-                        dd.style.left = (rect.left) + "px";
-                        dd.style.top = (rect.top) + "px";
-                    } else {
-                        dd.style.left = (rect.left - 10) + "px";
-                        dd.style.top = (rect.bottom + 10) + "px";
-                    }
-
+                    var dtop = sub == "true" ? rect.top : rect.bottom + 10;
+                    dd.style.left = (sub == "true" ? rect.left : (rect.left - 10)) + "px";
+                    dd.style.top = dtop + "px";
                     dd.style.display = "block";
                     dd.style.zIndex = 99;
 
@@ -917,12 +920,21 @@
 
             menu.style.left = event.pageX + "px";
 
-            if (event.pageX + 200 > etc.width()) {
-                menu.style.left = (event.pageX - 200) + "px";
+            if (event.pageX + 225> etc.width()) {
+                menu.style.left = (event.pageX - 225) + "px";
             }
 
-            menu.style.top = event.pageY + "px";
             menu.style.display = "block";
+
+            var dtop = event.pageY;
+            var height = g.etc.height(menu);
+            if (event.clientY + height > g.etc.height()) {
+                dtop -= event.clientY + height - g.etc.height();
+            } else if (dtop + height > g.etc.height(document)) {
+                dtop = g.etc.height(document) - height;
+            }
+
+            menu.style.top = dtop + "px";
             menu.style.zIndex = 99;
 
             etc.body().onclick = menu.onclick = function() {

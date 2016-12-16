@@ -374,6 +374,11 @@ func ServeImage(w http.ResponseWriter, r *http.Request) {
 
 func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u := auth.GetUser(r)
+	if !auth.LogIP(r) {
+		Return(w, "Err::Router::Frequent_Access_"+auth.GetIP(r))
+		return
+	}
+
 	id, err := strconv.Atoi(r.FormValue("id"))
 	action := r.FormValue("action")
 
@@ -408,6 +413,8 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		conf.GlobalServerConfig.GetPrivilege(u.Group, "DeleteOthers") {
 		tester = "1 = 1"
 	}
+
+	rotationDirection := true
 
 	switch action {
 	case "delete":
@@ -444,7 +451,6 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 			Return(w, "Err:DB::Delete_Failure")
 			return
 		}
-
 	case "archive":
 		if _, err := auth.Gdb.Exec(`UPDATE images SET archive = true WHERE ` + tester +
 			" AND id IN (" + strings.Join(ids, ",") + ")"); err == nil {
@@ -483,6 +489,36 @@ func (th ModelHandler) POST_alter_images(w http.ResponseWriter, r *http.Request,
 		if err != nil {
 			Return(w, "Err:DB::Update_Failure")
 			return
+		}
+
+		Return(w, "ok")
+	case "rotccw":
+		rotationDirection = false
+		fallthrough
+	case "rotcw":
+		rows, err := auth.Gdb.Query("SELECT path FROM images WHERE " + tester +
+			" AND id IN (" + strings.Join(ids, ",") + ")")
+
+		if err != nil {
+			Return(w, "Err:DB::Select_Failure")
+			return
+		}
+
+		rot := func(p string) {
+			if buf, err := ioutil.ReadFile(p); err == nil {
+				if err = auth.RotateImage(buf, p, rotationDirection,
+					auth.RICompressionLevel.DefaultCompression); err == nil {
+					auth.Gimage.Remove(p)
+				}
+			}
+		}
+
+		for rows.Next() {
+			var path string
+			rows.Scan(&path)
+
+			rot("./images/" + path)
+			rot("./thumbs/" + path)
 		}
 
 		Return(w, "ok")

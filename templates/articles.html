@@ -115,7 +115,7 @@
 {{if .IsOWA}}
 	<div id="owa-dropdown" class="dropdown">
 		<ul>
-		<li onclick="reverseTag()"><span class='fai'>&#xe0e6;</span> [[Inverse]]</li>
+		<li onclick="reverseTag()"><span class='fai'>&#xe0e6;</span> [[Invert]]</li>
 		<li onclick="selectAll()"><span class='fai'>&#xe0e6;</span> [[Select all]]</li>
 		{{range $key, $value := .Tags}}
 		<li onclick="this.children[0].checked = !this.children[0].checked; updateTag({{$key}})">
