@@ -71,7 +71,7 @@
 			var e = elems[i];
 			if (e.parentNode) {
 				var n = e.parentNode.nextSibling.nextSibling
-				var id = parseInt(n ? n.innerHTML : 0);
+				var id = parseInt(n ? n.getAttribute("data-id") : 0);
 				if (e.checked) ret.push(id);
 			}
 		}
@@ -161,6 +161,10 @@
 	{{end}}
 
 	<script type="text/javascript">
+		etc.get(".database td.col-0").forEach(function(e) {
+			e.setAttribute("data-id", e.innerHTML);
+		});
+
 		switch ("{{.Table}}") {
 		case "images":
 			etc.get(".database td.col-1").forEach(function(e) {
