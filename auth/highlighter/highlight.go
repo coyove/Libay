@@ -5,7 +5,7 @@ package highlighter
 
 import (
 	"bytes"
-	// "fmt"
+	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -48,24 +48,12 @@ func tokenClass(tok rune, tokText string) string {
 
 // DefaultHTMLConfig's class names match those of google-code-prettify
 // (https://code.google.com/p/google-code-prettify/).
-
+var _ = fmt.Sprintln
 var reSpace = regexp.MustCompile(`(\r|\s|\t)`)
 var reURL = regexp.MustCompile(`(http[s]?(?:.*?):(?:.*?)\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*,]|(?:%[0-9a-fA-F][0-9a-fA-F]))+?)(?:[\(\)\[\]"'\>\<\s\n\r\t]|$)`)
+var tabs = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 
 func joinStack(spans []spanPair, zebra *bool, linenum *int, tabspace int) string {
-	ret := bytes.Buffer{}
-	tabs := "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-
-	if *zebra = !*zebra; *zebra {
-		ret.WriteString("<tr class='li1'>")
-	} else {
-		ret.WriteString("<tr class='li0'>")
-	}
-
-	*linenum++
-	ln := strconv.Itoa(*linenum)
-	ret.WriteString("<td class='lin' id='line-" + ln + "'>" + ln + "</td><td>")
-
 	cons := bytes.Buffer{}
 	for _, sp := range spans {
 		text := reSpace.ReplaceAllStringFunc(sp.Text, func(in string) string {
@@ -101,8 +89,26 @@ func joinStack(spans []spanPair, zebra *bool, linenum *int, tabspace int) string
 		}
 	}
 
+	ret := bytes.Buffer{}
+
+	if *zebra = !*zebra; *zebra {
+		ret.WriteString("<tr class='li1'>")
+	} else {
+		ret.WriteString("<tr class='li0'>")
+	}
+
+	*linenum++
+	ln := strconv.Itoa(*linenum)
+	ret.WriteString("<td class='lin' id='line-" + ln + "'>" + ln + "</td><td>")
+
 	if cons.String() == "" {
-		ret.WriteString("&nbsp;")
+		if *linenum == 1 {
+			// Line 1 is empty, omitted
+			*linenum = 0
+			return ""
+		} else {
+			ret.WriteString("&nbsp;")
+		}
 	} else {
 		ret.WriteString(cons.String())
 	}
@@ -184,5 +190,11 @@ func Normal(s *scanner.Scanner, tabspace int) string {
 		final.WriteString(joinStack(stack, &zebra, &linenum, tabspace))
 	}
 
-	return final.String()
+	ret := final.String()
+
+	if strings.HasSuffix(ret, "<td>&nbsp;</td></tr>") {
+		return ret[:strings.LastIndex(ret, "<tr")]
+	} else {
+		return ret
+	}
 }

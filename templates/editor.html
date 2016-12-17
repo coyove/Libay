@@ -4,10 +4,13 @@
 {{else}}{{if .Update}}
 	<title>[[Edit article]]</title>
 
+{{else}}{{if .ReplyTo}}
+	<title>[[Reply]]</title>
+
 {{else}}
 	<title>[[Post new article]]</title>
 
-{{end}}{{end}}
+{{end}}{{end}}{{end}}
 
 <p id="breadcrumbs">
 	<span><span class='fai'>&#xe12c;</span>
@@ -73,7 +76,11 @@
 	{{if not .IsLoggedIn}}
 	<style type="text/css">
 		li[data-short] { display: none; }
-		li[data-short=r], li[data-short=an] { display: list-item; }
+		li[data-short=r], li[data-short=an] {
+			border-top: dotted 1px #ccc;
+			border-bottom: none;
+			display: list-item; 
+		}
 	</style>
 	{{end}}
 
@@ -85,7 +92,7 @@
 			{{else}}
 			<span class="fai" style="color: #ccc">&#xe06e;</span>
 			{{end}}
-			{{.Short}}: {{.Name}} {{range .PermittedTo}}[{{.}}] {{end}}
+			{{.Short}}: {{.Name}} {{range .PermittedTo}}/{{.}} {{end}}
 		</li>
 		{{end}}
 	{{end}}
@@ -367,19 +374,23 @@
 
 <div id="editor">
 	<div>
-		[[Title]]:
+		{{if .ReplyTo}}[[Reply Content]]{{else}}[[Title]]{{end}}:
 		<span id="title-length"></span><br>
-		<textarea id="thread-title" rows="2"></textarea>
+		<textarea id="thread-title" rows="{{if .ReplyTo}}5{{else}}2{{end}}"></textarea>
 	</div>
 
 	<div>
-		<span data-dropdown="tag-list" id="thread-tag" data-subdropdown="true" data-dropdown-onload="searchTagOnload()">
+		<span data-dropdown="tag-list" 
+			id="thread-tag" 
+			data-subdropdown="true" 
+			data-dropdown-onload="searchTagOnload()">
 			[[-- please select a tag --]]
 		</span>
 	</div>
 
 	<div style="margin-top: 4px">
-		[[Content]]: <span id="save-draft"></span>
+		{{if .ReplyTo}}[[Detailed Content]] ([[can be empty]]){{else}}[[Content]]{{end}}: 
+		<span id="save-draft"></span>
 	</div>
 
 	<div id="tr-edit">

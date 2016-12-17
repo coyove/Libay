@@ -929,7 +929,9 @@
             var dtop = event.pageY;
             var height = g.etc.height(menu);
             if (event.clientY + height > g.etc.height()) {
-                dtop -= event.clientY + height - g.etc.height();
+                dtop = event.pageY - height;
+                if (dtop < 0)
+                    dtop = event.pageY - (event.clientY + height - g.etc.height());
             } else if (dtop + height > g.etc.height(document)) {
                 dtop = g.etc.height(document) - height;
             }

@@ -113,6 +113,12 @@
 </div>
 
 {{if .IsOWA}}
+	<style type="text/css">
+		.dropdown li:hover label:before {
+			color: white !important;
+		}
+	</style>
+
 	<div id="owa-dropdown" class="dropdown">
 		<ul>
 		<li onclick="reverseTag()"><span class='fai'>&#xe0e6;</span> [[Invert]]</li>
@@ -213,24 +219,26 @@
 </script>
 
 {{if .IsReply}}
-	<table id="articles">
 	{{range .Articles}}
-	<tr class="darken">
-		<td class="fit header right-align"><a class="smaller" href="/user/{{.AuthorID}}">{{.Author}}</a></td>
-		<td class="title reply" onclick="location.href='/article/{{.ID}}'">
-			{{.Title}}<br>
-			<span class="time">
+	<div class='reply'>
+		<div class="marker"></div>
+		<div><pre>{{.Title}}</pre></div>
+
+		{{if .Content}}
+			<div><span class="preview-content">
+				<span class="fai">&#xe0b8;</span>
+				<a href="/article/{{.ID}}">[[More]]: {{.Content}}</a>
+			</span></div>
+		{{end}}
+
+		<div class='reply-info'>
+			<a href="/user/{{.AuthorID}}">{{.Author}}</a> @
+			<span>
 			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
 			</span>
-		</td>
-		<td class="fit last">
-		<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
-		</td>
-	</tr>
-	<tr><td colspan="3"><span class="preview-content">{{.Content}}</span></td>
-	</tr>
+		</div>	
+	</div>
 	{{end}}
-	</table>
 {{else}}
 <table id="articles">
 	<tr>

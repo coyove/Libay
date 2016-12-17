@@ -60,7 +60,7 @@ var Gallery = (function() {
 
             div = document.createElement("div");
             div.id = "gallery-content";
-            ac.parentNode.appendChild(div);
+            ac.parentNode.insertBefore(div, ac);
             div.style.display = "block";
 
             var paging = [

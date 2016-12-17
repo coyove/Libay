@@ -31,8 +31,9 @@
 	{{if not .IsSelf}}
 		<span onclick="expandR18()" id="show-r18" data-r18="false"><span class='fai'>&#xe11b;</span>
 		<span class="nc" id="show-r18-label">[[Show R18]]</span></span>
-
 	{{end}}
+
+	<span><span class='fai'>&#xe04b;</span> <a href="/image/uploader">[[Upload Images]]</a></span>
 
 	<script type="text/javascript">
 		document.title += " -- " + etc.date.format({{.Nav.Range.End}});
@@ -90,13 +91,13 @@
 
 		<div class="li50bottom sep" style="color: #b8b">[[Special image ops]]</div>
 
-		<li class="li50left" data-onclick="alterImages('delete')">
-		<span class='fai' style="color: #a0a">&#xe123;</span>
-		<span style="color: #a0a">[[Delete]]</span></li>
+		<li class="li50left warn" data-onclick="alterImages('delete')">
+		<span class='fai'>&#xe123;</span>
+		<span>[[Delete]]</span></li>
 
-		<li class="li50right" data-onclick="alterImages('archive')">
-		<span class='fai' style="color: #a0a">&#xe004;</span>
-		<span style="color: #a0a">[[Archive]]</span></li>
+		<li class="li50right warn" data-onclick="alterImages('archive')">
+		<span class='fai'>&#xe004;</span>
+		<span>[[Archive]]</span></li>
 
 		{{else}}
 		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe11a;</span>
@@ -113,7 +114,8 @@
 		<li class="li50right" onclick="copyImageCode('url')"><span class='fai'>&#xe04a;</span>
 		<span>URL</span></li>
 
-		<li class="li50left" onclick="copyImageCode('bbcode')"><span class='fai'>&#xe04a;</span>
+		<li class="li50left" onclick="copyImageCode('bbcode')" style="border-bottom: none">
+		<span class='fai'>&#xe04a;</span>
 		<span>BBCode</span></li>
 
 		<li class="li50right" onclick="copyImageCode('md')"><span class='fai'>&#xe04a;</span>

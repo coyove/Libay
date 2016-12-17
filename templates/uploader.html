@@ -1,0 +1,241 @@
+<script type="text/javascript">
+	document.title = "[[Upload]] -- " + window.__title;
+</script>
+
+<p id="breadcrumbs">
+	<span><span class='fai'>&#xe08d;</span> <span>[[Upload Images]]</span></span>
+</p>
+
+<style type="text/css">
+	#about div {
+		margin: 4px 0; 
+	}
+
+	#index-image {
+		margin:auto;
+		width:100%;
+		max-width:350px;
+		display:block;
+	}
+
+	#upload-area {
+		border: dashed 2px #ccc;
+		padding: 6px 10px;
+		width: 100%;
+	}
+
+	#upload-errors {
+		border-collapse: collapse;
+    	border-spacing: 0;
+    	width: 100%;
+    	margin: 4px 0;
+	}
+
+	#upload-errors td {
+		padding: 0.2em;
+    	border: solid 1px #f44336;
+    	word-wrap: break-word;
+    	word-break: break-word;
+	}
+
+
+	#select-file-div { cursor: pointer; }
+	#select-file-div:hover { color: steelblue; }
+
+	#select-code {
+		display: none;
+	}
+
+	#select-code > div { 
+		height: 24px; 
+	}
+
+	#select-code > div * {
+		height: 100%;
+		vertical-align: top;
+	}
+
+	#filename-keywords {
+		width: 90%;
+		max-width: 300px;
+	}
+</style>
+
+<div style="text-align: center">
+	<div id="about">
+		<div>
+			[[Supported formats]]: .jpg .jpeg .png .gif (10M)
+			<!--[if lte IE 9]>
+			<div>[[Your browser doesn't support uploading]]</div>
+			<![endif]-->
+		</div>
+		{{if .IsLoggedIn}}
+			{{if .CanPostImages}}
+			<input style="display: none" id="select-file" type="file" multiple>
+			<div id="upload-area">
+				<div id="select-file-div" onclick='etc.id("select-file").click()'>
+					[[Select or drag'n drop images to upload]] 
+					<span id="uploading-progress"></span>
+					<span id="uploading-sign"></span>
+				</div>
+
+				<div id="upload-errors-div" style="display: none">
+					<button onclick="hideErrors()">
+						<span class='fai'>&#xe122;</span> [[Clear errors]]
+					</button>
+					<table id="upload-errors" class="csv"></table>
+				</div>
+
+				<div id="select-code">
+					<div>
+						<select id="select-code-type">
+							<option value="image-full-url">[[Original URL]]</option>
+							<option value="image-thumb-url">[[Thumbnail URL]]</option>
+							<option value="image-full-bbcode" selected>[[Original BBCode]]</option>
+							<option value="image-thumb-bbcode">[[Thumbnail BBCode]]</option>
+							<option value="image-full-md">[[Original Markdown]]</option>
+							<option value="image-thumb-md">[[Thumbnail Markdown]]</option>
+							<option value="image-data-image">[[Data Images]]</option>
+						</select>
+						<button onclick="copy()"><span class='fai'>&#xe04a;</span></button>
+					</div>
+					<textarea style="display:none" class="image-code" id="image-data-image" readonly>[gallery]</textarea>
+					<textarea style="display:none" class="image-code" id="image-full-url" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-thumb-url" readonly></textarea>
+					<textarea class="image-code" id="image-full-bbcode" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-thumb-bbcode" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-full-md" readonly></textarea>
+					<textarea style="display:none" class="image-code" id="image-thumb-md" readonly></textarea>
+				</div>
+			</div>
+			<div>
+				<div id="filename-keywords" class="dropdown-normal dropdown">
+					<div><input type="text" id="upload-filename" placeholder="[[Rename it when uploaded]]: [[Keep original filename]]"></div>
+				</div>
+				<div style="height: 40px"></div>
+			</div>
+			<div>
+				<input type="checkbox" class="simple-check" id="hide-image">
+				<label for="hide-image">[[Hide in my gallery]]
+				(<b>[[Note]]</b>: [[Hiding will not prevent anyone accessing it through url]])</label>
+			</div>
+			<div>
+				<input type="checkbox" class="simple-check" id="r18-image">
+				<label for="r18-image">[[Add R18 tag]] ([[Thumbnail won't show up directly in the gallery]])</label>
+			</div>
+			{{else}}
+				<div>您所在的用户组无法上传图片</div>
+			{{end}}
+		{{else}}
+			<div>[[To upload images, please ]]<a href="/account">[[sign in]]</a></div>
+		{{end}}
+	</div>
+</div>
+
+<script type="text/javascript">
+    var upa = etc.id("upload-area");
+
+    upa.ondragover = function(e) { 
+    	e.preventDefault();
+    	upa.style.backgroundColor = "#abceea";
+    }
+
+    upa.ondragleave = function(e) { 
+    	e.preventDefault(); 
+    	upa.style.backgroundColor = "white";
+    }
+    
+    upa.ondrop = function(e) {
+    	e.preventDefault(); 
+    	upa.style.backgroundColor = "white";
+
+    	goUploading(etc.file(e.dataTransfer.files))
+    }
+
+    etc.id("select-file").onchange = function(e) { 
+		Animation.start("uploading-sign");
+		goUploading(etc.file('select-file', e));
+		etc.id("select-file").value = "";
+	}
+
+	etc.id("select-code-type").onchange = function(e) {
+		var texts = etc.get(".image-code");
+		for (var i = 0; i < texts.length; i++) {
+        	texts[i].style.display = "none";
+		}
+
+		etc.let.show(this.value);
+	}
+
+	etc.id("upload-filename").onkeyup = function(e) {
+		etc.id("rename-image").checked = etc.id("upload-filename").value != "";
+	}
+
+	function copy() {
+		etc.id(etc.id("select-code-type").value).focus();
+		etc.id(etc.id("select-code-type").value).select();
+		document.execCommand('copy');
+	}
+
+	function hideErrors() {
+		etc.let.hide("upload-errors-div");
+		etc.id("upload-errors").innerHTML = "";
+	}
+
+	function goUploading(files) {
+		Animation.start("uploading-sign");
+		var total = files.length;
+		var cur = 0;
+
+    	var uploaded = {
+    		"additional_form": {
+    			"hide": etc.id("hide-image").checked,
+    			"r18": etc.id("r18-image").checked,
+    			"tag": etc.id("upload-filename").value
+    		},
+    		"uploaded_callback": function(thumb, full) {
+				var a = document.createElement("a");
+				var img = document.createElement("img");
+
+				img.style.maxWidth = "100px";
+				img.style.maxHeight = "100px";
+				img.src = thumb;
+
+				a.href = full;
+				a.target = "_blank";
+
+				a.appendChild(img);
+				upa.appendChild(a);
+
+				window.UploadedImages = window.UploadedImages || {};
+
+				etc.id("image-full-url").value += full + "\n";
+				etc.id("image-thumb-url").value += thumb + "\n";
+
+				etc.id("image-full-bbcode").value += "[img]" + full + "[/img]\n";
+				etc.id("image-thumb-bbcode").value += "[url=" + full + "][img]" + thumb + "[/img][/url]\n";
+
+				etc.id("image-full-md").value += "![](" + full + ")\n";
+				etc.id("image-thumb-md").value += "![](" + thumb + ")\n";
+
+				etc.id("image-data-image").value += "\n[img=data]" + full + "[/img]";
+
+				etc.let.show("select-code");
+				cur++;
+				etc.id("uploading-progress").html(cur + "/" + total);
+    		}
+    	};
+
+    	etc.id("uploading-progress").html("0/" + total);
+    	etc.editor.uploadImage(files, function(err, file) {
+			if (err) {
+				var row = etc.let.show("upload-errors-div").show("upload-errors").$.insertRow(0);
+				row.insertCell(0).innerHTML = file.name;
+				row.insertCell(1).innerHTML = err;
+			} else {
+				Animation.stop();
+				etc.id("uploading-progress").html("");
+			}
+		}, uploaded);
+	}
+</script>

@@ -49,16 +49,7 @@
 		<span><span class='fai'>&#xe10f;</span>
 		<a href="/tag/{{.Article.Tag}}/page/1" title="[[Tag]]">{{.Article.Tag}}</a></span>
 
-		{{if .Article.ParentID}}
-			<span><span class='fai'>&#xe00b;</span>
-			<a href="/article/{{.Article.ParentID}}" title="[[Parent article]]">{{.Article.ParentTitle}}</a>
-			</span>
-		{{else}}
-			{{if .Article.Children}}
-			<span><span class='fai'>&#xe0b8;</span>
-			<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}} [[Reply(s)]]</a></span>
-			{{end}}
-
+		{{if not .Article.ParentID}}
 			<span><span class='fai'>&#xe0b7;</span>
 			<a href="/new/article/{{.Article.ID}}?/reply/{{.Article.ID}}/page/1">[[Reply Article]]</a>
 			</span>
@@ -103,7 +94,7 @@
 				</li>
 
 				<li data-onclick="setUserIndex()"><span class='fai'>&#xe089;</span>
-					<span>[[Make as my index]]</span>
+					<span>[[Make it my index]]</span>
 				</li>
 			{{end}}
 
@@ -297,9 +288,48 @@
 </script>
 
 <h1 id="article-title">
-{{.Article.Title}}
+<pre>{{.Article.Title}}</pre>
 </h1>
 
+{{if .Article.ParentID}}
+	<a href="/article/{{.Article.ParentID}}" title="[[Parent article]]"><span class='fai'>&#xe00b;</span>
+	{{.Article.ParentTitle}}</a>
+{{end}}
 <hr>
 
 <div id="article-content">{{.Article.Content}}</div>
+
+{{if .HasReplies}}
+	<div class="smaller" style="margin-top: 6px"><b>
+		<span><span class='fai'>&#xe0b8;</span>
+		<a href="/reply/{{.Article.ID}}/page/1">{{.Article.Children}} [[Reply(s)]]</a></span>
+	</b></div>
+
+	{{range .Replies}}
+	<div class='reply'>
+		<div class="marker"></div>
+		<div><pre>{{.Title}}</pre></div>
+
+		{{if .Content}}
+			<div><span class="preview-content">
+				<a href="/article/{{.ID}}"><span class="fai">&#xe0b8;</span> {{.Content}}</a>
+			</span></div>
+		{{end}}
+
+		<div class='reply-info'>
+			<a href="/user/{{.AuthorID}}">{{.Author}}</a> @
+			<span>
+			<script type="text/javascript">document.write(etc.date.format({{.ModTimestamp}}));</script>
+			</span>
+		</div>	
+	</div>
+	{{end}}
+
+	<table class="pager"><tr>
+		<td class="c n next"><a href="/reply/{{.Article.ID}}/page/{{.Nav.NextPage}}">[[Next]]</a></td>
+        <td class="c n l t"><a href="/reply/{{.Article.ID}}/page/{{.Nav.LastWeekPage}}">[[Week]]</a></td>
+        <td class="c n l"><a href="/reply/{{.Article.ID}}/page/{{.Nav.LastMonthPage}}">[[Month]]</a></td>
+        <td class="c l"><a href="/reply/{{.Article.ID}}/page/{{.Nav.LastYearPage}}">[[Year]]</a></td>
+        <td class="c"><a href="/reply/{{.Article.ID}}/page/last">[[Last]]</a></td>
+    </tr></table>
+{{end}}

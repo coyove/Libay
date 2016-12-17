@@ -13,6 +13,7 @@
     .simple-check { display: inline !important; }
     .simple-check + label:before { display: none !important; }
     .simple-check + label { color: black !important; text-decoration: none !important; }
+    .dropdown { border: solid 1px #aaa !important; }
 </style>
 <![endif]-->
 
@@ -20,14 +21,15 @@
 <div id="header">
     <ul id="navibar">
         <li id="nv-index" class="link"><a href="/">[[Index]]</a></li>
-        <li id="nv-gallery" class="link"><a href="/gallery/0/page/1">[[Gallery]]</a></li>
+        <li id="nv-articles" class="link"><a href="/page/1">[[All Articles]]</a></li>
         <li id="nv-tags" class="link"><a href="/tags">[[Tags]]</a></li>
-        <li id="nv-articles" class="link hide"><a href="/page/1">[[All Articles]]</a></li>
+        <li id="nv-gallery" class="link"><a href="/gallery/0/page/1">[[Gallery]]</a></li>
         <li id="nv-article" class="link hide"><a>[[Article]]</a></li>
         <li id="nv-user-articles" class="link hide"><a>[[User Articles]]</a></li>
         <li id="nv-tag-articles" class="link hide"><a>[[Tagged Articles]]</a></li>
         <li id="nv-replies" class="link hide"><a>[[Article Replies]]</a></li>
-        <li id="nv-new-article" class="link"><a href="/new/article/0">[[Post]]</a></li>
+        <li id="nv-new-article" class="link hide"><a href="/new/article/0">[[Post]]</a></li>
+        <li id="nv-uploader" class="link hide"><a href="/uploader">[[Upload]]</a></li>
         <li id="nv-console" class="link"><a href="/account" id="nv-console-a">[[Console]]</a></li>
         <li id="nv-user" class="link hide"><a>[[User]]</a></li>
         <li id="nv-my-gallery" class="link hide"><a>[[My Gallery]]</a></li>

@@ -49,14 +49,21 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	var payload struct {
-		Article          auth.Article
+		Article auth.Article
+		Replies []auth.Article
+
 		IsAuthorSelf     bool
 		IsEditedByOthers bool
 
 		CanMakeLocked bool
+		HasReplies    bool
 
 		User       auth.AuthUser
 		IsLoggedIn bool
+
+		IndexPage string
+
+		BasePage
 	}
 	u := auth.GetUser(r, w)
 	vtt := conf.GlobalServerConfig.GetPrivilege(u.Group, "ViewOthers")
@@ -69,6 +76,9 @@ func (th ModelHandler) GET_article_ID(w http.ResponseWriter, r *http.Request, ps
 
 	payload.User = u
 	payload.IsLoggedIn = u.Name != ""
+
+	payload.Replies, payload.Nav = auth.GetArticles("1", strconv.Itoa(id), "reply", "")
+	payload.HasReplies = len(payload.Replies) > 0
 
 	if canUserViewThis(u, payload.Article, vtt) {
 		ServePage(w, r, "article", payload)
@@ -314,8 +324,10 @@ func (th ModelHandler) POST_post_ID(w http.ResponseWriter, r *http.Request, ps h
 	title := r.FormValue("title")
 	if len(title) > 512 {
 		title = title[:512]
-	} else if len(title) < 3 {
-		Return(w, "Err::Post::Title_Too_Short")
+	}
+
+	if len(title)+len(content) < 4 {
+		Return(w, "Err::Post::Title_Or_Content_Too_Short")
 		return
 	}
 

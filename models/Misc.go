@@ -64,9 +64,6 @@ func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httproute
 		TotalUsers    int
 		TotalArticles int
 		TotalImages   int
-
-		CanPostImages bool
-		IsLoggedIn    bool
 	}
 
 	auth.Gdb.QueryRow(`
@@ -87,11 +84,6 @@ func (th ModelHandler) GET_(w http.ResponseWriter, r *http.Request, ps httproute
         WHERE
             relname = 'users'`).
 		Scan(&payload.TotalUsers, &payload.TotalArticles, &payload.TotalImages)
-
-	u := auth.GetUser(r)
-
-	payload.IsLoggedIn = u.ID != 0
-	payload.CanPostImages = u.CanPostImages()
 
 	ServePage(w, r, "index", payload)
 }
@@ -150,4 +142,17 @@ func (th ModelHandler) GET_random_safe(w http.ResponseWriter, r *http.Request, p
 
 func (th ModelHandler) GET_random(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	randomImage(w, true)
+}
+
+func (th ModelHandler) GET_image_uploader(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var payload struct {
+		CanPostImages bool
+		IsLoggedIn    bool
+	}
+
+	u := auth.GetUser(r)
+	payload.IsLoggedIn = u.ID != 0
+	payload.CanPostImages = u.CanPostImages()
+
+	ServePage(w, r, "uploader", payload)
 }

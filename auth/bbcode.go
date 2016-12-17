@@ -125,6 +125,7 @@ func (t *Tokenizer) Rollback() {
 }
 
 func (t *Tokenizer) Next() *Token {
+
 	for t.index < len(t.hits)*2+1 {
 		i := t.index / 2
 		t.index++
@@ -135,6 +136,7 @@ func (t *Tokenizer) Next() *Token {
 		} else {
 			idx = []int{len(t.bbcode), -1}
 		}
+
 		if t.index&1 == 1 {
 			// text
 			o := 0
@@ -156,6 +158,7 @@ func (t *Tokenizer) Next() *Token {
 		} else {
 			tok := Token{stackTokens: make([]*Token, 0)}
 			tok.Text = t.bbcode[idx[0]:idx[1]]
+
 			if idx[2] >= 0 {
 				// [tag] or [/tag]
 				tok.Tag = strings.ToLower(t.bbcode[idx[4]:idx[5]])
@@ -409,7 +412,7 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 				}
 			case "img":
 				if !t.End {
-					tok.Begin()
+					// tok.Begin()
 					style := ""
 					if t.Value != "" {
 						style = html.EscapeString(t.Value)
@@ -417,16 +420,16 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 
 					t = tok.Next()
 					if t == nil {
-						tok.Commit()
+						// tok.Commit()
 						errors = append(errors, ErrIncompleteTag("img"))
 						return bits, errors
 					}
 
 					if t.Tag != "" {
-						tok.Rollback()
-						errors = append(errors, ErrInvalidUrl(t.Tag))
+						// tok.Rollback()
+						// errors = append(errors, ErrInvalidUrl(t.Tag))
 					} else {
-						tok.Commit()
+						// tok.Commit()
 						url := html.EscapeString(t.Text)
 						if style == "data" {
 							bits = append(bits, "<img data-src='", url, "'>")
@@ -439,19 +442,19 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 				if !t.End {
 					tag := t.Tag
 
-					tok.Begin()
+					// tok.Begin()
 					t = tok.Next()
 					if t == nil {
-						tok.Commit()
+						// tok.Commit()
 						errors = append(errors, ErrIncompleteTag(tag))
 						return bits, errors
 					}
 
 					if t.Tag != "" {
-						tok.Rollback()
-						errors = append(errors, ErrIncompleteTag(tag))
+						// tok.Rollback()
+						// errors = append(errors, ErrIncompleteTag(tag))
 					} else {
-						tok.Commit()
+						// tok.Commit()
 						switch tag {
 						case "code":
 							bits = append(bits, "<table class='code'>"+
@@ -562,7 +565,6 @@ func FilterHTML(h string, textOnly int) string {
 func BBCodeToHTML(bbcode string) (string, string, []error) {
 	tok := TokenizeString(bbcode, -1)
 	bits, errs := tokensToHTML(tok)
-
 	html := "<table class='bbcode'><tr class='zebra-false'><td>" + strings.Join(bits, "") + "</td></tr></table>"
 	preview := FilterHTML(html, 256)
 
