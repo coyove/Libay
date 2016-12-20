@@ -6,7 +6,10 @@
 		<span>[[Global Gallery]]</span></span>
 
 		<span><span class='fai'>&#xe01c;</span>
-		<a href="/random" target="_blank">[[Random]]</a></span>		
+		<a href="/random" target="_blank">[[Random]]</a></span>
+
+		<span><span class='fai'>&#xe04b;</span> 
+		<a href="/image/uploader">[[Upload Images]]</a></span>
 
 	{{else}}{{if .IsAuthor}}
 		<span><span class='fai'>&#xe08d;</span>
@@ -27,13 +30,6 @@
 		<span class='fai'>&#xe08c;</span> <span class="nc">[[Images]]</span>
 		{{end}}
 	</span>
-
-	{{if not .IsSelf}}
-		<span onclick="expandR18()" id="show-r18" data-r18="false"><span class='fai'>&#xe11b;</span>
-		<span class="nc" id="show-r18-label">[[Show R18]]</span></span>
-	{{end}}
-
-	<span><span class='fai'>&#xe04b;</span> <a href="/image/uploader">[[Upload Images]]</a></span>
 
 	<script type="text/javascript">
 		document.title += " -- " + etc.date.format({{.Nav.Range.End}});
@@ -102,6 +98,12 @@
 		{{else}}
 		<li data-onclick="alterImages('flag')"><span class='fai'>&#xe11a;</span>
 		<span>[[Flag for deletion]]</span></li>
+
+		<div class="li50bottom sep" style="color: #b8b">[[Safe view]]</div>
+
+		<li class="warn" onclick="expandR18()" id="show-r18" data-r18="false">
+		<span class='fai'>&#xe11b;</span>
+		<span id="show-r18-label">[[Show R18]]</span></li>
 
 		{{end}}
 
@@ -328,7 +330,7 @@
 	}
 
 	.img-r18 {
-		width: 200x !important;
+		width: 200px !important;
 		height: 200px !important;
 	}
 

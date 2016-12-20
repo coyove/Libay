@@ -512,6 +512,10 @@ func FilterHTML(h string, textOnly int) string {
 			if ret.Len() > textOnly {
 				return ret.String()
 			}
+
+			if tag == "img" {
+				ret.WriteString("[img]")
+			}
 			continue
 		}
 

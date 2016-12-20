@@ -374,7 +374,7 @@
 
 <div id="editor">
 	<div>
-		{{if .ReplyTo}}[[Reply Content]]{{else}}[[Title]]{{end}}:
+		{{if .ReplyTo}}{{if .Update}}[[Title]]{{else}}[[Reply Content]]{{end}}{{else}}[[Title]]{{end}}:
 		<span id="title-length"></span><br>
 		<textarea id="thread-title" rows="{{if .ReplyTo}}5{{else}}2{{end}}"></textarea>
 	</div>
@@ -389,7 +389,11 @@
 	</div>
 
 	<div style="margin-top: 4px">
-		{{if .ReplyTo}}[[Detailed Content]] ([[can be empty]]){{else}}[[Content]]{{end}}: 
+		{{if .ReplyTo}}
+			{{if .Update}}[[Content]]:{{else}}[[Detailed Content]]: ([[can be empty]]){{end}}
+		{{else}}
+			[[Content]]:
+		{{end}}
 		<span id="save-draft"></span>
 	</div>
 

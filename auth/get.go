@@ -129,12 +129,7 @@ func GetArticles(enc, filter, filterType, searchPattern string) (ret []Article, 
 	}
 
 	onlyTag := "articles.deleted = false"
-	orderByDate := "modified_at"
-	if filterType == "reply" {
-		// Replies should be sorted by CREATION date not by MODIFICATION date
-		orderByDate = "created_at"
-	}
-	orderBy := orderByDate + " " + direction
+	orderByDate := "modified_at "
 
 	switch filterType {
 	case "ua":
@@ -193,6 +188,19 @@ func GetArticles(enc, filter, filterType, searchPattern string) (ret []Article, 
 			   filter = ID of the parent article, all replies are children of it
 			*/
 			onlyTag += " AND articles.parent = " + filter
+			// Replies should be sorted by CREATION date not by MODIFICATION date
+			orderByDate = "created_at "
+			// if direction == "DESC" {
+			// 	direction, compare = "ASC", ">"
+			// } else {
+			// 	direction, compare = "DESC", "<"
+			// }
+
+			// if enc == "1" {
+			// 	ts = 0
+			// } else if enc == "last" {
+			// 	ts = int(time.Now().UnixNano() / 1e6)
+			// }
 		} else {
 			return
 		}
@@ -222,7 +230,7 @@ func GetArticles(enc, filter, filterType, searchPattern string) (ret []Article, 
             ` + orderByDate + compare + itoa(ts) + ` AND ` + searchStat + ` AND
             (` + onlyTag + `)
         ORDER BY
-            ` + orderBy + ` 
+            ` + orderByDate + direction + ` 
         LIMIT ` + itoa(conf.GlobalServerConfig.ArticlesPerPage)
 
 	rows, err := Gdb.Query(sql)

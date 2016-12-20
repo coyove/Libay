@@ -353,7 +353,7 @@ div.reply .marker {
 }
 
 #article-content .zebra-false {
-    background-color: #fafafa;
+    background-color: white;
 }
 
 #article-content table.csv .csv-false {
@@ -372,15 +372,11 @@ div.reply .marker {
 }
 
 #article-content table.code tr.li0 {
-    background-color: #fafafa;
+    background-color: #f6f6f6;
 }
 
 #article-content .zebra-false tr.li1 {
     background-color: white !important;
-}
-
-#article-content .zebra-false tr.li0 {
-    background-color: #f6f6f6 !important;
 }
 
 #article-content table.code td.lin {
@@ -398,10 +394,6 @@ div.reply .marker {
     -ms-user-select: none;
     user-select: none;
     line-height: 1.5;
-}
-
-#article-content .zebra-false td.lin {
-    color: #ababab;
 }
 
 #article-content table.code td.lin + td {
