@@ -19,6 +19,7 @@ type EditorStruct struct {
 	Article  auth.Article
 
 	Update bool
+	Reply  bool
 
 	Message             bool
 	MessageReceiverName string
@@ -71,6 +72,9 @@ func (th ModelHandler) GET_new_article_ID(w http.ResponseWriter, r *http.Request
 	}
 
 	payload.ReplyTo = id
+	if id > 0 {
+		payload.Reply = true
+	}
 	payload.Update = false
 	ServePage(w, r, "editor", payload)
 }

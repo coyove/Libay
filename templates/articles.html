@@ -63,6 +63,9 @@
 	
 	<span><span class='fai'>&#xe0bf;</span> 
 	<span>[[All Articles]]</span></span>
+
+	<span><span class='fai'>&#xe0c3;</span> 
+	<a href='/new/article/0'>[[Post New Article]]</a></span>
 {{end}}
 
 <span data-dropdown="search-dropdown" data-dropdown-onload="focusSearch()">
@@ -222,7 +225,7 @@
 	{{range .Articles}}
 	<div class='reply'>
 		<div class="marker"></div>
-		<div><pre>{{.Title}}</pre></div>
+		<div><pre class="title">{{.Title}}</pre></div>
 
 		{{if .Content}}
 			<div><span class="preview-content">

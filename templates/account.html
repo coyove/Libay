@@ -5,17 +5,14 @@
 </style>
 
 <p id="breadcrumbs">    
-    <span><span class='fai'>&#xe0bf;</span>
-    <a href="/ua/{{.ID}}/page/1">[[Visible Articles]]</a></span>
-
-    <span><span class='fai'>&#xe04f;</span>
-    <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a></span>
-
-    <span><span class='fai'>&#xe0a5;</span>
-    <a id="message-box-count" href="/message/{{.ID}}/page/1">[[Private Message]]</a></span>
+    <span data-dropdown="articles-nav"><span class='fai'>&#xe0bf;</span>
+    <span class="nc">[[My Articles]]</span></span>
 
     <span><span class='fai'>&#xe08d;</span>
     <a href="/gallery/{{.ID}}/page/1">[[My Gallery]]</a></span>
+
+    <span><span class='fai'>&#xe0a5;</span>
+    <a id="message-box-count" href="/message/{{.ID}}/page/1">[[Private Message]]</a></span>
 
     <span><span class='fai'>&#xe069;</span>
     <a data-onclick="tryLogout()">[[Log Out]]</a></span>
@@ -25,6 +22,16 @@
         <span class='nc'>管理员</span>
     </span>
 </p>
+
+<div class="dropdown" id="articles-nav">
+    <ul>
+        <li><span class='fai'>&#xe04f;</span>
+        <a href="/ua/{{.ID}}/page/1">[[Visible Articles]]</a></li>
+
+        <li><span class='fai'>&#xe04f;</span>
+        <a href="/owa/{{.ID}}/page/1">[[Iceberg]]</a></li>
+    </ul>
+</div>
 
 <div class="dropdown" id="admin-nav">
     <ul>
@@ -218,7 +225,7 @@
         <input type="hidden" id="user-index" value="0"/>
         {{else}}
         <span class='fai'>&#xe0bf;</span>
-        <a href="/owa/{{.ID}}/page/1">[[Select from 'Iceberg']]</a>
+        <a href="/owa/{{.ID}}/page/1">[[Select from 'My Articles']]</a>
         {{end}}
         </td></tr>
     </table>

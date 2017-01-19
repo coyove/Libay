@@ -1,7 +1,23 @@
 var Gallery = (function() {
+    var generateList = function(length, max, seed) {
+        var ret = [];
+        var i = 0;
+        while (i < length) {
+            seed = (2097151*seed + 13739) % 4294967296;
+            ret.push(parseInt(seed / 4294967296 * max));
+            i++;
+        }
+
+        return ret;
+    }
+
+    var block = 32;
+    var isLoading = false;
+    var password = 0xc0ffee;
+
     return {
         "_Normal": function() {
-        	etc.id("gallery-content").style.display = "none";
+            etc.id("gallery-content").style.display = "none";
             etc.id("article-content").style.display = "block";
 
             var doms = Gallery._Gallery.imgDOMs;
@@ -11,7 +27,7 @@ var Gallery = (function() {
         },
 
         "_Gallery": function() {
-        	var ac = etc.id("article-content");
+            var ac = etc.id("article-content");
             var imgs = etc.get("#article-content img");
             var links = etc.get("#article-content a");
             var div = etc.id("gallery-content");
@@ -46,12 +62,7 @@ var Gallery = (function() {
                 if (m && ifLarger[m[1]]) {
                     Gallery._Gallery.imgList.push(ifLarger[m[1]]);
                 } else {
-                    m = isrc.match(/thumbs\/(\S+)/);
-                    if (m && ifLarger[m[1]]) {
-                        Gallery._Gallery.imgList.push(ifLarger[m[1]]);
-                    } else {
-                        Gallery._Gallery.imgList.push(isrc);
-                    }
+                    Gallery._Gallery.imgList.push(isrc);
                 }
 
                 imgs[i].src = "about:blank";
@@ -64,49 +75,37 @@ var Gallery = (function() {
             div.style.display = "block";
 
             var paging = [
-                "<style>",
-                "#gallery-image { transform-origin: top left; -webkit-transform-origin: top left; -ms-transform-origin: top left;}",
-                "#gallery-container.r90 img {",
-                    "transform: rotate(90deg) translateY(-100%);",
-                    "-webkit-transform: rotate(90deg) translateY(-100%);",
-                    "-ms-transform: rotate(90deg) translateY(-100%);",
-                "}",
-                "#gallery-container.r180 img {",
-                    "transform: rotate(180deg) translate(-100%, -100%);",
-                    "-webkit-transform: rotate(180deg) translate(-100%, -100%);",
-                    "-ms-transform: rotate(180deg) translateX(-100%, -100%);",
-                "}",
-                "#gallery-container.r270 img {",
-                    "transform: rotate(270deg) translateX(-100%);",
-                    "-webkit-transform: rotate(270deg) translateX(-100%);",
-                    "-ms-transform: rotate(270deg) translateX(-100%);",
-                "}",
-                "</style>",
-                "<table class='pager'>",
+                "<table class='pager tox'>",
                     "<td class='c'><a href='javascript:Gallery._Gallery_Prev()'>",
-                    "<span class='fai'>&nbsp;&#xe046;&nbsp;</span></a></td>",
-                    "<td class='nc'><select class='gallery-pager'></select></td>",
+                    "<span class='fai'>&#xe00e;</span></a></td>",
+                    "<td class='nc'><select class='gallery-pager'></select>",
+                    "<a href='javascript:Gallery._Gallery_Goto(true)'>",
+                    "<span class='fai' style='font-size:120%'>&#xe0da;</span></a></td>",
                     "<td class='c'><a href='javascript:Gallery._Gallery_Next()'>",
-                    "<span class='fai'>&nbsp;&#xe048;&nbsp;</span></a></td>",
-                    "<td class='c'><a href='javascript:Gallery._Gallery_Goto(true)'>",
-                    "<span class='fai'>&nbsp;&#xe01f;&nbsp;</span></a></td>",
+                    "<span class='fai'>&#xe01b;</span></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Size(0)'>",
+                    "<span class='fai'>&#xe08d;</span></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Size(1)'>",
+                    "<span class='fai' style='font-size:120%;'>&#xe08d;</span></a></td>",
+                    "<td class='c'><a href='javascript:Gallery._Size(2)'>",
+                    "<span class='fai' style='font-size:150%;'>&#xe08d;</span></a></td>",
                 "</table>",
-            ].join('');                
+            ].join('\n');                
 
             div.innerHTML = paging + [
+                    "<style>",
+                        ".tox .fai { padding: 0 6px }",
+                        ".image-large {",
+                            "max-width: 1024px;",
+                        "}",
+                        ".image-medium {",
+                            "max-width: 800px;",
+                        "}",
+                        ".image-small {",
+                            "max-width: 600px;",
+                        "}",
+                    "</style>",
                     "<div id='gallery-container'>",
-                        "<div style='",
-                            "position: absolute;",
-                            "z-index: 90;",
-                            "font-size: 150%;",
-                            "margin: 10px;",
-                            "border: solid 1px;",
-                            "line-height: 1;",
-                            "padding: 4px 8px;",
-                            "background: white;",
-                            "opacity: 0.75;'>",
-                            "<a class='none' href='javascript:Gallery._Gallery_Rotate()'><span class='fai'>&#xe0d9;</span></a>",
-                        "</div>",
                         "<div id='gallery-loading' style='",
                             "background-image:url(" + window.__cdn + "/assets/images/loading.gif);",
                             "display: none;",
@@ -115,10 +114,10 @@ var Gallery = (function() {
                             "opacity: 0.5;",
                             "filter: alpha(opacity=50);'>",
                         "</div>",
-                        "<img onclick='Gallery._Gallery_Next()' id='gallery-image' style='",
+                        "<canvas onclick='Gallery._Gallery_Next()' id='gallery-image' class='image-large' style='",
                             "cursor: pointer;",
-                            "max-width: 100%;",
-                            "display: block'/>",
+                            "width: 100%;",
+                            "display: block'></canvas>",
                     "</div>"].join('') + paging;
 
             var pager = etc.get(".gallery-pager");
@@ -136,86 +135,103 @@ var Gallery = (function() {
             }
 
             Gallery._Gallery_Goto(0);
+            var ups = etc.util.cookie.read("ups");
+            if (ups) {
+                Gallery._Size(parseInt(ups));
+            }
+        },
+
+        "_Size": function(level) {
+            etc.id("gallery-image").className = "image-" + ["small", "medium", "large"][level];
+            etc.util.cookie.write("ups", level);
         },
 
         "_Gallery_Next": function() {
-            Gallery._Gallery.index++;
-            Gallery._Gallery_Goto(Gallery._Gallery.index);
+            Gallery._Gallery_Goto(++Gallery._Gallery.index);
         },
 
         "_Gallery_Prev": function() {
-            Gallery._Gallery.index--;
-            Gallery._Gallery_Goto(Gallery._Gallery.index);
+            Gallery._Gallery_Goto(--Gallery._Gallery.index);
         },
 
         "_Gallery_Goto": function(p) {
             if (Gallery._Gallery.imgList.length == 0) return;
+            if (isLoading) {
+                console.log(1);
+                return;
+            }
+            isLoading = true;
             if (p === true) p = Gallery._Gallery.index;
 
             if (p < 0)
-            	p = 0;
-           	else if (p >= Gallery._Gallery.imgList.length) 
-           		p = Gallery._Gallery.imgList.length - 1;
+                p = 0;
+            else if (p >= Gallery._Gallery.imgList.length) 
+                p = Gallery._Gallery.imgList.length - 1;
 
-           	Gallery._Gallery.index = p;
+            Gallery._Gallery.index = p;
 
-			var img = new Image();
+            var img = new Image();
             var gi = etc.id("gallery-image");
+            var ctx = gi.getContext('2d');
             var loading = etc.id("gallery-loading");
-			var oldTop = document.documentElement.scrollTop;
+            var oldTop = document.documentElement.scrollTop;
 
             var gc = etc.id("gallery-container");
             gc.style.width = "";
             gc.style.height = "";
 
-			img.onload = function() {
+            img.onload = function() {
                 etc.let.hide("gallery-loading");
-                gi.src = this.src; 
+                ctx.canvas.width = this.width;
+                ctx.canvas.height = this.height;
+                ctx.drawImage(this, 0, 0);
+
+                if (Gallery._Gallery.imgDOMs[p][0].getAttribute("puzzle") != "") {
+                    var w = parseInt(this.width / block);
+                    var h = parseInt(this.height / block);
+
+                    var linearToXY = function(idx) {
+                        var y = parseInt(idx / w);
+                        var x = idx - y * w;
+                        return [x, y];
+                    }
+
+                    var remapping = [];
+                    for (var i = 0; i < w * h; i++) remapping[i] = i;
+
+                    var mapping = generateList(w * h, w * h, 0xc0ffee);
+                    for (var i in mapping) {
+                        var tmp = remapping[i];
+                        remapping[i] = remapping[mapping[i]];
+                        remapping[mapping[i]] = tmp;
+                    }
+
+                    for (var i in remapping) {
+                        var dxy = linearToXY(i);
+                        var dx = dxy[0] * block;
+                        var dy = dxy[1] * block;
+
+                        var xy = linearToXY(remapping[i]);
+                        var x = xy[0] * block;
+                        var y = xy[1] * block;
+
+                        ctx.drawImage(this, dx, dy, block, block, x, y, block, block);
+                    }
+                }
 
                 var pager = etc.get(".gallery-pager");
                 for (var i = 0; i < pager.length; i++) pager[i].value = p;
 
                 document.documentElement.scrollTop = oldTop;
-                Gallery._Gallery_Rotate(true);
-			};
+                isLoading = false;
+            };
 
-			img.src = (Gallery._Gallery.imgList[p]);
-			// i.src = window.__cdn + "/assets/images/loading.gif";
+            img.src = Gallery._Gallery.imgList[p];
+
             loading.style.width = (gi.clientWidth ? gi.clientWidth : 64) + "px";
             loading.style.height = (gi.clientHeight ? gi.clientHeight : 64) + "px";
 
             if (img) etc.let.show("gallery-loading");
         },
-
-        "_Gallery_Rotate": function(init) {
-            var gi = etc.id("gallery-image");
-            var gc = etc.id("gallery-container");
-            var gwidth = gi.clientWidth;
-            var gheight = gi.clientHeight;
-            var deg;
-
-            if (init) {
-                deg = 0;
-            } else {
-                deg = parseInt(gc.attr("data-deg"));
-                deg = (deg + 90) % 360;
-            }
-
-            gc.attr("data-deg", deg);
-
-            if (deg == 0) {
-                gc.className = "";
-            } else {
-                gc.className = "r" + deg;
-            }
-
-            if (deg == 0 || deg == 180) {
-                gc.style.width = gwidth + "px";
-                gc.style.height = gheight + "px";
-            } else {
-                gc.style.width = gheight + "px";
-                gc.style.height = gwidth + "px";
-            }
-        }
     }
 })();

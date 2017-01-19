@@ -44,9 +44,9 @@
 		<span id="article-revision" class='nc'>[[Clear]]</span>
 	</span>
 
-	<span>
+	<span id="go-preview" {{if .Reply}}style="display:none"{{end}}>
 	<span class='fai'>&#xe10d;</span>
-	<span class="nc" data-onclick="tryPreview()" data-mode="edit" id="go-preview">[[Preview]]</span>
+	<span class="nc" data-onclick="tryPreview()" data-mode="edit">[[Preview]]</span>
 	</span>
 
 	<span>
@@ -131,10 +131,10 @@
 		{{if .Message}}
 			etc.id("thread-tag").html(etc.get("li[data-short=m]")[0].getAttribute("data-tag"));
 		{{else}}
-			{{if not .Update}}{{if .ReplyTo}}
+			{{if .Reply}}
 				etc.id("thread-tag").html(etc.get("li[data-short=r]")[0].getAttribute("data-tag"));
 			{{end}}
-		{{end}}{{end}}
+		{{end}}
 
 		etc.util.cookie.remove("default-tag");
 		setInterval(function() { alterDraft('save'); }, 20000);
@@ -298,7 +298,7 @@
 	}
 
 	function tryPreview(){
-		var gp = etc.id("go-preview");
+		var gp = etc.id(etc.id("go-preview").querySelector(".nc"));
 
 		if (gp.attr("data-mode") == "edit") {
 			etc.util.ajax.post("/preview", {
@@ -374,12 +374,12 @@
 
 <div id="editor">
 	<div>
-		{{if .ReplyTo}}{{if .Update}}[[Title]]{{else}}[[Reply Content]]{{end}}{{else}}[[Title]]{{end}}:
+		{{if .Reply}}[[Reply Content]]{{else}}[[Title]]{{end}}:
 		<span id="title-length"></span><br>
-		<textarea id="thread-title" rows="{{if .ReplyTo}}5{{else}}2{{end}}"></textarea>
+		<textarea id="thread-title" rows="{{if .Reply}}8{{else}}2{{end}}"></textarea>
 	</div>
 
-	<div>
+	<div {{if .Reply}}style="display:none"{{end}}>
 		<span data-dropdown="tag-list" 
 			id="thread-tag" 
 			data-subdropdown="true" 
@@ -389,15 +389,18 @@
 	</div>
 
 	<div style="margin-top: 4px">
-		{{if .ReplyTo}}
-			{{if .Update}}[[Content]]:{{else}}[[Detailed Content]]: ([[can be empty]]){{end}}
+		{{if .Reply}}
+			<div>[[Images or long comment goes below]]:</div>
+			<button onclick="etc.let.hide(this).show('tr-edit').show('go-preview')">
+				[[Detailed reply content]]
+			</button>
 		{{else}}
 			[[Content]]:
 		{{end}}
 		<span id="save-draft"></span>
 	</div>
 
-	<div id="tr-edit">
+	<div id="tr-edit" {{if .Reply}}style="display:none"{{end}}>
 		<div id="editor-container" unselectable="on">
 			<div id="editor-panel" unselectable="on" style="overflow: hidden; padding: 0.33em; color: #ccc;">
 				<span><span id="uploading-sign"></span>

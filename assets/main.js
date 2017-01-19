@@ -451,7 +451,7 @@
                     break;
                 case "a":
                 case "span":
-                    e.style.display = "inherit";
+                    e.style.display = "";
                     break;
                 case "button":
                     e.style.display = "inline-block";
@@ -872,6 +872,7 @@
                     dd.style.left = (sub == "true" ? rect.left : (rect.left - 10)) + "px";
                     dd.style.top = dtop + "px";
                     dd.style.display = "block";
+                    dd.style.position = "fixed";
                     dd.style.zIndex = 99;
 
                     var underlay = document.createElement("div");
@@ -938,6 +939,7 @@
 
             menu.style.top = dtop + "px";
             menu.style.zIndex = 99;
+            menu.style.position = "absolute";
 
             etc.body().onclick = menu.onclick = function() {
                 menu.style.display = "none";

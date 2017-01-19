@@ -433,6 +433,8 @@ func tokensToHTML(tok *Tokenizer) ([]string, []error) {
 						url := html.EscapeString(t.Text)
 						if style == "data" {
 							bits = append(bits, "<img data-src='", url, "'>")
+						} else if style == "puzzle" {
+							bits = append(bits, "<img puzzle=puzzle data-src='", url, "'>")
 						} else {
 							bits = append(bits, "<img class='image' style='", style, "' alt='", url, "' src='", url, "'>")
 						}

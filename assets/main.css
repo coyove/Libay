@@ -39,6 +39,10 @@ pre {
     margin: 0;
     padding: 0;
     display: inline-block;
+    white-space: pre-wrap;
+}
+
+pre.title {
     font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
 }
 
@@ -189,6 +193,14 @@ div.reply .marker {
 .reply-info {
     color: #888; 
     font-size: 80%;
+    margin-top: 2px;
+}
+
+.reply-info a:first-child {
+    background: #ddd;
+    color: #666;
+    padding: 0 4px;
+    display: inline-block;
 }
 
 #gallery {
@@ -369,6 +381,7 @@ div.reply .marker {
     border-spacing: 0;
     font: normal 12px/20px Consolas, "Liberation Mono", Menlo, Courier, monospace;
     width: 100%;
+    border: solid 1px #ccc;
 }
 
 #article-content table.code tr.li0 {
@@ -444,6 +457,10 @@ div.reply .marker {
     cursor: pointer;
     margin: 0;
     padding: 0;
+}
+
+.dropdown a:hover {
+    text-decoration: none;
 }
 
 .dropdown li {
@@ -642,7 +659,6 @@ p {
     font-size: 90%;
     line-height: 2;
     word-spacing: 4px;
-    background-color: transparent;
     background-color: #f5f6f7;
     border-bottom: 1px solid #d2d3d7 ;
     overflow: hidden;
